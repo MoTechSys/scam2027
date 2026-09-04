@@ -227,7 +227,10 @@
   }
   .sidebar-item.active {
     @apply bg-sidebar-accent text-sidebar-accent-foreground;
-    border-inline-start: 3px solid var(--primary);
+    box-shadow: inset 3px 0 0 var(--primary); /* overridden per direction below */
+  }
+  [dir="rtl"] .sidebar-item.active {
+    box-shadow: inset -3px 0 0 var(--primary);
   }
 
   /* Tabs */

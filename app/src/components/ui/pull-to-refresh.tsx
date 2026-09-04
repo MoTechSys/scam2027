@@ -34,19 +34,16 @@ export function PullToRefresh({ children, onRefresh, className }: PullToRefreshP
     }
   }, []);
 
-  const handleTouchMove = useCallback(
-    (e: React.TouchEvent) => {
-      if (!isPulling || isRefreshing) return;
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isPulling || isRefreshing) return;
 
-      currentY.current = e.touches[0]?.clientY ?? startY.current;
-      const distance = Math.min(currentY.current - startY.current, maxPull);
+    currentY.current = e.touches[0]?.clientY ?? startY.current;
+    const distance = Math.min(currentY.current - startY.current, maxPull);
 
-      if (distance > 0) {
-        setPullDistance(distance);
-      }
-    },
-    [isPulling, isRefreshing],
-  );
+    if (distance > 0) {
+      setPullDistance(distance);
+    }
+  }, [isPulling, isRefreshing]);
 
   const handleTouchEnd = useCallback(async () => {
     if (!isPulling) return;
@@ -78,26 +75,22 @@ export function PullToRefresh({ children, onRefresh, className }: PullToRefreshP
       {/* مؤشر التحديث */}
       <div
         className={cn(
-          "absolute inset-x-0 z-10 mx-auto flex w-fit items-center justify-center transition-all duration-200",
-          pullDistance > 0 || isRefreshing ? "opacity-100" : "opacity-0",
+          "absolute inset-x-0 mx-auto w-fit flex items-center justify-center transition-all duration-200 z-10",
+          (pullDistance > 0 || isRefreshing) ? "opacity-100" : "opacity-0"
         )}
         style={{
           top: Math.min(pullDistance - 40, 20),
           transform: `translateX(-50%) rotate(${isRefreshing ? 0 : rotation}deg)`,
         }}
       >
-        <div
-          className={cn(
-            "flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card shadow-lg",
-            isRefreshing && "animate-spin",
-          )}
-        >
-          <RefreshCw
-            className={cn(
-              "h-4 w-4 text-primary",
-              pullDistance >= threshold && !isRefreshing && "text-green-500",
-            )}
-          />
+        <div className={cn(
+          "w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center shadow-lg",
+          isRefreshing && "animate-spin"
+        )}>
+          <RefreshCw className={cn(
+            "h-4 w-4 text-primary",
+            pullDistance >= threshold && !isRefreshing && "text-green-500"
+          )} />
         </div>
       </div>
 

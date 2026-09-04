@@ -6,10 +6,12 @@ Transformations (docs/30-architecture/05-UI-DESIGN-SYSTEM.md §6 — RTL rules):
   * physical → logical Tailwind classes (ml→ms, pl→ps, left→start, text-left→text-start, …)
   * centering idiom `left-1/2 -translate-x-1/2` → `inset-x-0 mx-auto w-fit`
   * `@radix-ui/react-*` → `radix-ui` meta-package namespaces
-  * `"use client"` directive on every component file
+  * `"use client"` directive only on files that need the client runtime (hooks/Radix/handlers);
+    presentational files (button, card, badge, alert, table …) stay RSC-safe
   * `@/hooks/*` imports kept (hooks are ported too)
 
-Usage: python3 app/scripts/port-ui.py   (idempotent — re-run any time)
+Usage: python3 app/scripts/port-ui.py && (cd app && pnpm eslint --fix src/components/ui)
+       (idempotent — re-run any time; the eslint pass normalises `import type`)
 """
 from __future__ import annotations
 
@@ -242,6 +244,16 @@ def _sidebar(code: str) -> str:
     )
 
 
+def _stat_card(code: str) -> str:
+    # Add `valueClassName` (long values such as dates need a smaller size) and translate the trend caption key.
+    code = code.replace("  description?: string;\n  className?: string;\n}", "  description?: string;\n  className?: string;\n  valueClassName?: string;\n}")
+    code = code.replace("export function StatCard({ title, value, icon: Icon, trend, description, className }: StatCardProps) {",
+                        "export function StatCard({ title, value, icon: Icon, trend, description, className, valueClassName }: StatCardProps) {")
+    code = code.replace('<p className="text-3xl font-bold text-foreground">{value}</p>',
+                        '<p className={cn("text-3xl font-bold text-foreground", valueClassName)}>{value}</p>')
+    return code
+
+
 FILE_PATCHES = {
     "carousel.tsx": _carousel,
     "dialog.tsx": _generic_any,
@@ -250,7 +262,24 @@ FILE_PATCHES = {
     "input-group.tsx": _input_group,
     "pagination.tsx": _pagination,
     "sidebar.tsx": _sidebar,
+    "stat-card.tsx": _stat_card,
 }
+
+
+CLIENT_MARKERS = (
+    "React.use", "useState", "useEffect", "useRef", "useMemo", "useCallback", "useContext", "useId",
+    "useSyncExternalStore", "useLayoutEffect", "useReducer", "useTransition", "useImperativeHandle",
+    'from "radix-ui"', 'from "cmdk"', 'from "vaul"', 'from "sonner"', 'from "recharts"', 'from "embla',
+    'from "react-day-picker"', 'from "input-otp"', 'from "react-resizable-panels"', 'from "react-hook-form"',
+    'from "next-themes"', "onClick", "onChange", "onKeyDown", "onTouch", "onPointer", "onScroll",
+    "window.", "document.", "navigator.", "createContext",
+)
+
+
+def needs_client(code: str) -> bool:
+    # Radix `Slot` is hook-free and RSC-safe (shadcn upstream ships button/badge without "use client").
+    probe = code.replace('import { Slot as SlotPrimitive } from "radix-ui";', "")
+    return any(m in probe for m in CLIENT_MARKERS)
 
 
 def port_radix(code: str) -> str:
@@ -292,8 +321,12 @@ def port_file(src: Path, dst: Path) -> None:
         code = code.replace('  const { isMobile, state } = useSidebar();\n', '  const { isMobile, state } = useSidebar();\n  const dir = useDirection();\n')
         code = code.replace('        side="end"\n        align="center"\n        hidden={state !== "collapsed" || isMobile}',
                             '        side={toPhysicalSide("end", dir)}\n        align="center"\n        hidden={state !== "collapsed" || isMobile}')
-    if not code.lstrip().startswith('"use client"'):
+    # Only mark files as client components when they actually need the client runtime; pure presentational
+    # files (button, card, badge, alert …) stay server-safe so RSC pages can call e.g. buttonVariants().
+    if not code.lstrip().startswith('"use client"') and needs_client(code):
         code = '"use client";\n\n' + code
+    elif code.lstrip().startswith('"use client"') and not needs_client(code):
+        code = re.sub(r'^\s*"use client";\s*\n', "", code, count=1)
     dst.parent.mkdir(parents=True, exist_ok=True)
     dst.write_text(code, encoding="utf-8")
 

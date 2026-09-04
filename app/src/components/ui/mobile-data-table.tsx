@@ -9,12 +9,7 @@ import { MoreVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cellValue, TablePagination, type Column, type Pagination } from "@/components/ui/data-table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 export interface MobileColumn<T> extends Column<T> {
@@ -44,26 +39,14 @@ interface MobileDataTableProps<T> {
   pagination?: Pagination;
 }
 
-export function MobileDataTable<T>({
-  columns,
-  data,
-  keyExtractor,
-  emptyMessage,
-  actionsLabel = "إجراءات",
-  actions,
-  onItemClick,
-  pagination,
-}: MobileDataTableProps<T>) {
+export function MobileDataTable<T>({ columns, data, keyExtractor, emptyMessage, actionsLabel = "إجراءات", actions, onItemClick, pagination }: MobileDataTableProps<T>) {
   const primaryCol = columns.find((c) => c.primary);
   const secondaryCol = columns.find((c) => c.secondary);
   const badgeCols = columns.filter((c) => c.badge);
   const iconCol = columns.find((c) => c.icon);
-  const visibleCols = columns.filter(
-    (c) => !c.hide && !c.primary && !c.secondary && !c.badge && !c.icon && !c.action,
-  );
+  const visibleCols = columns.filter((c) => !c.hide && !c.primary && !c.secondary && !c.badge && !c.icon && !c.action);
 
-  if (data.length === 0)
-    return <div className="py-8 text-center text-sm text-muted-foreground">{emptyMessage}</div>;
+  if (data.length === 0) return <div className="py-8 text-center text-sm text-muted-foreground">{emptyMessage}</div>;
 
   return (
     <div className="space-y-2">
@@ -89,9 +72,7 @@ export function MobileDataTable<T>({
                 <div className="flex flex-col gap-1">
                   {badgeCols.map((col) => (
                     <div key={col.key} className="mobile-badge">
-                      {col.render ? (
-                        col.render(item)
-                      ) : (
+                      {col.render ? col.render(item) : (
                         <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
                           {cellValue(item, col)}
                         </Badge>
@@ -103,16 +84,9 @@ export function MobileDataTable<T>({
             </>
           );
           return (
-            <li
-              key={keyExtractor(item)}
-              className={cn("flex items-center", index !== data.length - 1 && "border-b border-border")}
-            >
+            <li key={keyExtractor(item)} className={cn("flex items-center", index !== data.length - 1 && "border-b border-border")}>
               {onItemClick ? (
-                <button
-                  type="button"
-                  onClick={() => onItemClick(item)}
-                  className="mobile-list-item min-h-11 flex-1 active:bg-muted/50"
-                >
+                <button type="button" onClick={() => onItemClick(item)} className="mobile-list-item min-h-11 flex-1 active:bg-muted/50">
                   {body}
                 </button>
               ) : (
@@ -128,11 +102,7 @@ export function MobileDataTable<T>({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       {actions.map((action) => (
-                        <DropdownMenuItem
-                          key={action.label}
-                          onClick={() => action.onClick(item)}
-                          className={cn(action.variant === "destructive" && "text-destructive")}
-                        >
+                        <DropdownMenuItem key={action.label} onClick={() => action.onClick(item)} className={cn(action.variant === "destructive" && "text-destructive")}>
                           {action.icon}
                           {action.label}
                         </DropdownMenuItem>

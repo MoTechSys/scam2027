@@ -87,3 +87,13 @@ pnpm test && pnpm lint && pnpm typecheck
 | التاريخ | الجلسة | الناتج | PR |
 |---|---|---|---|
 | 2026-09-04 | 1 — تحليل وتخطيط | `docs/**`, `README.md`, `CHANGELOG.md`, `.gitignore` | #1 |
+
+
+## الجلسة 3 — إكمال P0 (PR #3)
+- أُنجز: P0-04/05/09/12/13/14/15/16 (انظر CHANGELOG «Unreleased»). كل P0 ☑ في خارطة الطريق.
+- أوامر التحقق: `cd app && pnpm check` (typecheck·lint·vitest·build) ثم `pnpm e2e` (يشغّل `pnpm start` تلقائيًا أو يعيد استخدام خادم يعمل على 3000).
+- ملاحظة porter: بعد أي تحديث لمكوّنات shadcn شغّل `python3 scripts/port-ui.py && pnpm eslint --fix src/components/ui` — يضيف `"use client"` فقط عند الحاجة.
+- معروف/متبقٍ: اختبار logout في Playwright معلَّم `fixme` (قائمة Radix + form action) — يُعاد تفعيله بقيادة لوحة المفاتيح؛ CI لم يُنفَّذ بعد على GitHub (أول تشغيل مع هذا الـPR)؛ التالي: P1 حسب `docs/40-plan/01-ROADMAP.md`.
+- حسابات demo: admin@demo.edu/Admin@123456 · academic@demo.edu/Academic@123456 · EMP-0101/Doctor@123456 · 443100001/Student@123456.
+
+> **CI:** الملف `.github/ci.yml.template` يجب نقله يدويًا إلى `.github/workflows/ci.yml` (توكن GitHub App لا يملك صلاحية `workflows`).
