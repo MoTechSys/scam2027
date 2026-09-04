@@ -1,0 +1,39 @@
+# Reference clones of legacy repositories (analysis only — never commit)
+.refs/
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+coverage/
+playwright-report/
+test-results/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Prisma
+app/prisma/*.db
+app/prisma/migrations/**/migration_lock.toml.bak
+
+# Logs / OS / editor
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Sandbox tooling
+supervisord.log
+supervisord.pid
+supervisor.sock
+*.pid
