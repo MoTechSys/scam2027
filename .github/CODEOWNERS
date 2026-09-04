@@ -1,0 +1,7 @@
+# Default owners for everything in the repo
+*                       @MoTechSys
+/docs/                  @MoTechSys
+/app/prisma/            @MoTechSys
+/app/src/lib/auth/      @MoTechSys
+/app/src/proxy.ts       @MoTechSys
+/.github/               @MoTechSys

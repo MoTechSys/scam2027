@@ -12,6 +12,24 @@
 ## [Unreleased]
 
 ### Added
+- App shell: `DashboardLayout`, `Sidebar` (collapsible, tooltips), `Header` (locale/theme toggles, user menu + logout), `BottomNavigation`, `MobileDrawer` — nav derived from the permission matrix (P0-04).
+- Root layout: Cairo font, tenant `--primary`, `dir`/`lang` per locale, skip link, `NextIntlClientProvider` with `now`/`timeZone` (tenant TZ via `x-tenant-tz`), Sonner toaster.
+- Pages: `/login` (Server Action + Auth.js error mapping + `?reason=` messages), `/dashboard` (real role-gated stats, my sessions with revoke, recent audit), `/developer`, `/unauthorized`, `/tenant-not-found`, `/tenant-suspended`, `not-found`, `error` (P0-12).
+- Session actions: `logoutAction` (revokes DB session + audit), `revokeSessionAction`, `setLocaleAction`.
+- `/api/health` (P0-13).
+- Tests: 6 unit suites (permissions catalogue ↔ matrix doc, ratelimit, password, safe-action, login helpers, tenant resolver) — 32 passing; Playwright config (desktop-chromium 1280×800 + iPhone 12 390×844) with auth/tenant/a11y (axe WCAG 2.1 AA) specs — 26 passing, logout spec `fixme` (P0-14).
+- GitHub Actions CI (postgres:17, migrate, RLS, seed, lint, typecheck, vitest, build, Playwright, gitleaks, audit), PR template, CODEOWNERS (P0-15/16).
+
+### Changed
+- `scripts/port-ui.py` adds `"use client"` only when a component actually needs it (14 UI primitives are now RSC-safe); `StatCard` gained `valueClassName`.
+- `proxy.ts`: removed disallowed `runtime` config; forwards `x-tenant-tz`.
+
+### Fixed
+- Non-existent Tailwind utilities `inset-inline-*`/`inset-block-*` replaced with `inset-x-0`/`inset-y-0`/`start-*`.
+- RTL sidebar active indicator drawn on the wrong edge (direction-aware inset box-shadow).
+- next-intl `ENVIRONMENT_FALLBACK` error from client `relativeTime`.
+
+### Added
 - **P0 — أساس التطبيق (`app/`)**: Next.js 16.3.4 + React 19 + TypeScript strict + pnpm، ESLint (next + jsx-a11y strict + قاعدة تمنع فئات الاتجاه الفيزيائي `ml-/pl-/left-…` + منع `PrismaClient` خارج `lib/db`)، Prettier، رؤوس أمان HTTP.
 - **نظام التصميم**: `globals.css` مع رموز Omnitrix الكاملة (`@theme inline`)، ثيم فاتح، خصائص منطقية RTL، `prefers-reduced-motion`.
 - **مكوّنات UI (59)**: نقل shadcn/ui من التراث عبر سكربت `scripts/port-ui.py` (radix-ui meta-package، فئات منطقية، `"use client"`), مع `chart`/`resizable`/`carousel` من upstream (recharts 3 / panels 4) و`data-table`/`mobile-data-table`/`mobile-list` مُعاد كتابتها (مُنمَّطة، وصول لوحة المفاتيح، أهداف 44px). خطافات `useIsMobile`, `useMediaQuery`, `useDirection`, `usePersistFn`, `useComposition`.
