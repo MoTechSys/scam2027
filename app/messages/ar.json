@@ -1,5 +1,9 @@
 {
-  "app": { "name": "SCAM", "tagline": "نظام إدارة التعلم الجامعي", "skipToContent": "تخطَّ إلى المحتوى" },
+  "app": {
+    "name": "SCAM",
+    "tagline": "نظام إدارة التعلم الجامعي",
+    "skipToContent": "تخطَّ إلى المحتوى"
+  },
   "common": {
     "loading": "جارٍ التحميل…",
     "save": "حفظ",
@@ -17,7 +21,12 @@
     "toggleTheme": "تبديل السمة",
     "language": "اللغة",
     "arabic": "العربية",
-    "english": "English"
+    "english": "English",
+    "confirm": "تأكيد",
+    "close": "إغلاق",
+    "optional": "اختياري",
+    "filters": "تصفية",
+    "reset": "إعادة ضبط"
   },
   "auth": {
     "loginTitle": "تسجيل الدخول",
@@ -122,5 +131,110 @@
     "stack": "الحزمة التقنية",
     "contact": "للتواصل والدعم التقني"
   },
-  "health": { "ok": "يعمل", "degraded": "متدهور" }
+  "health": {
+    "ok": "يعمل",
+    "degraded": "متدهور"
+  },
+  "users": {
+    "title": "المستخدمون",
+    "subtitle": "إدارة حسابات الجامعة وأدوارها وحالاتها",
+    "searchPlaceholder": "ابحث بالاسم أو البريد أو الرقم الأكاديمي…",
+    "roleFilter": "كل الأدوار",
+    "allRoles": "كل الأدوار",
+    "tabs": {
+      "ALL": "الكل",
+      "ACTIVE": "نشط",
+      "PENDING_ACTIVATION": "غير مفعّل",
+      "FROZEN": "مجمّد",
+      "DISABLED": "موقوف",
+      "DELETED": "سلة المحذوفات"
+    },
+    "status": {
+      "ACTIVE": "نشط",
+      "PENDING_ACTIVATION": "غير مفعّل",
+      "FROZEN": "مجمّد",
+      "DISABLED": "موقوف",
+      "DELETED": "محذوف"
+    },
+    "columns": {
+      "name": "الاسم",
+      "academicId": "الرقم الأكاديمي",
+      "email": "البريد",
+      "roles": "الأدوار",
+      "status": "الحالة",
+      "lastLogin": "آخر دخول",
+      "createdAt": "أُنشئ"
+    },
+    "never": "لم يسجّل بعد",
+    "empty": "لا يوجد مستخدمون مطابقون",
+    "total": "{count} مستخدم",
+    "actions": {
+      "create": "مستخدم جديد",
+      "view": "عرض",
+      "edit": "تعديل",
+      "activate": "تفعيل",
+      "freeze": "تجميد",
+      "disable": "إيقاف",
+      "delete": "حذف",
+      "restore": "استعادة",
+      "resetPassword": "إعادة تعيين كلمة المرور",
+      "assignRoles": "تعيين الأدوار",
+      "revokeSessions": "إنهاء كل الجلسات"
+    },
+    "form": {
+      "name": "الاسم الكامل",
+      "email": "البريد الإلكتروني",
+      "phone": "الهاتف",
+      "academicId": "الرقم الأكاديمي",
+      "academicIdHint": "اتركه فارغًا للتوليد التلقائي",
+      "title": "المسمّى الوظيفي",
+      "roles": "الأدوار",
+      "password": "كلمة المرور",
+      "passwordHint": "اتركها فارغة لتوليد كلمة مؤقتة تُعرض مرة واحدة",
+      "statusActive": "تفعيل الحساب فورًا",
+      "mustChange": "إلزام تغيير كلمة المرور عند أول دخول",
+      "locale": "اللغة"
+    },
+    "createTitle": "إنشاء مستخدم",
+    "editTitle": "تعديل المستخدم",
+    "rolesTitle": "أدوار المستخدم",
+    "resetTitle": "إعادة تعيين كلمة المرور",
+    "resetHint": "سيتم إنهاء كل جلسات المستخدم وإلزامه بتغيير كلمة المرور.",
+    "tempPasswordTitle": "كلمة المرور المؤقتة",
+    "tempPasswordBody": "انسخها الآن؛ لن تُعرض مجددًا.",
+    "copy": "نسخ",
+    "copied": "تم النسخ",
+    "confirm": {
+      "delete": "سيُنقل المستخدم إلى سلة المحذوفات وتُنهى جلساته. يمكن استعادته خلال 30 يومًا.",
+      "freeze": "سيُمنع المستخدم من الدخول وتُنهى جلساته فورًا.",
+      "disable": "سيُوقف الحساب نهائيًا حتى إعادة تفعيله.",
+      "revokeSessions": "سيُسجَّل المستخدم خروجًا من كل الأجهزة.",
+      "proceed": "تأكيد"
+    },
+    "toast": {
+      "created": "تم إنشاء المستخدم {academicId}",
+      "updated": "تم حفظ التغييرات",
+      "statusChanged": "تم تغيير الحالة",
+      "deleted": "تم نقل المستخدم إلى السلة",
+      "restored": "تمت الاستعادة",
+      "rolesUpdated": "تم تحديث الأدوار",
+      "passwordReset": "تمت إعادة تعيين كلمة المرور",
+      "sessionsRevoked": "تم إنهاء الجلسات"
+    },
+    "detail": {
+      "info": "البيانات",
+      "security": "الأمان",
+      "activity": "النشاط",
+      "activeSessions": "جلسات نشطة",
+      "failedLogins": "محاولات فاشلة",
+      "lockedUntil": "مقفل حتى",
+      "mustChange": "يجب تغيير كلمة المرور",
+      "emailVerified": "البريد مؤكَّد",
+      "notVerified": "غير مؤكَّد",
+      "noAudit": "لا يوجد نشاط مسجَّل",
+      "by": "بواسطة {name}",
+      "system": "النظام",
+      "self": "هذا حسابك — بعض الإجراءات معطّلة"
+    }
+  }
 }

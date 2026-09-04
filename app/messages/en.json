@@ -1,5 +1,9 @@
 {
-  "app": { "name": "SCAM", "tagline": "University Learning Management System", "skipToContent": "Skip to content" },
+  "app": {
+    "name": "SCAM",
+    "tagline": "University Learning Management System",
+    "skipToContent": "Skip to content"
+  },
   "common": {
     "loading": "Loading…",
     "save": "Save",
@@ -17,7 +21,12 @@
     "toggleTheme": "Toggle theme",
     "language": "Language",
     "arabic": "العربية",
-    "english": "English"
+    "english": "English",
+    "confirm": "Confirm",
+    "close": "Close",
+    "optional": "Optional",
+    "filters": "Filters",
+    "reset": "Reset"
   },
   "auth": {
     "loginTitle": "Sign in",
@@ -122,5 +131,110 @@
     "stack": "Tech stack",
     "contact": "Contact & technical support"
   },
-  "health": { "ok": "ok", "degraded": "degraded" }
+  "health": {
+    "ok": "ok",
+    "degraded": "degraded"
+  },
+  "users": {
+    "title": "Users",
+    "subtitle": "Manage university accounts, roles and statuses",
+    "searchPlaceholder": "Search by name, email or academic ID…",
+    "roleFilter": "All roles",
+    "allRoles": "All roles",
+    "tabs": {
+      "ALL": "All",
+      "ACTIVE": "Active",
+      "PENDING_ACTIVATION": "Pending",
+      "FROZEN": "Frozen",
+      "DISABLED": "Disabled",
+      "DELETED": "Trash"
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "PENDING_ACTIVATION": "Pending",
+      "FROZEN": "Frozen",
+      "DISABLED": "Disabled",
+      "DELETED": "Deleted"
+    },
+    "columns": {
+      "name": "Name",
+      "academicId": "Academic ID",
+      "email": "Email",
+      "roles": "Roles",
+      "status": "Status",
+      "lastLogin": "Last login",
+      "createdAt": "Created"
+    },
+    "never": "Never",
+    "empty": "No matching users",
+    "total": "{count} users",
+    "actions": {
+      "create": "New user",
+      "view": "View",
+      "edit": "Edit",
+      "activate": "Activate",
+      "freeze": "Freeze",
+      "disable": "Disable",
+      "delete": "Delete",
+      "restore": "Restore",
+      "resetPassword": "Reset password",
+      "assignRoles": "Assign roles",
+      "revokeSessions": "End all sessions"
+    },
+    "form": {
+      "name": "Full name",
+      "email": "Email",
+      "phone": "Phone",
+      "academicId": "Academic ID",
+      "academicIdHint": "Leave empty to auto-generate",
+      "title": "Job title",
+      "roles": "Roles",
+      "password": "Password",
+      "passwordHint": "Leave empty to generate a one-time temporary password",
+      "statusActive": "Activate account now",
+      "mustChange": "Require password change on first login",
+      "locale": "Language"
+    },
+    "createTitle": "Create user",
+    "editTitle": "Edit user",
+    "rolesTitle": "User roles",
+    "resetTitle": "Reset password",
+    "resetHint": "All sessions will end and the user must change the password.",
+    "tempPasswordTitle": "Temporary password",
+    "tempPasswordBody": "Copy it now; it will not be shown again.",
+    "copy": "Copy",
+    "copied": "Copied",
+    "confirm": {
+      "delete": "The user moves to trash and all sessions end. Restorable within 30 days.",
+      "freeze": "The user is blocked from signing in and all sessions end now.",
+      "disable": "The account is disabled until re-activated.",
+      "revokeSessions": "The user is signed out from every device.",
+      "proceed": "Confirm"
+    },
+    "toast": {
+      "created": "User {academicId} created",
+      "updated": "Changes saved",
+      "statusChanged": "Status changed",
+      "deleted": "User moved to trash",
+      "restored": "Restored",
+      "rolesUpdated": "Roles updated",
+      "passwordReset": "Password reset",
+      "sessionsRevoked": "Sessions ended"
+    },
+    "detail": {
+      "info": "Details",
+      "security": "Security",
+      "activity": "Activity",
+      "activeSessions": "Active sessions",
+      "failedLogins": "Failed logins",
+      "lockedUntil": "Locked until",
+      "mustChange": "Must change password",
+      "emailVerified": "Email verified",
+      "notVerified": "Not verified",
+      "noAudit": "No recorded activity",
+      "by": "by {name}",
+      "system": "System",
+      "self": "This is your account — some actions are disabled"
+    }
+  }
 }
