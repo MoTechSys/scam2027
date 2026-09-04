@@ -21,17 +21,17 @@
 
 | # | المهمة | المتطلبات | حالة |
 |---|---|---|---|
-| P0-01 | تهيئة `app/` بـ Next.js 16 + TS strict + pnpm + ESLint (next, jsx-a11y, no-restricted-imports, logical-props) + Prettier | NFR-MNT-001 | ☐ |
-| P0-02 | Tailwind v4 + tokens Omnitrix + خط Cairo + RTL + `globals.css` | A5 §1 | ☐ |
-| P0-03 | نقل مكوّنات shadcn/ui (60) + `mobile-data-table`, `mobile-list`, `page-tabs`, `pull-to-refresh`, `stat-card` | A5 §4 | ☐ |
+| P0-01 | تهيئة `app/` بـ Next.js 16 + TS strict + pnpm + ESLint (next, jsx-a11y, no-restricted-imports, logical-props) + Prettier | NFR-MNT-001 | ☑ |
+| P0-02 | Tailwind v4 + tokens Omnitrix + خط Cairo + RTL + `globals.css` | A5 §1 | ☑ |
+| P0-03 | نقل مكوّنات shadcn/ui (60) + `mobile-data-table`, `mobile-list`, `page-tabs`, `pull-to-refresh`, `stat-card` | A5 §4 | ☑ |
 | P0-04 | التخطيط: `DashboardLayout`, `Sidebar`, `Header`, `BottomNavigation`, `MobileDrawer` (مبنية من مصفوفة الصلاحيات) | A5 §3 | ☐ |
 | P0-05 | `next-intl` بنية + `ar.json` أولي + `en.json` هيكلي | FR-I18N-001 | ☐ |
-| P0-06 | Prisma + Postgres (docker-compose) + `schema.prisma` P0: Tenant, TenantBranding, Subscription, User, UserProfile, Role, Permission, RolePermission, UserRole, Session, LoginAttempt, VerificationCode, AuditLog, TenantSetting | A2 | ☐ |
-| P0-07 | RLS migration generator + `db(tenantId)` extension + دور `app_user` | A1 §2-3 | ☐ |
-| P0-08 | `env.ts` (Zod) + `logger` (pino) + `result.ts` + `audit.ts` + `ratelimit.ts` | R2 V13/V16 | ☐ |
-| P0-09 | Auth.js Credentials + Argon2id + جلسة DB + قفل + `middleware.ts` (tenant + auth + locale) | FR-AUTH-001/002/006/011, FR-TEN-002/003 | ☐ |
-| P0-10 | `permissions.ts` (المصفوفة الكاملة `as const`) + `rbac.ts` (`requireUser`, `assertPermission`, …) + اختبار تطابق DB↔ملف | P2 §3 | ☐ |
-| P0-11 | `seed.ts`: مستأجر `demo` + 4 أدوار نظامية بصلاحياتها + مستخدمون (admin/academic/instructor/student) + بنية أكاديمية صغيرة واقعية | — | ☐ |
+| P0-06 | Prisma + Postgres (docker-compose) + `schema.prisma` P0: Tenant, TenantBranding, Subscription, User, UserProfile, Role, Permission, RolePermission, UserRole, Session, LoginAttempt, VerificationCode, AuditLog, TenantSetting | A2 | ☑ |
+| P0-07 | RLS migration generator + `db(tenantId)` extension + دور `app_user` | A1 §2-3 | ☑ |
+| P0-08 | `env.ts` (Zod) + `logger` (pino) + `result.ts` + `audit.ts` + `ratelimit.ts` | R2 V13/V16 | ☑ |
+| P0-09 | Auth.js Credentials + Argon2id + جلسة DB + قفل + `middleware.ts` (tenant + auth + locale) | FR-AUTH-001/002/006/011, FR-TEN-002/003 | ◐ |
+| P0-10 | `permissions.ts` (المصفوفة الكاملة `as const`) + `rbac.ts` (`requireUser`, `assertPermission`, …) + اختبار تطابق DB↔ملف | P2 §3 | ☑ |
+| P0-11 | `seed.ts`: مستأجر `demo` + 4 أدوار نظامية بصلاحياتها + مستخدمون (admin/academic/instructor/student) + بنية أكاديمية صغيرة واقعية | — | ☑ |
 | P0-12 | صفحات: `/login` (بالعلامة التجارية)، `/dashboard` (إحصائيات حقيقية حسب الدور — مطابق للقطة المرجعية)، `/developer`, `/unauthorized`, `/404`, `/tenant-not-found` | FR-SYS-002, FR-RPT-007 | ☐ |
 | P0-13 | `/api/health` | FR-SYS-003 | ☐ |
 | P0-14 | Vitest (unit + integration بـ DB اختبار) + Playwright (projects: desktop-chromium 1280×800, mobile-safari 390×844) + axe + سكربت crawl لكل مسارات Sidebar لكل دور | GAP-21 | ☐ |

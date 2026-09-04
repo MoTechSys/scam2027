@@ -1,0 +1,351 @@
+// scam2027 — Prisma schema (P0 scope)
+// Source of truth: docs/30-architecture/02-DATA-MODEL.md, 01-MULTI-TENANCY.md
+//
+// Conventions (docs/30-architecture/02-DATA-MODEL.md §3):
+//  - uuid PKs (@db.Uuid) · createdAt/updatedAt everywhere
+//  - every tenant-scoped model has `tenantId` + `@@index([tenantId, ...])`
+//    and is protected by Postgres RLS (see prisma/migrations/*_rls)
+//  - composite FKs `(tenantId, <fk>)` → `(tenantId, id)` prevent cross-tenant links
+//  - soft delete (`deletedAt`) for User, Role (+ Course/Offering/File/… in P1+)
+//  - platform tables (no tenantId): Tenant, TenantBranding, Subscription, PlatformUser, PlatformAuditLog, Permission
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // runtime: app_user (RLS enforced)
+  directUrl = env("DIRECT_DATABASE_URL") // migrations/seed: owner role
+}
+
+// ───────────────────────────── Platform ─────────────────────────────
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+enum Plan {
+  TRIAL
+  BASIC
+  PRO
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  EXPIRED
+  CANCELLED
+}
+
+model Tenant {
+  id           String       @id @default(uuid()) @db.Uuid
+  slug         String       @unique // ksu → ksu.<ROOT_DOMAIN>
+  name         String
+  nameEn       String?
+  customDomain String?      @unique // lms.ksu.edu.sa
+  status       TenantStatus @default(ACTIVE)
+  locale       String       @default("ar")
+  timezone     String       @default("Asia/Riyadh")
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  branding     TenantBranding?
+  subscription Subscription?
+  settings     TenantSetting[]
+
+  users             User[]
+  roles             Role[]
+  rolePermissions   RolePermission[]
+  userRoles         UserRole[]
+  sessions          Session[]
+  loginAttempts     LoginAttempt[]
+  verificationCodes VerificationCode[]
+  auditLogs         AuditLog[]
+  userProfiles      UserProfile[]
+}
+
+model TenantBranding {
+  tenantId     String  @id @db.Uuid
+  logoUrl      String?
+  faviconUrl   String?
+  primaryColor String  @default("#39ff14")
+  accentColor  String?
+  loginMessage String?
+  updatedAt    DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+model Subscription {
+  tenantId           String             @id @db.Uuid
+  plan               Plan               @default(TRIAL)
+  maxUsers           Int                @default(500)
+  maxStorageGB       Int                @default(20)
+  maxAiTokensMonthly Int                @default(1000000)
+  startsAt           DateTime           @default(now())
+  endsAt             DateTime
+  status             SubscriptionStatus @default(ACTIVE)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+/// Key/value settings per tenant (category.key). Secret values are AES-256-GCM encrypted.
+model TenantSetting {
+  tenantId  String   @db.Uuid
+  category  String
+  key       String
+  value     Json
+  isSecret  Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@id([tenantId, category, key])
+}
+
+/// Super admins of the platform (no tenant). Login at the root domain.
+model PlatformUser {
+  id             String    @id @default(uuid()) @db.Uuid
+  email          String    @unique
+  name           String
+  passwordHash   String
+  isActive       Boolean   @default(true)
+  sessionVersion Int       @default(1)
+  lastLoginAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  auditLogs PlatformAuditLog[]
+}
+
+model PlatformAuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  actorId   String?  @db.Uuid
+  action    String
+  entity    String
+  entityId  String?
+  tenantId  String?  @db.Uuid
+  before    Json?
+  after     Json?
+  ip        String?
+  userAgent String?
+  requestId String?
+  createdAt DateTime @default(now())
+
+  actor PlatformUser? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([tenantId, createdAt])
+}
+
+/// Global permission catalogue — must match src/lib/auth/permissions.ts (tested).
+model Permission {
+  code        String   @id // e.g. "user.create"
+  group       String // e.g. "user"
+  description String
+  createdAt   DateTime @default(now())
+
+  rolePermissions RolePermission[]
+}
+
+// ───────────────────────── Identity & Access (tenant) ─────────────────────────
+
+enum UserStatus {
+  PENDING_ACTIVATION
+  ACTIVE
+  FROZEN
+  DISABLED
+}
+
+model User {
+  id                 String     @id @default(uuid()) @db.Uuid
+  tenantId           String     @db.Uuid
+  academicId         String // university id / employee id (auto-generated when absent)
+  email              String
+  name               String
+  phone              String?
+  passwordHash       String?
+  status             UserStatus @default(PENDING_ACTIVATION)
+  mustChangePassword Boolean    @default(false)
+  sessionVersion     Int        @default(1)
+  locale             String     @default("ar")
+  emailVerifiedAt    DateTime?
+  lastLoginAt        DateTime?
+  failedLoginCount   Int        @default(0)
+  lockedUntil        DateTime?
+  deletedAt          DateTime?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  profile           UserProfile?
+  roles             UserRole[]
+  sessions          Session[]
+  verificationCodes VerificationCode[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, email])
+  @@unique([tenantId, academicId])
+  @@index([tenantId, status])
+  @@index([tenantId, deletedAt])
+}
+
+model UserProfile {
+  tenantId  String   @db.Uuid
+  userId    String   @db.Uuid
+  avatarUrl String?
+  bio       String?
+  title     String? // e.g. "أستاذ مشارك"
+  gender    String?
+  birthDate DateTime?
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Cascade)
+
+  @@id([tenantId, userId])
+  @@unique([userId])
+}
+
+model Role {
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @db.Uuid
+  code        String // TENANT_ADMIN | ACADEMIC_ADMIN | INSTRUCTOR | STUDENT | custom slug
+  name        String
+  nameEn      String?
+  description String?
+  isSystem    Boolean   @default(false)
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  permissions RolePermission[]
+  users       UserRole[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, code])
+  @@index([tenantId, deletedAt])
+}
+
+model RolePermission {
+  tenantId       String   @db.Uuid
+  roleId         String   @db.Uuid
+  permissionCode String
+  createdAt      DateTime @default(now())
+
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  role       Role       @relation(fields: [tenantId, roleId], references: [tenantId, id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionCode], references: [code], onDelete: Cascade)
+
+  @@id([tenantId, roleId, permissionCode])
+  @@index([tenantId, permissionCode])
+}
+
+model UserRole {
+  tenantId   String   @db.Uuid
+  userId     String   @db.Uuid
+  roleId     String   @db.Uuid
+  assignedBy String?  @db.Uuid
+  createdAt  DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Cascade)
+  role   Role   @relation(fields: [tenantId, roleId], references: [tenantId, id], onDelete: Cascade)
+
+  @@id([tenantId, userId, roleId])
+  @@index([tenantId, roleId])
+}
+
+/// Server-side session record (revocable). The Auth.js JWT carries `sid`; requireUser() validates it.
+model Session {
+  id         String    @id @default(uuid()) @db.Uuid
+  tenantId   String    @db.Uuid
+  userId     String    @db.Uuid
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime  @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  revokedBy  String?   @db.Uuid
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Cascade)
+
+  @@index([tenantId, userId, revokedAt])
+  @@index([expiresAt])
+}
+
+model LoginAttempt {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  email     String
+  userId    String?  @db.Uuid
+  success   Boolean
+  reason    String? // INVALID_CREDENTIALS | LOCKED | FROZEN | PENDING | OK
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, email, createdAt])
+  @@index([createdAt])
+}
+
+enum VerificationPurpose {
+  ACTIVATE
+  RESET_PASSWORD
+  MFA
+  EMAIL_CHANGE
+}
+
+model VerificationCode {
+  id         String              @id @default(uuid()) @db.Uuid
+  tenantId   String              @db.Uuid
+  userId     String              @db.Uuid
+  purpose    VerificationPurpose
+  codeHash   String // sha256(code + pepper)
+  attempts   Int                 @default(0)
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime            @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Cascade)
+
+  @@index([tenantId, userId, purpose, consumedAt])
+  @@index([expiresAt])
+}
+
+// ───────────────────────────── System (tenant) ─────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  actorId   String?  @db.Uuid
+  action    String // permission-like verb e.g. "user.create", "auth.login"
+  entity    String // "User" | "Role" | ...
+  entityId  String?
+  before    Json?
+  after     Json?
+  ip        String?
+  userAgent String?
+  requestId String?
+  createdAt DateTime @default(now())
+
+  // No FK to User on purpose: audit rows must survive hard-deletion of the actor (PDPL retention).
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, entity, entityId])
+  @@index([tenantId, actorId, createdAt])
+}

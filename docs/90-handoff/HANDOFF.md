@@ -32,6 +32,12 @@
 | 3 | تحديد النطاق الرئيسي المستقبلي (مثال `scam.app`) | لتصميم النطاقات الفرعية للمستأجرين (يمكن تأجيله؛ التطوير على `localhost` بمستأجر `demo`) |
 | 4 | تحديد مزوّد AI المفضّل ومفتاح تطوير (OpenAI-compatible أو Gemini) | لـ P2 |
 
+## 1b. الجلسة 2 — تنفيذ P0 (جزئي)
+**منجز (☑):** P0-01, 02, 03, 06, 07, 08, 10, 11. **جزئي (◐):** P0-09 (Auth.js + Argon2id + Session + قفل جاهزة؛ **ناقص** `src/proxy.ts` و`app/api/auth/[...nextauth]/route.ts`).
+**غير مبدوء:** P0-04 (Layout), P0-05 (next-intl — `next.config.ts` يشير إلى `src/i18n/request.ts` غير الموجود ⇒ `pnpm build` يفشل حاليًا), P0-12 (الصفحات), P0-13 (`/api/health`), P0-14 (Playwright), P0-15 (CI), P0-16 (PR template/CODEOWNERS).
+**حالة الجودة:** `pnpm lint` ✅ · `pnpm typecheck` ✅ · `pnpm test` ✅ (6/6 عزل مستأجرين) · `pnpm build` ❌ (بسبب i18n المفقود ولا توجد صفحات بعد).
+**سكربتات مهمة:** `python3 app/scripts/port-ui.py` (إعادة نقل المكوّنات — idempotent)، `python3 app/scripts/gen-permissions.py`، `pnpm tsx scripts/gen-rls.ts > prisma/migrations/<ts>_rls/migration.sql` (أعِد تشغيله عند إضافة جداول بـ `tenantId`).
+
 ## 3. كيف تبدأ بيئة جديدة (Bootstrap)
 
 ```bash
@@ -44,9 +50,27 @@ for r in S-ACM-Project s-acm-frontend s-acm-master s-acm s-acm-backend SCAM scam
 ```
 عند بدء P0-01 سيُضاف قسم "تشغيل التطبيق" هنا (`pnpm install`, `docker compose up -d db`, `pnpm prisma migrate dev`, `pnpm seed`, `pnpm dev`).
 
+### 3b. أوامر الجلسة 2
+```bash
+sudo service postgresql start
+cd app && cp .env.example .env   # ثم ولّد AUTH_SECRET و APP_ENCRYPTION_KEY
+pnpm install
+pnpm prisma migrate deploy            # يستخدم DIRECT_DATABASE_URL
+pnpm tsx prisma/seed.ts
+pnpm test && pnpm lint && pnpm typecheck
+```
+
 ## 4. بيانات الدخول التجريبية (بعد P0-11)
 
 انظر `docs/50-quality/01-TESTING-STRATEGY.md` §4 (مستأجر `demo`؛ كلمات مرور تطوير فقط).
+
+| الدور | البريد | الرقم الأكاديمي | كلمة المرور |
+|---|---|---|---|
+| مدير المستأجر | admin@demo.edu | EMP-0001 | Admin@123456 |
+| مدير أكاديمي | academic@demo.edu | EMP-0002 | Academic@123456 |
+| مدرّس | dr.ahmad@demo.edu | EMP-0101 | Doctor@123456 |
+| طالب | student1@demo.edu | 443100001 | Student@123456 |
+| مدير المنصة | super@scam.local | — | Super@123456 |
 
 ## 5. المشاكل المعروفة
 
