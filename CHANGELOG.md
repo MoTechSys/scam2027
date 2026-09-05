@@ -11,6 +11,14 @@
 
 ## [Unreleased]
 
+### Added — P1-07 الإشعارات (PR #14)
+- **وحدة `features/notifications`**: `sendNotificationSchema` (رابط داخلي فقط `^/`، أنواع قابلة للإرسال بدون SYSTEM/SECURITY)، `allowedTargetKinds`/`assertCanTarget` (الكل/كلية/قسم/تخصص/مستوى ← `send_to_all`، دور ← `send_to_role`، شعبة ← `send_to_offering` + يدرّسها، أفراد ← ضمن شُعبه)، `recipientsWhere` لكل نوع هدف (نشطون فقط، المرسل مستثنى، الوحدات الأكاديمية عبر التسجيل النشط)، `fanOut` idempotent (createMany skipDuplicates بدفعات 1000) يحترم تفضيل IN_APP إلا لـ SYSTEM/SECURITY، `processFanoutJob` لجمهور > 500 عبر `Job notification.fanout` (قفل PENDING→RUNNING، إعادة محاولة حتى maxAttempts) يُطلق فورًا بـ `after()`.
+- **إجراءات**: send (rate-limit 20/10 دقائق + تدقيق) / preview / search recipients / read / unread / archive / unarchive / readAll / delete (المالك أو `notification.manage`) / preferences (upsert).
+- **`/notifications`**: تبويبات الكل/غير المقروء/الأرشيف/المُرسَلة/التفضيلات مع عدّادات، بحث ومرشّح نوع، توسيع العنصر = مقروء، جدول المُرسَلة مع شريط نسبة القراءة، تفضيلات in-app لكل نوع، حوار إرسال (رقائق نوع الهدف + قائمة اختيار متعدد / بحث أفراد + معاينة عدد المستلمين).
+- **جرس Header** `NotificationBell` بعدّاد أولي من RSC + `GET /api/notifications/unread-count` (كل 60 ث وعند التنقّل/الظهور)؛ عنصر التنقّل فعّال؛ نطاق i18n `notifications` ar/en.
+- **Seed**: 3 إشعارات نموذجية (53 صف مستلم)؛ تنظيف e2e لعناوين `E2E*`.
+- **اختبارات**: unit 18 + integration 12 + e2e 4 (مدير→الكل، طالب inbox/تفضيلات، مدرّس→شعبة؛ الجوال بدون تمرير أفقي).
+
 ### Added — P1-06 الملفات (PR #13)
 - **طبقة تخزين** `src/lib/storage/`: واجهة `StorageAdapter` بمحرّكين `LocalStorage` (مسار آمن، `wx`, 0600، حارس traversal) و`S3Storage` (lib-storage Upload، MinIO/R2 عبر `S3_ENDPOINT`)، عدّاد بايتات + SHA-256 يوقف الرفع عند تجاوز الحد (`StorageLimitError`)، متغيرات `STORAGE_DRIVER/STORAGE_LOCAL_ROOT/MAX_UPLOAD_BYTES/S3_*`.
 - **رفع stream** `POST /api/files/upload`: busboy → معاينة أول 4 KB → فحص magic bytes (`file-type`) مقابل قائمة سماح بالامتدادات (pdf/docx/pptx/xlsx/صور/mp4/zip/txt/csv/md) → حد حجم = min(`MAX_UPLOAD_BYTES`، سعة الاشتراك المتبقية) → مفتاح `tenant/course/uuid.ext` لا يحمل الاسم الأصلي → صف + تدقيق في معاملة واحدة؛ تنظيف الكائن عند أي فشل؛ 401/403/413/429 JSON.

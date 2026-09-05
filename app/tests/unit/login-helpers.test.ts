@@ -41,7 +41,8 @@ describe("visibleNavItems", () => {
     expect(keys).not.toContain("roles"); // shipped in P1-03 but role.view not granted here
     expect(keys).not.toContain("academic"); // shipped in P1-04 but academic.view not granted here
     expect(keys).not.toContain("courses"); // shipped in P1-05 but course.view not granted here
-    expect(keys).not.toContain("notifications"); // still a future phase
+    expect(keys).not.toContain("notifications"); // shipped in P1-07 but notification.view not granted here
+    expect(keys).not.toContain("reports"); // still a future phase (P3)
   });
   it("shows roles when role.view is granted", () => {
     expect(visibleNavItems(new Set(["role.view"])).map((i) => i.key)).toContain("roles");
@@ -53,6 +54,12 @@ describe("visibleNavItems", () => {
     const keys = visibleNavItems(new Set(["course.view", "offering.view"])).map((i) => i.key);
     expect(keys).toContain("courses");
     expect(keys).toContain("offerings");
+  });
+  it("shows notifications (bottom bar) when notification.view is granted (P1-07)", () => {
+    const items = visibleNavItems(new Set(["notification.view"]));
+    const n = items.find((i) => i.key === "notifications");
+    expect(n?.href).toBe("/notifications");
+    expect(n?.bottom).toBe(true);
   });
   it("shows files when file.view is granted (P1-06)", () => {
     const keys = visibleNavItems(new Set(["file.view"])).map((i) => i.key);

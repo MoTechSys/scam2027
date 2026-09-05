@@ -90,9 +90,9 @@ pnpm test && pnpm lint && pnpm typecheck
 - المراجع في `.refs/` قد تحوي `node_modules` لـ UniCore-OS-V2 (~1.3GB) — يمكن حذفها عند الحاجة للمساحة.
 - قد تكون هناك عملية `next` قديمة على المنفذ 3000 في الـ sandbox؛ استخدم `setsid scripts/restart-server.sh` (يقتل ويعيد التشغيل ويطبع `BUILD_ID`).
 
-## 6. الخطوة التالية (محدّث — الجلسة 13)
+## 6. الخطوة التالية (محدّث — الجلسة 14)
 
-**P1-07 الإشعارات** (نموذج + مركز إشعارات `/notifications` + جرس + بريد عبر طابور + مشغّلات التسجيل/الملفات/الدرجات) ثم P1-08 → P1-15 بالترتيب، ثم P2 → P5. مخرجات P1-06 مفصّلة في `STATUS.json` → `progress.nextTask.deliverables` و`AGENTS.md` §5. كل مهمة = PR مستقل بدورة العمل السباعية (`AGENTS.md` §6) وتحديث ROADMAP + REQUIREMENTS + CHANGELOG + HANDOFF + **STATUS.json** في نفس الالتزام.
+**P1-07 الإشعارات — 🔄 قيد التنفيذ (PR #14)**. النطاق المُقرَّر: FR-NTF-001..005 + 008 (إرسال بهدف مرن، inbox، مقروء/أرشفة/حذف، عدّاد الجرس، «المُرسَلة» مع إحصاء القراءة، تفضيلات in-app). **خارج النطاق عمدًا**: البريد (FR-NTF-006 → P1-12/P2) والمشغّلات الآلية (FR-NTF-007 → P2). بعده P1-08 → P1-15 بالترتيب، ثم P2 → P5. المخرجات مفصّلة في `STATUS.json` → `progress.nextTask.deliverables` و`AGENTS.md` §5. كل مهمة = PR مستقل بدورة العمل السباعية (`AGENTS.md` §6) وتحديث ROADMAP + REQUIREMENTS + CHANGELOG + HANDOFF + **STATUS.json** في نفس الالتزام.
 
 ## 7. سجل الجلسات
 
@@ -186,6 +186,19 @@ pnpm test && pnpm lint && pnpm typecheck
 ## الجلسة 11 — إصلاح حلّ المستأجر على رابط المعاينة + أيقونة (PR #11)
 **السبب:** المالك أرسل لقطة «الجامعة غير موجودة» من الرابط العام للـsandbox. `resolveTenant` كان يرجع إلى `DEFAULT_TENANT_SLUG` فقط حين `NODE_ENV !== "production"`، و`next start` يفرض `production`. **الإصلاح:** الرجوع يعتمد على وجود المتغيّر (فارغ في الإنتاج + تحذير في السجل إن استُخدم). أُضيفت `icon.svg` واستُثنيت من مطابق الـproxy. البوابة: tsc 0 · eslint 0 · vitest 114 · Playwright 63 ✓ / 5 skip · build ✓ · كونسول نظيف على الرابط العام.
 **درس:** أي منطق «dev فقط» يجب أن يعتمد على متغيّر بيئة صريح لا على `NODE_ENV`، لأن خادم المعاينة يعمل في وضع الإنتاج.
+
+## الجلسة 14 — P1-07 الإشعارات (PR #14) — ☑ مكتمل
+
+- **البحث (مكتمل):** المتطلبات FR-NTF-001..008 (REQUIREMENTS §الإشعارات)؛ 7 صلاحيات `notification.*` (المدير: الكل؛ الأكاديمي: الكل عدا `manage`؛ المدرّس: `view` + `send`/`send_to_offering`/`view_sent` بنطاق `own`؛ الطالب: `view`)؛ النماذج `Notification`/`NotificationRecipient`/`NotificationPreference`/`Job` (RLS مفعّل منذ P1-01)؛ عنصر التنقّل موجود بـ`phase:"P3"`؛ الجرس غير موجود في `Header.tsx`.
+- **قرارات التصميم:** الأهداف COLLEGE/MAJOR/LEVEL تُحلّ عبر الطلاب المسجّلين في شُعب مقررات مرتبطة (`CourseMajor`) لأن المستخدم لا يحمل تخصصًا مباشرًا في المخطط؛ fan-out متزامن حتى 500 مستلم وإلا `Job notification.fanout` (ينفّذه worker P1-12)؛ التفضيلات in-app فقط (`channel=IN_APP`) والمعطَّل منها يُستثنى من الاستلام؛ عدّاد الجرس يُقرأ في RSC التخطيط ويُحدَّث بالتنقّل + كل 60 ث.
+- **حالة التنفيذ (تُحدَّث مع كل مرحلة):**
+  - ☑ `features/notifications/{schemas,scope,core,queries,actions}.ts` — `sendNotificationSchema` (رابط داخلي فقط `^/`)، `allowedTargetKinds`/`assertCanTarget`، `recipientsWhere` لكل نوع هدف، `fanOut` (createMany skipDuplicates بدفعات 1000)، `processFanoutJob` (قفل PENDING→RUNNING، إعادة المحاولة حتى maxAttempts)، 10 إجراءات (send/preview/search/read/unread/archive/unarchive/readAll/delete/preferences) مع rate-limit 20/10 دقائق وتدقيق.
+  - ☑ الجرس: `components/layout/NotificationBell.tsx` (عدّاد أولي من RSC التخطيط + `GET /api/notifications/unread-count` كل 60 ث وعند التنقّل/الظهور)، عنصر التنقّل فعّال (أُزيل `phase:"P3"`)، نطاق i18n `notifications` ar/en.
+  - ☑ `/notifications`: تبويبات الكل/غير المقروء/الأرشيف/المُرسَلة/التفضيلات مع عدّادات، بحث ومرشّح نوع، قائمة inbox متجاوبة (توسيع = تعيين مقروء، رابط داخلي)، جدول المُرسَلة مع شريط نسبة القراءة وحذف (المالك/`manage`)، تفضيلات in-app (SYSTEM/SECURITY دائمًا)، حوار الإرسال (رقائق نوع الهدف + قائمة اختيار متعدد أو بحث أفراد + معاينة عدد المستلمين).
+  - ☑ seed: 3 إشعارات نموذجية (إعلان ALL، أكاديمي OFFERING CS101، SYSTEM لأدمن) + 53 صف مستلم؛ ☑ تنظيف e2e لعناوين `E2E*`.
+  - ☑ اختبارات: unit 18 (schemas/رابط داخلي/تفضيلات/recipientsWhere/allowedTargetKinds) + integration 12 (fanOut ALL/OFFERING/USERS/SYSTEM + تفضيلات + idempotency، نطاق inbox/sent، assertCanTarget، processFanoutJob، عزل المستأجر).
+  - ☑ e2e 4 (`e2e/notifications.spec.ts`)؛ ☑ البوابة: lint 0، typecheck 0، vitest 167/167، build `3_DlrNx7tjKLVptmBJpNI`، Playwright 72 ✅ / 8 skipped (فشلان بسبب مهلة login تحت الحمل الكامل نجحا عند الإعادة — غير مرتبطين بالإشعارات)؛ ☑ التوثيق النهائي؛ ☑ PR #14 مُدمج.
+  - **التالي:** P1-08 سلة المحذوفات.
 
 ## الجلسة 13 — P1-06 الملفات (PR #13)
 

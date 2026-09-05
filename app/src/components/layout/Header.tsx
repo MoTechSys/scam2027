@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { logoutAction, setLocaleAction } from "@/lib/session/actions";
+import { NotificationBell } from "./NotificationBell";
 import type { LayoutTenant, LayoutUser } from "./types";
 
 type Props = { user: LayoutUser; tenant: LayoutTenant; onOpenMenu: () => void };
@@ -98,6 +99,8 @@ export function Header({ user, tenant, onOpenMenu }: Props) {
 
       <p className="min-w-0 flex-1 truncate text-base font-semibold sm:text-lg">{tenant.name}</p>
 
+      <NotificationBell initialCount={user.unreadNotifications} />
+
       <Button
         variant="ghost"
         size="icon"
@@ -117,14 +120,20 @@ export function Header({ user, tenant, onOpenMenu }: Props) {
         aria-label={t("common.toggleTheme")}
         aria-pressed={theme === "light"}
       >
-        {theme === "dark" ? <Sun className="size-5" aria-hidden="true" /> : <Moon className="size-5" aria-hidden="true" />}
+        {theme === "dark" ? (
+          <Sun className="size-5" aria-hidden="true" />
+        ) : (
+          <Moon className="size-5" aria-hidden="true" />
+        )}
       </Button>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-11 gap-2 px-2" aria-label={user.name}>
             <Avatar className="size-8">
-              <AvatarFallback className="bg-primary/15 text-xs font-bold text-primary">{initials}</AvatarFallback>
+              <AvatarFallback className="bg-primary/15 text-xs font-bold text-primary">
+                {initials}
+              </AvatarFallback>
             </Avatar>
             <span className="hidden max-w-40 truncate text-sm font-medium md:inline">{user.name}</span>
           </Button>

@@ -1104,5 +1104,138 @@
       "originalName": "Original name",
       "mime": "Content type"
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "subtitle": "Your inbox, what you sent, and in-app delivery preferences.",
+    "bell": {
+      "unread": "Notifications: {count} unread",
+      "none": "Notifications"
+    },
+    "tabs": {
+      "ALL": "All",
+      "UNREAD": "Unread",
+      "ARCHIVED": "Archive",
+      "SENT": "Sent",
+      "PREFS": "Preferences"
+    },
+    "type": {
+      "ANNOUNCEMENT": "Announcement",
+      "SYSTEM": "System",
+      "ACADEMIC": "Academic",
+      "FILE": "File",
+      "QUIZ": "Quiz",
+      "ASSIGNMENT": "Assignment",
+      "GRADE": "Grade",
+      "ATTENDANCE": "Attendance",
+      "SECURITY": "Security"
+    },
+    "priority": {
+      "LOW": "Low",
+      "NORMAL": "Normal",
+      "HIGH": "High",
+      "URGENT": "Urgent"
+    },
+    "target": {
+      "ALL": "Everyone",
+      "ROLE": "Role",
+      "COLLEGE": "College",
+      "DEPARTMENT": "Department",
+      "MAJOR": "Major",
+      "LEVEL": "Level",
+      "OFFERING": "Section",
+      "USERS": "People"
+    },
+    "filters": {
+      "search": "Search title or body…",
+      "type": "Type",
+      "allTypes": "All types"
+    },
+    "columns": {
+      "title": "Title",
+      "type": "Type",
+      "priority": "Priority",
+      "sender": "Sender",
+      "deliveredAt": "Date",
+      "target": "Audience",
+      "recipients": "Recipients",
+      "read": "Read",
+      "sentAt": "Sent",
+      "actions": "Actions"
+    },
+    "system": "System",
+    "empty": {
+      "ALL": "No notifications yet.",
+      "UNREAD": "Nothing unread — you're all caught up!",
+      "ARCHIVED": "The archive is empty.",
+      "SENT": "You have not sent anything yet."
+    },
+    "actions": {
+      "compose": "New notification",
+      "markRead": "Mark as read",
+      "markUnread": "Mark as unread",
+      "markAllRead": "Mark all as read",
+      "archive": "Archive",
+      "unarchive": "Unarchive",
+      "delete": "Delete",
+      "open": "Open link",
+      "details": "Details",
+      "preview": "Count recipients"
+    },
+    "readStats": "{read} of {total} read ({percent}%)",
+    "unreadDot": "Unread",
+    "form": {
+      "title": "Title",
+      "body": "Body",
+      "type": "Type",
+      "priority": "Priority",
+      "link": "In-app link (optional)",
+      "linkHint": "A path inside the system starting with / e.g. /files",
+      "targetKind": "Audience",
+      "targetIds": "Select",
+      "targetIdsHint": "You may pick several",
+      "users": "Search people",
+      "usersHint": "Type a name, academic ID or e-mail",
+      "selected": "Selected ({count})",
+      "remove": "Remove {name}",
+      "noResults": "No results",
+      "recipientsPreview": "Will reach {count} recipients",
+      "recipientsUnknown": "Press “Count recipients” to preview",
+      "err": {
+        "EMPTY": "No recipients match this audience — pick something else",
+        "FORBIDDEN": "You may not address these recipients"
+      }
+    },
+    "dialogs": {
+      "compose": "New notification",
+      "composeDesc": "Pick the audience and write the message. Delivered in-app immediately.",
+      "details": "Notification details"
+    },
+    "confirm": {
+      "deleteTitle": "Delete this notification?",
+      "deleteDesc": "It disappears from every recipient's inbox. This cannot be undone.",
+      "delete": "Delete"
+    },
+    "toast": {
+      "sent": "Sent to {count} recipients",
+      "queued": "Sent — delivering to recipients in the background",
+      "read": "Marked as read",
+      "unread": "Marked as unread",
+      "archived": "Archived",
+      "unarchived": "Unarchived",
+      "deleted": "Notification deleted",
+      "readAll": "{count} marked as read",
+      "prefsSaved": "Preferences saved"
+    },
+    "prefs": {
+      "title": "In-app delivery preferences",
+      "desc": "Turn off the types you do not want to receive. System and security notifications are always delivered.",
+      "save": "Save preferences",
+      "always": "Always"
+    },
+    "send": "Send",
+    "from": "From {name}",
+    "to": "To: {target}",
+    "count": "{count} items"
   }
 }
