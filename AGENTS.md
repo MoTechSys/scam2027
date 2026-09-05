@@ -12,8 +12,8 @@
 |---|---|
 | المنتج | **scam2027** — نظام إدارة تعلّم (LMS) جامعي **متعدد المستأجرين** (عدة جامعات على منصة واحدة) بواجهة **Omnitrix الخضراء** RTL، عربي/إنجليزي، جوال أولًا |
 | المستودع | `https://github.com/MoTechSys/scam2027` (عام) — `main` محمي بالمنطق التالي: فرع `genspark_ai_developer` → PR → **squash-merge** مصرّح به للوكيل |
-| التقدّم | **19 / 65 مهمة (29%)** — P0 كامل (16/16) · P1 3/15 · P2–P5 لم تبدأ. انظر §4 |
-| التالي مباشرة | **P1-04 البنية الأكاديمية** (`/academic`) ثم P1-05 المقررات/الشُعب/التسجيل — §5 |
+| التقدّم | **20 / 65 مهمة (31%)** — P0 كامل (16/16) · P1 4/15 · P2–P5 لم تبدأ. انظر §4 |
+| التالي مباشرة | **P1-05 المقررات/الشُعب/التسجيل** (`/courses`, `/offerings`) ثم P1-06 الملفات — §5 |
 | كيف تبدأ | §2 (Bootstrap 10 أوامر) → §6 (دورة العمل الإلزامية لكل مهمة) |
 | المرجع الكامل | `docs/` (28 وثيقة) — خريطتها في §3 |
 
@@ -122,9 +122,10 @@ pnpm exec playwright test                    # 39 ✓ + 2 fixme (سطح المك
 | **P0 (16/16)** | Next.js 16 App Router + React 19 + TS strict · Tailwind 4 tokens Omnitrix + Cairo + RTL · 65 مكوّنًا · تخطيط (Sidebar/Header/BottomNav/MobileDrawer مبنية من الصلاحيات) · next-intl ar/en · Prisma + PostgreSQL + **RLS** (`app_user` بلا BYPASSRLS، GUC `app.current_tenant_id`) · Auth.js v5 Credentials + Argon2id + جلسات DB قابلة للإبطال + قفل + rate-limit · RBAC (`requireUser`, `assertPermission`, `hasRole`, `assertCanManageUser`) · `safeAction`/`Result` · `audit` · `logger` · `env.ts` Zod · `/login`, `/dashboard` (إحصائيات حقيقية لكل دور), `/developer`, `/unauthorized`, `/tenant-not-found`, `/tenant-suspended`, `/api/health` · Vitest + Playwright (desktop+mobile) + axe · قالب CI + PR template + CODEOWNERS | `app/src/lib/**`, `app/src/components/**`, `app/src/app/**`, `app/prisma/migrations/2026090422*` |
 | **P1-02 المستخدمون** | قائمة (تبويبات/بحث/فلتر/ترقيم)، إنشاء برقم أكاديمي تلقائي، تعديل، تجميد/إيقاف (يُبطل الجلسات)، حذف ناعم/استرجاع، تعيين أدوار متعددة، إعادة تعيين كلمة المرور، إنهاء الجلسات، صفحة تفاصيل؛ حارس رفع الامتياز | `app/src/features/users/*`, `app/src/app/(dashboard)/users/**` |
 | **P1-03 الأدوار** | قائمة/تفاصيل، مصفوفة صلاحيات 14 فئة، إنشاء/تعديل/نسخ/حذف (سلة)/استرجاع، أدوار النظام محمية، لا منح لما لا يملكه الفاعل، تدقيق قبل/بعد | `app/src/features/roles/*`, `app/src/app/(dashboard)/roles/**` |
+| **P1-04 البنية الأكاديمية** | `/academic/[tab]` (سنوات/فصول · كليات · أقسام · تخصصات · مستويات)، فترة حالية واحدة متماسكة، CRUD بحوارات + توليد مستويات، حذف محمي بالتبعيات، Wizard الإعداد الأول (عملية ذرية)، seed واقعي | `app/src/features/academic/*`, `app/src/app/(dashboard)/academic/**` |
 | **P1-01 المخطط** | 18 موديلًا (أكاديمي/مقررات/محتوى/تواصل/نظام) + قيود SQL يدوية + RLS على 30 جدولًا + عقود Zod لأعمدة Json | `app/prisma/schema.prisma`, `app/prisma/migrations/20260905*`, `app/src/lib/contracts/json-columns.ts`, ADR-0006 |
 
-**مقاييس الجودة الحالية:** `tsc` 0 · `eslint` 0 · Vitest **69/69** (15 ملفًا: 11 وحدة + 4 تكامل بقاعدة اختبار مستقلة) · Playwright **39 ✓ / 2 fixme** (5 ملفات × 2 مشروع) · `pnpm build` ✓ · 0 تمرير أفقي على 390px · 0 انتهاكات axe serious/critical على الصفحات المبنية.
+**مقاييس الجودة الحالية:** `tsc` 0 · `eslint` 0 · Vitest **101/101** (17 ملفًا: 12 وحدة + 5 تكامل بقاعدة اختبار مستقلة) · Playwright **50 ✓ / 2 fixme** (6 ملفات × 2 مشروع) · `pnpm build` ✓ · 0 تمرير أفقي على 390px · 0 انتهاكات axe serious/critical على الصفحات المبنية.
 
 ### 4.2 ما هو **غير** مبني (بصراحة)
 - لا مقررات ولا شُعب ولا تسجيل ولا ملفات ولا إشعارات ولا اختبارات ولا درجات **في الواجهة** — الجداول موجودة (P1-01) لكن بلا صفحات أو Server Actions. الطالب والمدرّس يريان لوحة تحكم فقط.
@@ -152,10 +153,9 @@ pnpm exec playwright test                    # 39 ✓ + 2 fixme (سطح المك
 
 > مصدر الحقيقة: `docs/40-plan/01-ROADMAP.md`. لا تُغيّر الترتيب دون ADR. كل مهمة = PR واحد مُدمَج.
 
-### P1 — النواة الإدارية (متبقٍ 12 مهمة)
+### P1 — النواة الإدارية (متبقٍ 11 مهمة)
 | # | المهمة | مخرجات محددة | ملاحظات تنفيذ |
 |---|---|---|---|
-| **P1-04** | البنية الأكاديمية | `/academic` بتبويبات: كليات → أقسام → تخصصات → مستويات؛ سنوات → فصول (فصل حالي واحد). CRUD + تفعيل/تعطيل + إعادة ترتيب. **Wizard الإعداد الأول** عند مستأجر بلا بنية. توسيع `seed.ts` ببنية واقعية (كلية، قسمان، 3 تخصصات، 4 مستويات، سنة + فصل حالي) | `features/academic/{schemas,queries,actions}.ts`؛ صلاحيات `college.*`, `department.*`, `major.*`, `level.*`, `semester.*`, `year.*` موجودة في المصفوفة؛ nav item `academic` (احذف `phase`) |
 | **P1-05** | المقررات والشُعب والتسجيل | `/courses` (CRUD، ربط M:N بتخصصات مع المستوى، بحث)، `/courses/[id]`، `/offerings` (شعبة لكل فصل: مسودة/مفتوحة/مغلقة/مؤرشفة، مدرّسون، سعة، جدول)، `/offerings/[id]` (تسجيل فردي/جماعي، انسحاب)، **نطاق الرؤية**: المدرّس يرى شُعبه فقط، الطالب شُعبه فقط (`course.manage_all` للمدير) | `offeringScheduleSchema` من `json-columns.ts`؛ seed 6 مقررات + 4 شُعب + 30 طالبًا |
 | **P1-06** | الملفات | storage adapter (local/S3 عبر واجهة واحدة)، رفع stream متعدد بتقدّم، فحص magic bytes + قائمة سماح + حد حجم حسب الاشتراك، اسم مُعاد التوليد `tenant/course/uuid`، تصنيف، روابط تنزيل موقّعة قصيرة العمر (`/api/files/[id]/download`)، `/files` بتبويبات | `lib/storage/`؛ حذف ناعم؛ `file.manage_all` |
 | **P1-07** | الإشعارات | إرسال بهدف مرن (`notificationTargetSchema`: الكل/دور/كلية/قسم/تخصص/مستوى/شعبة/أفراد) → fan-out إلى `NotificationRecipient`، inbox، مقروء/غير مقروء، أرشفة، عدّاد Header، «المُرسَلة» مع إحصاء القراءة، تفضيلات in-app | fan-out عبر `Job` إن تجاوز المستلمون 500 |

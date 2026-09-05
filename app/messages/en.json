@@ -26,6 +26,7 @@
     "close": "Close",
     "optional": "Optional",
     "filters": "Filters",
+    "all": "All",
     "reset": "Reset"
   },
   "auth": {
@@ -493,6 +494,177 @@
       "cloned": "Clone created",
       "deleted": "Role moved to trash",
       "restored": "Restored"
+    }
+  },
+  "academic": {
+    "title": "Academic structure",
+    "subtitle": "Years & semesters, colleges, departments, majors and levels",
+    "tabs": {
+      "years": "Years & semesters",
+      "colleges": "Colleges",
+      "departments": "Departments",
+      "majors": "Majors",
+      "levels": "Levels"
+    },
+    "searchPlaceholder": "Search by name or code…",
+    "empty": "No matching items",
+    "total": "{count} items",
+    "current": {
+      "title": "Current period",
+      "year": "Current year",
+      "semester": "Current semester",
+      "none": "Not set",
+      "badge": "Current"
+    },
+    "term": {
+      "FIRST": "First semester",
+      "SECOND": "Second semester",
+      "SUMMER": "Summer"
+    },
+    "status": {
+      "PLANNED": "Planned",
+      "ACTIVE": "Active",
+      "CLOSED": "Closed",
+      "ARCHIVED": "Archived"
+    },
+    "degree": {
+      "DIPLOMA": "Diploma",
+      "BACHELOR": "Bachelor",
+      "MASTER": "Master",
+      "PHD": "PhD"
+    },
+    "active": {
+      "true": "Active",
+      "false": "Inactive"
+    },
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "nameEn": "Name (EN)",
+      "period": "Period",
+      "start": "Start",
+      "end": "End",
+      "semesters": "Semesters",
+      "status": "Status",
+      "offerings": "Sections",
+      "registration": "Registration",
+      "departments": "Departments",
+      "majors": "Majors",
+      "courses": "Courses",
+      "levels": "Levels",
+      "college": "College",
+      "department": "Department",
+      "major": "Major",
+      "degree": "Degree",
+      "duration": "Duration",
+      "number": "Number",
+      "sortOrder": "Order",
+      "updatedAt": "Updated",
+      "isActive": "Status"
+    },
+    "years_": "{count} yr",
+    "durationYears": "{count} years",
+    "actions": {
+      "createYear": "New year",
+      "createSemester": "Add semester",
+      "createCollege": "New college",
+      "createDepartment": "New department",
+      "createMajor": "New major",
+      "createLevel": "New level",
+      "generateLevels": "Generate levels",
+      "edit": "Edit",
+      "delete": "Delete",
+      "setCurrent": "Set as current",
+      "deactivate": "Deactivate",
+      "activate": "Activate"
+    },
+    "form": {
+      "code": "Code",
+      "codeHint": "Latin letters, digits and - _ / (e.g. CCIS or 2026/2027)",
+      "name": "Name",
+      "nameEn": "English name",
+      "description": "Description",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "isCurrent": "Set as current",
+      "term": "Term",
+      "status": "Status",
+      "registrationOpensAt": "Registration opens",
+      "registrationClosesAt": "Registration closes",
+      "college": "College",
+      "department": "Department",
+      "major": "Major",
+      "degree": "Degree",
+      "durationYears": "Duration (years)",
+      "sortOrder": "Display order",
+      "isActive": "Active",
+      "number": "Level number",
+      "levelCount": "Number of levels",
+      "year": "Academic year",
+      "choose": "Choose…"
+    },
+    "dialogs": {
+      "year": {
+        "create": "New academic year",
+        "edit": "Edit year"
+      },
+      "semester": {
+        "create": "New semester",
+        "edit": "Edit semester"
+      },
+      "college": {
+        "create": "New college",
+        "edit": "Edit college"
+      },
+      "department": {
+        "create": "New department",
+        "edit": "Edit department"
+      },
+      "major": {
+        "create": "New major",
+        "edit": "Edit major"
+      },
+      "level": {
+        "create": "New level",
+        "edit": "Edit level"
+      },
+      "generate": {
+        "title": "Generate levels",
+        "hint": "Creates levels 1..N, skipping numbers that already exist."
+      }
+    },
+    "confirm": {
+      "delete": "The item will be permanently deleted. Items with dependants (departments/majors/semesters/courses) cannot be deleted.",
+      "deleteMajor": "The major and all its levels will be permanently deleted. Not allowed while courses are mapped to it.",
+      "setCurrentYear": "This year will become the university's current year.",
+      "setCurrentSemester": "This semester will become the current one (and its year the current year)."
+    },
+    "toast": {
+      "created": "Created",
+      "updated": "Changes saved",
+      "deleted": "Deleted",
+      "setCurrent": "Current period set",
+      "generated": "{count} levels generated"
+    },
+    "wizard": {
+      "title": "First-time setup",
+      "subtitle": "No academic structure yet. Create the year, current semester, first college, department and major in one step; add the rest later.",
+      "steps": {
+        "period": "Year & semester",
+        "structure": "College & department",
+        "major": "Major & levels",
+        "review": "Review"
+      },
+      "next": "Next",
+      "prev": "Back",
+      "finish": "Create structure",
+      "success": "Academic structure created",
+      "review": {
+        "intro": "The following will be created in one operation:",
+        "levels": "{count} levels"
+      },
+      "skip": "Manage manually instead",
+      "forbidden": "You need permissions to manage years, colleges, departments, majors and levels to run the wizard."
     }
   }
 }

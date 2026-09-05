@@ -4,16 +4,16 @@
 >
 > **للوكيل الجديد:** لا تبدأ من هنا. ابدأ من [`/AGENTS.md`](../../AGENTS.md) (الدليل الكامل) و[`STATUS.json`](STATUS.json) (الحالة الآلية). هذا الملف هو **سجل الجلسات ودروسها** — أقدم الأقسام في الأعلى محفوظة للتاريخ وموسومة بجلستها.
 
-## 0. ملخص الحالة (محدّث — الجلسة 7)
+## 0. ملخص الحالة (محدّث — الجلسة 8)
 
 | البند | الحالة |
 |---|---|
-| المستودع | `MoTechSys/scam2027` (عام) — `main` = `590df59` قبل PR #7 |
+| المستودع | `MoTechSys/scam2027` (عام) — `main` = `93a3a5d` قبل PR #8 |
 | الفرع الرئيسي | `main` |
 | فرع العمل | `genspark_ai_developer` → PR → `main` (squash-merge مباشر مصرّح به من المالك) → مزامنة الفرع |
-| التقدّم | **19 / 65 مهمة (29%)** — P0 16/16 ☑ · P1 3/15 (P1-01, P1-02, P1-03) · P2–P5 لم تبدأ |
-| المهمة التالية | **P1-04** البنية الأكاديمية (المخرجات مفصّلة في `STATUS.json` → `progress.nextTask` و`AGENTS.md` §5) |
-| بوابة الجودة | `pnpm check` ✅ (tsc 0 · eslint 0 · vitest 69/69 · build) · Playwright 39 ✅ / 2 fixme (desktop + mobile) |
+| التقدّم | **20 / 65 مهمة (31%)** — P0 16/16 ☑ · P1 4/15 (P1-01..P1-04) · P2–P5 لم تبدأ |
+| المهمة التالية | **P1-05** المقررات/الشُعب/التسجيل (المخرجات مفصّلة في `STATUS.json` → `progress.nextTask` و`AGENTS.md` §5) |
+| بوابة الجودة | `pnpm check` ✅ (tsc 0 · eslint 0 · vitest 101/101 · build) · Playwright 50 ✅ / 2 fixme (desktop + mobile) |
 | قاعدة البيانات | آخر هجرة `20260905015700_rls_p1_01` — 30 جدولاً محمياً بـRLS + 4 جداول منصة؛ **قاعدتان** (`scam2027`, `scam2027_test`) يجب هجرتهما معاً |
 | بيئة التطوير | `/home/user/webapp` (sandbox)؛ المراجع التراثية في `.refs/` (غير ملتزمة، تُستنسخ بالحلقة في §3) |
 
@@ -90,9 +90,9 @@ pnpm test && pnpm lint && pnpm typecheck
 - المراجع في `.refs/` قد تحوي `node_modules` لـ UniCore-OS-V2 (~1.3GB) — يمكن حذفها عند الحاجة للمساحة.
 - قد تكون هناك عملية `next` قديمة على المنفذ 3000 في الـ sandbox؛ استخدم `setsid scripts/restart-server.sh` (يقتل ويعيد التشغيل ويطبع `BUILD_ID`).
 
-## 6. الخطوة التالية (محدّث — الجلسة 7)
+## 6. الخطوة التالية (محدّث — الجلسة 8)
 
-**P1-04 البنية الأكاديمية** ثم P1-05 → P1-15 بالترتيب، ثم P2 → P5. مخرجات P1-04 مفصّلة في `STATUS.json` → `progress.nextTask.deliverables` و`AGENTS.md` §5. كل مهمة = PR مستقل بدورة العمل السباعية (`AGENTS.md` §6) وتحديث ROADMAP + REQUIREMENTS + CHANGELOG + HANDOFF + **STATUS.json** في نفس الالتزام.
+**P1-05 المقررات والشُعب والتسجيل** ثم P1-06 → P1-15 بالترتيب، ثم P2 → P5. مخرجات P1-05 مفصّلة في `STATUS.json` → `progress.nextTask.deliverables` و`AGENTS.md` §5. كل مهمة = PR مستقل بدورة العمل السباعية (`AGENTS.md` §6) وتحديث ROADMAP + REQUIREMENTS + CHANGELOG + HANDOFF + **STATUS.json** في نفس الالتزام.
 
 ## 7. سجل الجلسات
 
@@ -104,6 +104,7 @@ pnpm test && pnpm lint && pnpm typecheck
 | 2026-09-05 | 5 — P1-03 الأدوار | `app/src/features/roles`, `app/src/app/(dashboard)/roles`, مصفوفة الصلاحيات، e2e roles | #5 |
 | 2026-09-05 | 6 — P1-01 المخطط | 18 موديلاً + migrations + RLS + عقود Json + ADR-0006 | #6 |
 | 2026-09-05 | 7 — توثيق التسليم | `AGENTS.md`, `STATUS.json`, `CLAUDE.md`, تحديث README/HANDOFF | #7 |
+| 2026-09-05 | 8 — P1-04 البنية الأكاديمية | `app/src/features/academic`, `app/src/app/(dashboard)/academic/**`, wizard، seed، e2e academic | #8 |
 
 
 ## الجلسة 3 — إكمال P0 (PR #3)
@@ -152,3 +153,12 @@ pnpm test && pnpm lint && pnpm typecheck
 5. تحديث `README.md` (فقرة الحالة، خريطة التوثيق، قسم البدء بأوامر فعلية) و`HANDOFF.md` (الرأس، §0، §2، §5، §6، §7).
 
 **درس:** الوثيقة السردية (`HANDOFF.md`) تتقادم بصمت في رأسها بينما تُضاف الجلسات في ذيلها؛ لذلك صار §0 يُعاد كتابته كل جلسة، و`STATUS.json` هو المرجع الآلي الوحيد للأرقام.
+
+## الجلسة 8 — P1-04 البنية الأكاديمية (PR #8)
+
+- **الميزة:** `features/academic/{schemas,queries,actions}.ts` (23 Server Action) + `/academic/[tab]` (`years|colleges|departments|majors|levels`) + `academic-client` / `years-client` / `catalogue-client` / `dialogs` / `form-fields` / `setup-wizard`.
+- **القرارات:** التبويبات مقاطع URL (قابلة للربط)؛ `setCurrentSemester` يعيّن السنة أيضًا ويجعل الحالة `ACTIVE`؛ الحذف يُرفض عند وجود تابعين (الرسالة من الخادم، الحوار يبقى مفتوحًا)؛ التخصص يحذف مستوياته (Cascade) ويُرفض إن كانت له مقررات؛ Wizard يظهر فقط عند `years==0 && colleges==0` ولمن يملك صلاحيات الإدارة الخمس، ويمكن تجاوزه بـ`?manual=1`.
+- **إصلاح:** `includeInactive` في استعلام URL (`z.coerce.boolean("false") === true`) → مُعالج صريح.
+- **البيانات:** seed موسّع وidempotent (سنة 2026/2027 حالية، الفصل الأول حالي، CCIS → CS/IS → CS-BSC/SE-BSC/IS-BSC → 4 مستويات لكل تخصص). teardown الـe2e يحذف صفوف `E2E*` من الأسفل للأعلى ويعيد الفصل الأول حاليًا.
+- **الجودة:** tsc 0 · eslint 0 · vitest 101/101 (17 ملفًا) · build ✓ · Playwright 50 ✓ / 2 fixme (desktop + mobile، 0 تمرير أفقي على 390px).
+- **التالي:** P1-05 المقررات/الشُعب/التسجيل.

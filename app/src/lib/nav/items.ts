@@ -47,7 +47,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { key: "dashboard", href: "/dashboard", icon: LayoutDashboard, permission: "dashboard.view", bottom: true },
   { key: "users", href: "/users", icon: Users, permission: "user.view", bottom: true },
   { key: "roles", href: "/roles", icon: Shield, permission: "role.view" },
-  { key: "academic", href: "/academic", icon: GraduationCap, permission: "academic.view", phase: "P1" },
+  { key: "academic", href: "/academic", icon: GraduationCap, permission: "academic.view" },
   { key: "courses", href: "/courses", icon: BookOpen, permission: "course.view", phase: "P2", bottom: true },
   { key: "notifications", href: "/notifications", icon: Bell, permission: "notification.view", phase: "P3", bottom: true },
   { key: "reports", href: "/reports", icon: BarChart3, permission: "report.view", phase: "P3" },

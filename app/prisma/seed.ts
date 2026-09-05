@@ -10,10 +10,13 @@
  *    academic@demo.edu    / Academic@123456   ACADEMIC_ADMIN
  *    dr.ahmad@demo.edu    / Doctor@123456     INSTRUCTOR
  *    student1@demo.edu    / Student@123456    STUDENT
+ *  Academic structure (P1-04, TESTING-STRATEGY §4): year 2026/2027 (current) with FIRST (current) + SECOND semesters,
+ *    college CCIS → departments CS, IS → majors CS-BSC, SE-BSC, IS-BSC → 4 levels each.
  */
 import { PrismaClient } from "@prisma/client";
 import { hash } from "@node-rs/argon2";
 import { PERMISSIONS, SYSTEM_ROLE_GRANTS, SYSTEM_ROLES, type SystemRoleCode } from "../src/lib/auth/permissions";
+import { levelName } from "../src/features/academic/schemas";
 
 const prisma = new PrismaClient({ datasourceUrl: process.env.DIRECT_DATABASE_URL });
 const ARGON = { algorithm: 2, memoryCost: 65536, timeCost: 3, parallelism: 1 } as const;
@@ -116,10 +119,84 @@ async function seedDemoTenant() {
   return tenant;
 }
 
+/* ───────────── Academic structure (P1-04) ───────────── */
+const d = (s: string) => new Date(`${s}T00:00:00.000Z`);
+
+async function seedAcademic(tenantId: string) {
+  const year = await prisma.academicYear.upsert({
+    where: { tenantId_code: { tenantId, code: "2026/2027" } },
+    update: { name: "العام الأكاديمي 2026/2027", startDate: d("2026-09-01"), endDate: d("2027-07-31") },
+    create: { tenantId, code: "2026/2027", name: "العام الأكاديمي 2026/2027", startDate: d("2026-09-01"), endDate: d("2027-07-31"), isCurrent: true },
+  });
+  // Exactly one current year/semester per tenant (partial unique index) — clear others before flagging.
+  await prisma.academicYear.updateMany({ where: { tenantId, id: { not: year.id }, isCurrent: true }, data: { isCurrent: false } });
+  await prisma.academicYear.update({ where: { id: year.id }, data: { isCurrent: true } });
+
+  const semesters = [
+    { term: "FIRST" as const, name: "الفصل الأول 2026/2027", start: "2026-09-01", end: "2027-01-31", regOpen: "2026-08-15", regClose: "2026-09-15", status: "ACTIVE" as const, current: true },
+    { term: "SECOND" as const, name: "الفصل الثاني 2026/2027", start: "2027-02-07", end: "2027-06-30", regOpen: "2027-01-20", regClose: "2027-02-20", status: "PLANNED" as const, current: false },
+  ];
+  let currentSemesterId = "";
+  for (const s of semesters) {
+    const row = await prisma.semester.upsert({
+      where: { tenantId_academicYearId_term: { tenantId, academicYearId: year.id, term: s.term } },
+      update: { name: s.name, startDate: d(s.start), endDate: d(s.end), registrationOpensAt: d(s.regOpen), registrationClosesAt: d(s.regClose), status: s.status },
+      create: {
+        tenantId, academicYearId: year.id, term: s.term, name: s.name, startDate: d(s.start), endDate: d(s.end),
+        registrationOpensAt: d(s.regOpen), registrationClosesAt: d(s.regClose), status: s.status, isCurrent: false,
+      },
+    });
+    if (s.current) currentSemesterId = row.id;
+  }
+  await prisma.semester.updateMany({ where: { tenantId, id: { not: currentSemesterId }, isCurrent: true }, data: { isCurrent: false } });
+  await prisma.semester.update({ where: { id: currentSemesterId }, data: { isCurrent: true } });
+
+  const college = await prisma.college.upsert({
+    where: { tenantId_code: { tenantId, code: "CCIS" } },
+    update: { name: "كلية علوم الحاسب والمعلومات", nameEn: "College of Computer and Information Sciences", isActive: true },
+    create: { tenantId, code: "CCIS", name: "كلية علوم الحاسب والمعلومات", nameEn: "College of Computer and Information Sciences", sortOrder: 1 },
+  });
+  const departments = [
+    { code: "CS", name: "قسم علوم الحاسب", nameEn: "Computer Science", majors: [
+      { code: "CS-BSC", name: "علوم الحاسب", nameEn: "Computer Science" },
+      { code: "SE-BSC", name: "هندسة البرمجيات", nameEn: "Software Engineering" },
+    ] },
+    { code: "IS", name: "قسم نظم المعلومات", nameEn: "Information Systems", majors: [{ code: "IS-BSC", name: "نظم المعلومات", nameEn: "Information Systems" }] },
+  ];
+  let majorsN = 0;
+  let levelsN = 0;
+  for (const [i, dep] of departments.entries()) {
+    const department = await prisma.department.upsert({
+      where: { tenantId_code: { tenantId, code: dep.code } },
+      update: { name: dep.name, nameEn: dep.nameEn, collegeId: college.id, isActive: true },
+      create: { tenantId, collegeId: college.id, code: dep.code, name: dep.name, nameEn: dep.nameEn, sortOrder: i + 1 },
+    });
+    for (const [j, m] of dep.majors.entries()) {
+      const major = await prisma.major.upsert({
+        where: { tenantId_code: { tenantId, code: m.code } },
+        update: { name: m.name, nameEn: m.nameEn, departmentId: department.id, degree: "BACHELOR", durationYears: 4, isActive: true },
+        create: { tenantId, departmentId: department.id, code: m.code, name: m.name, nameEn: m.nameEn, degree: "BACHELOR", durationYears: 4, sortOrder: j + 1 },
+      });
+      majorsN++;
+      for (let n = 1; n <= 4; n++) {
+        const { name, nameEn } = levelName(n);
+        await prisma.level.upsert({
+          where: { tenantId_majorId_number: { tenantId, majorId: major.id, number: n } },
+          update: { name, nameEn, isActive: true },
+          create: { tenantId, majorId: major.id, number: n, name, nameEn },
+        });
+        levelsN++;
+      }
+    }
+  }
+  console.log(`✓ academic: 1 year, ${semesters.length} semesters, 1 college, ${departments.length} departments, ${majorsN} majors, ${levelsN} levels`);
+}
+
 async function main() {
   await seedPermissions();
   await seedPlatformAdmin();
-  await seedDemoTenant();
+  const tenant = await seedDemoTenant();
+  await seedAcademic(tenant.id);
 }
 
 main()

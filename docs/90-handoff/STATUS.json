@@ -4,8 +4,8 @@
   "repo": "https://github.com/MoTechSys/scam2027",
   "entryPoint": "AGENTS.md",
   "updatedAt": "2026-09-05",
-  "updatedInPr": 7,
-  "mainHead": "590df59",
+  "updatedInPr": 8,
+  "mainHead": "93a3a5d",
   "branches": {
     "main": "main",
     "work": "genspark_ai_developer",
@@ -13,39 +13,108 @@
   },
   "progress": {
     "totalTasks": 65,
-    "doneTasks": 19,
-    "percent": 29,
+    "doneTasks": 20,
+    "percent": 31,
     "phases": {
-      "P0": { "name": "Foundation", "total": 16, "done": 16, "status": "DONE", "prs": [2, 3] },
-      "P1": { "name": "Core LMS", "total": 15, "done": 3, "status": "IN_PROGRESS", "prs": [4, 5, 6] },
-      "P2": { "name": "Assessment, files viewer, AI, SIS import, PDPL basic", "total": 12, "done": 0, "status": "NOT_STARTED" },
-      "P3": { "name": "Assignments, MFA, platform, PDPL full, OpenAPI, EN", "total": 12, "done": 0, "status": "NOT_STARTED" },
-      "P4": { "name": "SSO, Push, attendance, PWA, webhooks", "total": 7, "done": 0, "status": "NOT_STARTED" },
-      "P5": { "name": "Interop: LTI 1.3, QTI 3.0, OneRoster 1.2", "total": 3, "done": 0, "status": "NOT_STARTED" }
+      "P0": {
+        "name": "Foundation",
+        "total": 16,
+        "done": 16,
+        "status": "DONE",
+        "prs": [
+          2,
+          3
+        ]
+      },
+      "P1": {
+        "name": "Core LMS",
+        "total": 15,
+        "done": 4,
+        "status": "IN_PROGRESS",
+        "prs": [
+          4,
+          5,
+          6,
+          8
+        ]
+      },
+      "P2": {
+        "name": "Assessment, files viewer, AI, SIS import, PDPL basic",
+        "total": 12,
+        "done": 0,
+        "status": "NOT_STARTED"
+      },
+      "P3": {
+        "name": "Assignments, MFA, platform, PDPL full, OpenAPI, EN",
+        "total": 12,
+        "done": 0,
+        "status": "NOT_STARTED"
+      },
+      "P4": {
+        "name": "SSO, Push, attendance, PWA, webhooks",
+        "total": 7,
+        "done": 0,
+        "status": "NOT_STARTED"
+      },
+      "P5": {
+        "name": "Interop: LTI 1.3, QTI 3.0, OneRoster 1.2",
+        "total": 3,
+        "done": 0,
+        "status": "NOT_STARTED"
+      }
     },
     "doneTaskIds": [
-      "P0-01", "P0-02", "P0-03", "P0-04", "P0-05", "P0-06", "P0-07", "P0-08",
-      "P0-09", "P0-10", "P0-11", "P0-12", "P0-13", "P0-14", "P0-15", "P0-16",
-      "P1-01", "P1-02", "P1-03"
+      "P0-01",
+      "P0-02",
+      "P0-03",
+      "P0-04",
+      "P0-05",
+      "P0-06",
+      "P0-07",
+      "P0-08",
+      "P0-09",
+      "P0-10",
+      "P0-11",
+      "P0-12",
+      "P0-13",
+      "P0-14",
+      "P0-15",
+      "P0-16",
+      "P1-01",
+      "P1-02",
+      "P1-03",
+      "P1-04"
     ],
     "nextTask": {
-      "id": "P1-04",
-      "title": "Academic structure: colleges/departments/majors/levels/years/semesters + first-setup wizard + /academic/[tab]",
-      "requirements": ["FR-ACD-001", "FR-ACD-002", "FR-ACD-003", "FR-ACD-004", "FR-ACD-005", "FR-ACD-006"],
+      "id": "P1-05",
+      "title": "Courses, offerings (sections) and enrollment: /courses, /courses/[id], /offerings, /offerings/[id]",
+      "requirements": [
+        "FR-CRS-001..",
+        "FR-OFF-001..",
+        "FR-ENR-001.."
+      ],
       "deliverables": [
-        "src/features/academic/{schemas,queries,actions}.ts (safeAction + audit + assertPermission)",
-        "src/app/(dashboard)/academic/[tab]/ pages: years, semesters, colleges, departments, majors, levels (desktop table + mobile cards)",
-        "first-setup wizard when tenant has no AcademicYear",
-        "setCurrent year/semester action (partial unique index already enforces one current per tenant)",
-        "seed.ts extension per docs/50-quality/01-TESTING-STRATEGY.md §4 (1 college, 2 depts, 3 majors, 4 levels, year+semester)",
-        "remove `phase` from nav item `academic` + update tests/unit/login-helpers.test.ts",
-        "i18n ar/en domain `academic`",
-        "unit (schemas) + integration (queries isolation) + e2e academic.spec.ts desktop+mobile",
-        "docs: ROADMAP ☑, REQUIREMENTS FR-ACD ☑, CHANGELOG, HANDOFF session, STATUS.json"
+        "src/features/courses/{schemas,queries,actions}.ts + src/features/offerings/* + src/features/enrollment/* (safeAction + audit + assertPermission)",
+        "/courses list (tabs/search/pagination) + create/edit + M:N mapping to majors with level (CourseMajor) — reuse academic form-fields/dialog patterns",
+        "/courses/[id] detail; /offerings per semester (DRAFT/OPEN/CLOSED/ARCHIVED, instructors, capacity, schedule via offeringScheduleSchema)",
+        "/offerings/[id]: single + bulk enrollment, withdraw; visibility scope: instructor sees own sections, student own enrollments, course.manage_all for admins",
+        "remove `phase` from nav item `courses` + update tests/unit/login-helpers.test.ts (asserts courses hidden)",
+        "seed.ts: 6 courses + 4 offerings in current semester + 30 students enrolled",
+        "i18n ar/en domains courses/offerings; unit + integration (RLS, scope) + e2e courses.spec.ts desktop+mobile (+ teardown for E2E* codes)",
+        "docs: ROADMAP ☑, REQUIREMENTS ☑, CHANGELOG, HANDOFF session 9, STATUS.json, AGENTS.md §0/§4/§5"
       ],
       "remainingInPhaseOrder": [
-        "P1-04", "P1-05", "P1-06", "P1-07", "P1-08", "P1-09", "P1-10",
-        "P1-11", "P1-12", "P1-13", "P1-14", "P1-15"
+        "P1-05",
+        "P1-06",
+        "P1-07",
+        "P1-08",
+        "P1-09",
+        "P1-10",
+        "P1-11",
+        "P1-12",
+        "P1-13",
+        "P1-14",
+        "P1-15"
       ]
     }
   },
@@ -54,11 +123,26 @@
     "definition": "typecheck + lint + test + build must all pass; then playwright e2e against `pnpm build && pnpm start -p 3000`",
     "lastRun": {
       "date": "2026-09-05",
-      "commit": "590df59",
+      "commit": "P1-04 (PR #8)",
       "typecheck": "PASS (0 errors)",
       "lint": "PASS (0 errors)",
-      "unitAndIntegration": { "runner": "vitest", "passed": 69, "failed": 0, "files": 15 },
-      "e2e": { "runner": "playwright", "passed": 39, "skipped": 2, "failed": 0, "projects": ["desktop-chromium", "mobile-safari"], "skippedReason": "logout via Radix menu form action marked fixme (both projects)" },
+      "unitAndIntegration": {
+        "runner": "vitest",
+        "passed": 101,
+        "failed": 0,
+        "files": 17
+      },
+      "e2e": {
+        "runner": "playwright",
+        "passed": 50,
+        "skipped": 2,
+        "failed": 0,
+        "projects": [
+          "desktop-chromium",
+          "mobile-safari"
+        ],
+        "skippedReason": "logout via Radix menu form action marked fixme (both projects)"
+      },
       "build": "PASS",
       "buildId": "2FOU6I9blXQU9_lVcIxGx"
     },
@@ -74,8 +158,15 @@
     "engine": "PostgreSQL 17",
     "orm": "Prisma 6.19.3",
     "databases": {
-      "dev": { "name": "scam2027", "envFile": "app/.env" },
-      "test": { "name": "scam2027_test", "envFile": "app/.env.test", "migrateCommand": "DIRECT_DATABASE_URL=\"postgresql://postgres:postgres@localhost:5432/scam2027_test?schema=public\" pnpm exec prisma migrate deploy" }
+      "dev": {
+        "name": "scam2027",
+        "envFile": "app/.env"
+      },
+      "test": {
+        "name": "scam2027_test",
+        "envFile": "app/.env.test",
+        "migrateCommand": "DIRECT_DATABASE_URL=\"postgresql://postgres:postgres@localhost:5432/scam2027_test?schema=public\" pnpm exec prisma migrate deploy"
+      }
     },
     "latestMigration": "20260905015700_rls_p1_01",
     "migrations": [
@@ -100,11 +191,41 @@
     "tenant": "demo",
     "note": "Development only. Source: app/prisma/seed.ts. Permission counts as of 113 codes.",
     "accounts": [
-      { "role": "TENANT_ADMIN", "login": "admin@demo.edu", "academicId": "EMP-0001", "password": "Admin@123456", "permissions": 110 },
-      { "role": "ACADEMIC_ADMIN", "login": "academic@demo.edu", "academicId": "EMP-0002", "password": "Academic@123456", "permissions": 70 },
-      { "role": "INSTRUCTOR", "login": "dr.ahmad@demo.edu", "academicId": "EMP-0101", "password": "Doctor@123456", "permissions": 51 },
-      { "role": "STUDENT", "login": "student1@demo.edu", "academicId": "443100001", "password": "Student@123456", "permissions": 20 },
-      { "role": "PLATFORM_SUPER_ADMIN", "login": "super@scam.local", "academicId": null, "password": "Super@123456", "permissions": null }
+      {
+        "role": "TENANT_ADMIN",
+        "login": "admin@demo.edu",
+        "academicId": "EMP-0001",
+        "password": "Admin@123456",
+        "permissions": 110
+      },
+      {
+        "role": "ACADEMIC_ADMIN",
+        "login": "academic@demo.edu",
+        "academicId": "EMP-0002",
+        "password": "Academic@123456",
+        "permissions": 70
+      },
+      {
+        "role": "INSTRUCTOR",
+        "login": "dr.ahmad@demo.edu",
+        "academicId": "EMP-0101",
+        "password": "Doctor@123456",
+        "permissions": 51
+      },
+      {
+        "role": "STUDENT",
+        "login": "student1@demo.edu",
+        "academicId": "443100001",
+        "password": "Student@123456",
+        "permissions": 20
+      },
+      {
+        "role": "PLATFORM_SUPER_ADMIN",
+        "login": "super@scam.local",
+        "academicId": null,
+        "password": "Super@123456",
+        "permissions": null
+      }
     ]
   },
   "legacySources": {
@@ -134,20 +255,91 @@
     "interop": "LTI 1.3, QTI 3.0, OneRoster 1.2 (P5)"
   },
   "ownerActions": [
-    { "id": 1, "action": "Rotate Supabase DB password of legacy project hmqmtxgyuarccyrioics (exposed in MoTechSys/SCAM/HANDOVER.md, SEC-01)", "status": "OPEN", "priority": "HIGH" },
-    { "id": 2, "action": "Move .github/ci.yml.template to .github/workflows/ci.yml (agent token lacks workflows scope)", "status": "OPEN", "priority": "HIGH" },
-    { "id": 3, "action": "Decide production root domain for tenant subdomains", "status": "OPEN", "priority": "MEDIUM" },
-    { "id": 4, "action": "Provide AI provider + dev key (OpenAI-compatible or Gemini) for P2-05", "status": "OPEN", "priority": "MEDIUM" },
-    { "id": 5, "action": "Provide SMTP credentials for P1-12 platform mail", "status": "OPEN", "priority": "MEDIUM" },
-    { "id": 6, "action": "Confirm final license", "status": "OPEN", "priority": "LOW" }
+    {
+      "id": 1,
+      "action": "Rotate Supabase DB password of legacy project hmqmtxgyuarccyrioics (exposed in MoTechSys/SCAM/HANDOVER.md, SEC-01)",
+      "status": "OPEN",
+      "priority": "HIGH"
+    },
+    {
+      "id": 2,
+      "action": "Move .github/ci.yml.template to .github/workflows/ci.yml (agent token lacks workflows scope)",
+      "status": "OPEN",
+      "priority": "HIGH"
+    },
+    {
+      "id": 3,
+      "action": "Decide production root domain for tenant subdomains",
+      "status": "OPEN",
+      "priority": "MEDIUM"
+    },
+    {
+      "id": 4,
+      "action": "Provide AI provider + dev key (OpenAI-compatible or Gemini) for P2-05",
+      "status": "OPEN",
+      "priority": "MEDIUM"
+    },
+    {
+      "id": 5,
+      "action": "Provide SMTP credentials for P1-12 platform mail",
+      "status": "OPEN",
+      "priority": "MEDIUM"
+    },
+    {
+      "id": 6,
+      "action": "Confirm final license",
+      "status": "OPEN",
+      "priority": "LOW"
+    }
   ],
   "sessions": [
-    { "n": 1, "date": "2026-09-04", "scope": "Analysis & planning (docs/**)", "pr": 1 },
-    { "n": 2, "date": "2026-09-04", "scope": "P0 partial", "pr": 2 },
-    { "n": 3, "date": "2026-09-04", "scope": "P0 complete", "pr": 3 },
-    { "n": 4, "date": "2026-09-05", "scope": "P1-02 users", "pr": 4 },
-    { "n": 5, "date": "2026-09-05", "scope": "P1-03 roles & permissions", "pr": 5 },
-    { "n": 6, "date": "2026-09-05", "scope": "P1-01 schema (18 models, RLS, Json contracts, ADR-0006)", "pr": 6 },
-    { "n": 7, "date": "2026-09-05", "scope": "Handoff documentation: AGENTS.md, STATUS.json, README/HANDOFF refresh", "pr": 7 }
+    {
+      "n": 1,
+      "date": "2026-09-04",
+      "scope": "Analysis & planning (docs/**)",
+      "pr": 1
+    },
+    {
+      "n": 2,
+      "date": "2026-09-04",
+      "scope": "P0 partial",
+      "pr": 2
+    },
+    {
+      "n": 3,
+      "date": "2026-09-04",
+      "scope": "P0 complete",
+      "pr": 3
+    },
+    {
+      "n": 4,
+      "date": "2026-09-05",
+      "scope": "P1-02 users",
+      "pr": 4
+    },
+    {
+      "n": 5,
+      "date": "2026-09-05",
+      "scope": "P1-03 roles & permissions",
+      "pr": 5
+    },
+    {
+      "n": 6,
+      "date": "2026-09-05",
+      "scope": "P1-01 schema (18 models, RLS, Json contracts, ADR-0006)",
+      "pr": 6
+    },
+    {
+      "n": 7,
+      "date": "2026-09-05",
+      "scope": "Handoff documentation: AGENTS.md, STATUS.json, README/HANDOFF refresh",
+      "pr": 7
+    },
+    {
+      "n": 8,
+      "date": "2026-09-05",
+      "scope": "P1-04 academic structure: /academic/[tab], 23 actions, setup wizard, seed, tests",
+      "pr": 8
+    }
   ]
 }
