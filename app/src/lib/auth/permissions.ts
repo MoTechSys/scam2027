@@ -507,6 +507,18 @@ export function isEscalatingPermission(code: PermissionCode): boolean {
   return !SELF_SCOPE_PERMISSIONS.has(code);
 }
 
+/**
+ * Pure core of the privilege-escalation guard (FR-ROL-006): may an actor holding `actor` manage a user / grant a
+ * role whose permission codes are `target`? Unknown codes are never manageable; self-scope codes are ignored.
+ */
+export function canManagePermissionSet(actor: ReadonlySet<PermissionCode>, target: Iterable<string>): boolean {
+  for (const code of target) {
+    if (!isPermissionCode(code)) return false;
+    if (isEscalatingPermission(code) && !actor.has(code)) return false;
+  }
+  return true;
+}
+
 export function permissionsByGroup(): Record<PermissionGroup, PermissionDef[]> {
   const out = {} as Record<PermissionGroup, PermissionDef[]>;
   for (const g of Object.keys(PERMISSION_GROUPS) as PermissionGroup[]) out[g] = [];

@@ -46,7 +46,7 @@ test.describe("users module (P1-02)", () => {
     await expect(code).toBeVisible({ timeout: 15_000 });
     const tempPassword = (await code.textContent())?.trim() ?? "";
     expect(tempPassword.length).toBeGreaterThanOrEqual(12);
-    await dialog.getByRole("button", { name: /إغلاق|Close/ }).click();
+    await dialog.getByRole("button", { name: /^إغلاق$|^Close$/ }).filter({ hasNot: page.locator("svg") }).click();
     await expect(dialog).toBeHidden();
 
     // Search for the created user

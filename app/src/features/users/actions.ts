@@ -8,8 +8,8 @@
 import { randomInt } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { assertCanManageUser, assertPermission, hasRole, requireUserOrThrow, type Ctx } from "@/lib/auth/rbac";
+import { canManagePermissionSet } from "@/lib/auth/permissions";
 import { hashPassword, passwordIssues } from "@/lib/auth/password";
-import { isEscalatingPermission, isPermissionCode } from "@/lib/auth/permissions";
 import { audit } from "@/lib/audit";
 import { db, tx, type TenantTx } from "@/lib/db/tenant";
 import { AppError, type Result } from "@/lib/result";
@@ -48,13 +48,9 @@ async function assertGrantableRoles(ctx: Ctx, client: TenantTx, roleIds: string[
   for (const r of roles) {
     if (r.code === "TENANT_ADMIN" && !hasRole(ctx, "TENANT_ADMIN"))
       throw new AppError("FORBIDDEN", "لا يمكن منح دور مدير النظام");
-    for (const p of r.permissions) {
-      const code = p.permissionCode;
-      // Unknown codes are never grantable; self-scope codes (quiz.take …) carry no admin power and are skipped.
-      if (!isPermissionCode(code)) throw new AppError("FORBIDDEN", "لا يمكن منح دور يحوي صلاحيات غير معروفة");
-      if (isEscalatingPermission(code) && !ctx.user.permissions.has(code))
-        throw new AppError("FORBIDDEN", "لا يمكن منح دور يحوي صلاحيات لا تملكها");
-    }
+    // Unknown codes are never grantable; self-scope codes (quiz.take …) carry no admin power and are ignored.
+    if (!canManagePermissionSet(ctx.user.permissions, r.permissions.map((p) => p.permissionCode)))
+      throw new AppError("FORBIDDEN", "لا يمكن منح دور يحوي صلاحيات لا تملكها");
   }
 }
 

@@ -1,4 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
+import { config as loadEnv } from "dotenv";
+
+loadEnv({ path: ".env" }); // DIRECT_DATABASE_URL for global teardown
 
 /**
  * E2E — runs against a production build (`pnpm build && pnpm start`) so RSC/proxy behave as in prod.
@@ -10,6 +13,7 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: "./e2e",
+  globalTeardown: "./e2e/global-teardown.ts",
   fullyParallel: false, // login-attempt rate limiting is per tenant/identifier
   workers: 1,
   retries: process.env.CI ? 1 : 0,
