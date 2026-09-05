@@ -90,7 +90,7 @@ pnpm test && pnpm lint && pnpm typecheck
 - المراجع في `.refs/` قد تحوي `node_modules` لـ UniCore-OS-V2 (~1.3GB) — يمكن حذفها عند الحاجة للمساحة.
 - قد تكون هناك عملية `next` قديمة على المنفذ 3000 في الـ sandbox؛ استخدم `setsid scripts/restart-server.sh` (يقتل ويعيد التشغيل ويطبع `BUILD_ID`).
 
-## 6. الخطوة التالية (محدّث — الجلسة 10)
+## 6. الخطوة التالية (محدّث — الجلسة 12)
 
 **P1-06 الملفات** (storage adapter local/S3، رفع stream، magic bytes، روابط موقّعة، `/files`) ثم P1-07 → P1-15 بالترتيب، ثم P2 → P5. مخرجات P1-06 مفصّلة في `STATUS.json` → `progress.nextTask.deliverables` و`AGENTS.md` §5. كل مهمة = PR مستقل بدورة العمل السباعية (`AGENTS.md` §6) وتحديث ROADMAP + REQUIREMENTS + CHANGELOG + HANDOFF + **STATUS.json** في نفس الالتزام.
 
@@ -186,4 +186,8 @@ pnpm test && pnpm lint && pnpm typecheck
 ## الجلسة 11 — إصلاح حلّ المستأجر على رابط المعاينة + أيقونة (PR #11)
 **السبب:** المالك أرسل لقطة «الجامعة غير موجودة» من الرابط العام للـsandbox. `resolveTenant` كان يرجع إلى `DEFAULT_TENANT_SLUG` فقط حين `NODE_ENV !== "production"`، و`next start` يفرض `production`. **الإصلاح:** الرجوع يعتمد على وجود المتغيّر (فارغ في الإنتاج + تحذير في السجل إن استُخدم). أُضيفت `icon.svg` واستُثنيت من مطابق الـproxy. البوابة: tsc 0 · eslint 0 · vitest 114 · Playwright 63 ✓ / 5 skip · build ✓ · كونسول نظيف على الرابط العام.
 **درس:** أي منطق «dev فقط» يجب أن يعتمد على متغيّر بيئة صريح لا على `NODE_ENV`، لأن خادم المعاينة يعمل في وضع الإنتاج.
+
+## الجلسة 12 — إصلاح إعادة التوجيه بعد الدخول إلى `localhost:3000` (PR #12)
+**السبب:** لقطة من المالك: بعد الدخول من الرابط العام يُحوَّل المتصفح إلى `http://localhost:3000/dashboard`. **التشخيص:** `AUTH_URL="http://localhost:3000"` في `.env` يجعل `createActionURL`/`reqWithEnvURL` في Auth.js تثبّت الأصل؛ والنفق يرسل `x-client-proto` بدل `x-forwarded-proto` ولا يرسل `x-forwarded-host`؛ وNext في `next start` يبني `request.url` لمعالِجات المسار من `hostname:port` الخادم (`http://localhost:3000`) لا من `Host`. **الإصلاح (3 طبقات):** (1) `AUTH_URL` غير مضبوط إطلاقًا — `.env.example`/`.env.test` توثّق السبب؛ (2) `src/lib/auth/forwarded.ts` وحدة نقية بلا next-auth: `normalizeForwardedHeaders` (يستدعيها الـproxy قبل أي منطق؛ يرقّي `http` الافتراضي من Next إلى `https` عند وجود ترويسة مورد ولا يخفّض `https` أبدًا)، `forwardedOrigin`, `rebaseUrlToForwardedOrigin`; (3) `api/auth/[...nextauth]/route.ts` يعيد بناء `NextRequest` على الأصل المُمرَّر قبل تسليمه لـAuth.js. **التحقّق:** متصفح حقيقي على الرابط العام: مدير مع `next=/users` → `/users`، طالب/مدرّس → `/dashboard`، كلمة مرور خاطئة → `/login` + تنبيه، خروج → `/login?reason=signed_out`، ثم `/dashboard` → `/login?next=/dashboard`؛ صفر إعادة توجيه إلى localhost. البوابة: tsc 0 · eslint 0 · vitest 124 (20 ملف) · Playwright 63 ✓ / 5 skip · build ✓.
+**درس:** في نظام متعدد المستأجرين لا يُضبط `AUTH_URL` أبدًا؛ الأصل يُشتق من الطلب. وأي وكيل عكسي جديد يجب فحص ترويساته الفعلية (خادم صدى على منفذ جانبي) قبل الافتراض. وعند إعادة بناء URL لا تعدّل `host` في WHATWG URL (يحتفظ بالمنفذ القديم) — ابنِ من الأصل.
 

@@ -14,6 +14,7 @@ import { getToken } from "next-auth/jwt";
 import { resolveTenant } from "@/lib/auth/tenant-resolver";
 import { rateLimit } from "@/lib/ratelimit";
 import { env } from "@/lib/env";
+import { normalizeForwardedHeaders } from "@/lib/auth/forwarded";
 
 export const config = {
   matcher: [
@@ -70,6 +71,7 @@ export default async function proxy(req: NextRequest): Promise<NextResponse> {
   const reqHeaders = new Headers(req.headers);
   reqHeaders.set("x-request-id", requestId);
   reqHeaders.set("x-nonce", nonce);
+  normalizeForwardedHeaders(reqHeaders);
 
   // 3. Login / auth rate limit
   if (req.method === "POST" && (pathname === "/login" || pathname.startsWith("/api/auth/"))) {

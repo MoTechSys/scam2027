@@ -126,7 +126,7 @@ pnpm exec playwright test                    # 39 ✓ + 2 fixme (سطح المك
 | **P1-05 المقررات والشُعب والتسجيل** | `/courses` + `/courses/[id]` (CRUD، ربط M:N تخصص↔مستوى، بحث، حذف ناعم)، `/offerings` + `/offerings/[id]` (شعبة لكل فصل بحالات مسودة/مفتوحة/مغلقة/مؤرشفة، مدرّسون بأدوار، سعة، جدول أسبوعي، قائمة الطلاب)، تسجيل فردي ببحث حيّ + جماعي بمعرّفات مع نتيجة لكل سطر، انسحاب/إعادة/إكمال؛ **نطاق الرؤية**: `course.manage_all` = كل المستأجر، وإلا المدرّس شُعبه والطالب تسجيلاته؛ seed 6 مقررات/4 شُعب/30 طالبًا | `app/src/features/{courses,offerings,enrollment}/*`, `app/src/app/(dashboard)/{courses,offerings}/**`, `app/src/components/forms/*`, `app/src/lib/auth/has-permission.ts` |
 | **P1-01 المخطط** | 18 موديلًا (أكاديمي/مقررات/محتوى/تواصل/نظام) + قيود SQL يدوية + RLS على 30 جدولًا + عقود Zod لأعمدة Json | `app/prisma/schema.prisma`, `app/prisma/migrations/20260905*`, `app/src/lib/contracts/json-columns.ts`, ADR-0006 |
 
-**مقاييس الجودة الحالية:** `tsc` 0 · `eslint` 0 · Vitest **114/114** (19 ملفًا: 13 وحدة + 6 تكامل بقاعدة اختبار مستقلة) · Playwright **63 ✓ / 5 skip** (8 ملفات × 2 مشروع؛ skips = logout fixme + حوارات Radix Select على mobile-safari المغطّاة على سطح المكتب) · `pnpm build` ✓ · 0 تمرير أفقي على 390px · 0 انتهاكات axe serious/critical على الصفحات المبنية.
+**مقاييس الجودة الحالية:** `tsc` 0 · `eslint` 0 · Vitest **124/124** (20 ملفًا: 14 وحدة + 6 تكامل بقاعدة اختبار مستقلة) · Playwright **63 ✓ / 5 skip** (8 ملفات × 2 مشروع؛ skips = logout fixme + حوارات Radix Select على mobile-safari المغطّاة على سطح المكتب) · `pnpm build` ✓ · 0 تمرير أفقي على 390px · 0 انتهاكات axe serious/critical على الصفحات المبنية.
 
 ### 4.2 ما هو **غير** مبني (بصراحة)
 - لا ملفات ولا إشعارات ولا اختبارات (quizzes) ولا درجات **في الواجهة** — الجداول موجودة (P1-01) لكن بلا صفحات أو Server Actions. الطالب يرى لوحة التحكم + المقررات + شُعبه؛ المدرّس يرى شُعبه وقوائم طلابه.
@@ -147,6 +147,8 @@ pnpm exec playwright test                    # 39 ✓ + 2 fixme (سطح المك
 7. React 19 + `react-hooks/set-state-in-effect`: لا `setState` داخل `useEffect` لمزامنة props — استخدم نمط الحالة المشتقّة (مثال: `roles/[id]/permissions-editor.tsx`).
 8. Playwright على الجوال: جدول سطح المكتب موجود مخفيًا في DOM → طابق `.locator("visible=true")`.
 9. القائمة الجانبية قصيرة **بالتصميم**: `visibleNavItems` يفلتر بالصلاحية **و**يخفي ما له `phase` (لم يُبنَ). عند شحن وحدة: احذف `phase` وحدّث `tests/unit/login-helpers.test.ts`.
+10. `next start` يفرض `NODE_ENV=production` (روابط المعاينة أيضًا) — لا تربط سلوكًا بـ`NODE_ENV`؛ استخدم متغيّر بيئة صريحًا (PR #11).
+11. **لا تضبط `AUTH_URL` أبدًا** (متعدد المستأجرين): Auth.js يثبّت كل إعادة توجيه على ذلك الأصل → `localhost:3000` بعد الدخول. الأصل يُشتق من الطلب عبر `src/lib/auth/forwarded.ts` (تطبيع `x-forwarded-*` في الـproxy + إعادة بناء `request.url` في `api/auth/[...nextauth]/route.ts` لأن Next يبنيه من `hostname:port` الخادم). عند وكيل عكسي جديد افحص ترويساته فعليًا (PR #12).
 
 ---
 

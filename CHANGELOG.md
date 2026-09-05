@@ -11,6 +11,9 @@
 
 ## [Unreleased]
 
+### Fixed — PR #12
+- **إعادة التوجيه بعد الدخول إلى `localhost:3000`:** على الرابط العام كان المتصفح يُحوَّل بعد الدخول إلى `http://localhost:3000/dashboard` (`ERR_CONNECTION_REFUSED`). سببان: (1) `AUTH_URL="http://localhost:3000"` في `.env` يجعل Auth.js يثبّت كل إعادة توجيه على أصل واحد؛ (2) نفق المعاينة لا يرسل `x-forwarded-host`/`x-forwarded-proto` (يرسل `x-client-proto` فقط) وNext يبني `request.url` لمعالِجات المسار من `hostname:port` الخاص بالخادم لا من `Host`. **الإصلاح:** أُلغي `AUTH_URL` نهائيًا (`.env.example`/`.env.test` توثّق ذلك)، ووحدة نقية جديدة `src/lib/auth/forwarded.ts` (`normalizeForwardedHeaders`, `forwardedOrigin`, `rebaseUrlToForwardedOrigin`) يستدعيها الـproxy لتطبيع الترويسات، ومعالِج `/api/auth/[...nextauth]` يعيد بناء `request.url` على أصل الطلب الفعلي. النتيجة: كل إعادات التوجيه (دخول، `next=`، خطأ، خروج، بوابة الجلسة) تبقى على نفس المضيف الذي استخدمه المتصفح — نطاق مستأجر فرعي أو رابط معاينة. 10 اختبارات وحدة (`forwarded.test.ts`) + تحقّق بمتصفح حقيقي على الرابط العام (مدير/مدرّس/طالب، خطأ كلمة المرور، تسجيل خروج).
+
 ### Fixed — PR #11
 - **حلّ المستأجر على روابط المعاينة/الـsandbox:** كان الرجوع إلى `DEFAULT_TENANT_SLUG` مقيّدًا بـ`NODE_ENV !== "production"`، لكن `next start` يفرض `production` دائمًا، فظهرت صفحة «الجامعة غير موجودة» على عنوان المعاينة العام. أصبح الرجوع اعتمادًا صريحًا على وجود المتغيّر (يبقى فارغًا في الإنتاج، ويُسجَّل تحذير `tenant.fallback_default_slug_in_production` إن استُخدم هناك). اختبار وحدة لمضيف `3000-xxx.sandbox…`.
 - أيقونة التطبيق `src/app/icon.svg` (Omnitrix) كبديل افتراضي عند غياب شعار المستأجر؛ استثناء `icon.svg`/`apple-icon.png` من مطابق الـproxy حتى لا يُعاد توجيهها إلى `/login` — لا مزيد من 404 في الكونسول.
