@@ -4,8 +4,8 @@
   "repo": "https://github.com/MoTechSys/scam2027",
   "entryPoint": "AGENTS.md",
   "updatedAt": "2026-09-05",
-  "updatedInPr": 8,
-  "mainHead": "93a3a5d",
+  "updatedInPr": 10,
+  "mainHead": "f54bf9c",
   "branches": {
     "main": "main",
     "work": "genspark_ai_developer",
@@ -13,8 +13,8 @@
   },
   "progress": {
     "totalTasks": 65,
-    "doneTasks": 20,
-    "percent": 31,
+    "doneTasks": 21,
+    "percent": 32,
     "phases": {
       "P0": {
         "name": "Foundation",
@@ -29,13 +29,15 @@
       "P1": {
         "name": "Core LMS",
         "total": 15,
-        "done": 4,
+        "done": 5,
         "status": "IN_PROGRESS",
         "prs": [
           4,
           5,
           6,
-          8
+          8,
+          9,
+          10
         ]
       },
       "P2": {
@@ -83,28 +85,27 @@
       "P1-01",
       "P1-02",
       "P1-03",
-      "P1-04"
+      "P1-04",
+      "P1-05"
     ],
     "nextTask": {
-      "id": "P1-05",
-      "title": "Courses, offerings (sections) and enrollment: /courses, /courses/[id], /offerings, /offerings/[id]",
+      "id": "P1-06",
+      "title": "Files: storage adapter (local/S3), streamed upload with magic-byte check, signed download links, classification, /files/[tab]",
       "requirements": [
-        "FR-CRS-001..",
-        "FR-OFF-001..",
-        "FR-ENR-001.."
+        "FR-FIL-001..008",
+        "FR-FIL-011"
       ],
       "deliverables": [
-        "src/features/courses/{schemas,queries,actions}.ts + src/features/offerings/* + src/features/enrollment/* (safeAction + audit + assertPermission)",
-        "/courses list (tabs/search/pagination) + create/edit + M:N mapping to majors with level (CourseMajor) — reuse academic form-fields/dialog patterns",
-        "/courses/[id] detail; /offerings per semester (DRAFT/OPEN/CLOSED/ARCHIVED, instructors, capacity, schedule via offeringScheduleSchema)",
-        "/offerings/[id]: single + bulk enrollment, withdraw; visibility scope: instructor sees own sections, student own enrollments, course.manage_all for admins",
-        "remove `phase` from nav item `courses` + update tests/unit/login-helpers.test.ts (asserts courses hidden)",
-        "seed.ts: 6 courses + 4 offerings in current semester + 30 students enrolled",
-        "i18n ar/en domains courses/offerings; unit + integration (RLS, scope) + e2e courses.spec.ts desktop+mobile (+ teardown for E2E* codes)",
-        "docs: ROADMAP ☑, REQUIREMENTS ☑, CHANGELOG, HANDOFF session 9, STATUS.json, AGENTS.md §0/§4/§5"
+        "src/lib/storage/{index,local,s3}.ts — StorageAdapter{put(stream),getSignedUrl(ttl),delete}; env S3_* optional (local default, folder outside public/)",
+        "src/features/files/{schemas,queries,actions}.ts (safeAction + audit + assertPermission; file.manage_all tenant-wide, else scope by offerings the user teaches/is enrolled in)",
+        "app/api/files/upload/route.ts — multipart stream, allowlist + magic bytes (file-type), size cap from subscription, regenerated name tenant/course/uuid.ext",
+        "app/api/files/[id]/download/route.ts — short-lived HMAC-signed URL + FileDownloadLog",
+        "/files/[tab] (all | by course/offering | trash) with multi-upload progress, FileCategory + DataClassification, soft delete/restore; desktop table + mobile list",
+        "nav item files unhidden + login-helpers test; seed 2 sample files; i18n ar/en files domain",
+        "tests: unit (magic bytes/allowlist/name), integration (RLS + scope), e2e files.spec.ts desktop+mobile (+ teardown E2E*)",
+        "docs: ROADMAP ☑, REQUIREMENTS ☑, CHANGELOG, HANDOFF session 11, STATUS.json (doneTasks 22), AGENTS.md §0/§4.1/§5"
       ],
       "remainingInPhaseOrder": [
-        "P1-05",
         "P1-06",
         "P1-07",
         "P1-08",
@@ -123,35 +124,36 @@
     "definition": "typecheck + lint + test + build must all pass; then playwright e2e against `pnpm build && pnpm start -p 3000`",
     "lastRun": {
       "date": "2026-09-05",
-      "commit": "P1-04 (PR #8)",
+      "commit": "P1-05 part 2 (PR #10)",
       "typecheck": "PASS (0 errors)",
       "lint": "PASS (0 errors)",
       "unitAndIntegration": {
         "runner": "vitest",
-        "passed": 101,
+        "passed": 114,
         "failed": 0,
-        "files": 17
+        "files": 19
       },
       "e2e": {
         "runner": "playwright",
-        "passed": 50,
-        "skipped": 2,
+        "passed": 61,
+        "skipped": 5,
         "failed": 0,
         "projects": [
           "desktop-chromium",
           "mobile-safari"
         ],
-        "skippedReason": "logout via Radix menu form action marked fixme (both projects)"
+        "skippedReason": "logout via Radix menu form action fixme (2) + Radix Select option tap on mobile-safari for create-course/create-section/bulk (3), covered on desktop"
       },
       "build": "PASS",
-      "buildId": "2FOU6I9blXQU9_lVcIxGx"
+      "buildId": "EQsGcJ3LoZ3WJnk5Sk4Ex"
     },
     "knownDebt": [
-      "prettier --check flags 10 pre-existing files; not part of `pnpm check`. Format only files you touch or do a dedicated `style:` PR.",
+      "prettier --check flags ~120 pre-existing files; not part of `pnpm check`. Format ONLY files you touch (running --write on a folder pollutes the PR) or do a dedicated `style:` PR.",
       "CI lives in .github/ci.yml.template because the agent token lacks `workflows` scope; owner must move it to .github/workflows/ci.yml.",
       "docs/50-quality/01-TESTING-STRATEGY.md §5 references scripts e2e:mobile / e2e:crawl / test:a11y that are not yet in app/package.json (a11y is covered by e2e/a11y.spec.ts; a crawl spec is not written yet).",
-      "prisma/seed.ts has no academic structure yet (to be extended in P1-04/P1-05).",
-      "e2e logout test is fixme in auth.spec.ts."
+      "e2e logout test is fixme in auth.spec.ts.",
+      "Radix Select option tap is flaky on mobile-safari in Playwright; create dialogs are skipped on that project and asserted on desktop — mobile asserts list/detail/no-horizontal-scroll.",
+      "Modules imported by integration tests must import permission predicates from src/lib/auth/has-permission.ts, never runtime from rbac.ts (next-auth → next/server is not resolvable under vitest)."
     ]
   },
   "database": {
@@ -189,7 +191,7 @@
   },
   "demoCredentials": {
     "tenant": "demo",
-    "note": "Development only. Source: app/prisma/seed.ts. Permission counts as of 113 codes.",
+    "note": "Development only. Source: app/prisma/seed.ts. Students student1..30@demo.edu / 4431000NN / Student@123456 (30 accounts). Permission counts as of 114 codes.",
     "accounts": [
       {
         "role": "TENANT_ADMIN",
@@ -340,27 +342,19 @@
       "date": "2026-09-05",
       "scope": "P1-04 academic structure: /academic/[tab], 23 actions, setup wizard, seed, tests",
       "pr": 8
+    },
+    {
+      "n": 9,
+      "date": "2026-09-05",
+      "scope": "P1-05 part 1: course.manage_all, features courses/offerings/enrollment, /courses, /courses/[id], shared form components",
+      "pr": 9
+    },
+    {
+      "n": 10,
+      "date": "2026-09-05",
+      "scope": "P1-05 part 2: /offerings, /offerings/[id] roster, enrol/bulk dialogs, searchStudentsAction, seedCourses, has-permission extraction, tests",
+      "pr": 10
     }
   ],
-  "nextTask": "P1-05 (part 2: /offerings, /offerings/[id] roster, enrol/bulk dialogs, seedCourses, integration tests) → then P1-06",
-  "inProgress": {
-    "task": "P1-05",
-    "pr": 9,
-    "done": [
-      "course.manage_all permission (114)",
-      "features/courses|offerings|enrollment (schemas/scope/queries/actions)",
-      "/courses list+dialogs+majors editor",
-      "/courses/[id]",
-      "i18n courses/offerings/enrollment",
-      "e2e courses.spec + teardown E2E* courses"
-    ],
-    "remaining": [
-      "/offerings + /offerings/[id] roster UI (feature layer ready)",
-      "searchStudentsAction",
-      "seedCourses (6 courses, 4 offerings, 30 students)",
-      "unit+integration tests for scope/enrolOne",
-      "unhide nav offerings (phase P1 flag)",
-      "ROADMAP P1-05 ☑ after part 2"
-    ]
-  }
+  "nextTask": "P1-06 files"
 }

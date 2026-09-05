@@ -55,7 +55,11 @@ const offeringBase = z.object({
   courseId: uuid,
   semesterId: uuid,
   section,
-  capacity: z.coerce.number().int().min(1).max(MAX_CAPACITY).optional().nullable(),
+  /** Empty form field → null (unlimited). */
+  capacity: z.preprocess(
+    (v) => (v === "" || v === undefined ? null : v),
+    z.coerce.number().int().min(1).max(MAX_CAPACITY).nullable(),
+  ),
   location,
   schedule: offeringScheduleSchema.optional().default([]),
 });

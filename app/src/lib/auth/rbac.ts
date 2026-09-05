@@ -14,6 +14,7 @@ import { auth } from "./auth";
 import { db } from "@/lib/db/tenant";
 import { AppError } from "@/lib/result";
 import { canManagePermissionSet, type PermissionCode } from "./permissions";
+import { hasRole } from "./has-permission";
 
 export type Ctx = {
   tenantId: string;
@@ -132,26 +133,13 @@ export async function requireUserOrThrow(): Promise<Ctx> {
   return r.ctx;
 }
 
-export function hasPermission(ctx: Pick<Ctx, "user">, ...perms: PermissionCode[]): boolean {
-  return perms.some((p) => ctx.user.permissions.has(p));
-}
-
-export function hasAllPermissions(ctx: Pick<Ctx, "user">, ...perms: PermissionCode[]): boolean {
-  return perms.every((p) => ctx.user.permissions.has(p));
-}
-
-/** Any of the given permissions suffices. */
-export function assertPermission(ctx: Pick<Ctx, "user">, ...perms: PermissionCode[]): void {
-  if (!hasPermission(ctx, ...perms)) throw new AppError("FORBIDDEN", "ليس لديك صلاحية لهذا الإجراء");
-}
-
-export function assertAllPermissions(ctx: Pick<Ctx, "user">, ...perms: PermissionCode[]): void {
-  if (!hasAllPermissions(ctx, ...perms)) throw new AppError("FORBIDDEN", "ليس لديك صلاحية لهذا الإجراء");
-}
-
-export function hasRole(ctx: Pick<Ctx, "user">, ...roles: string[]): boolean {
-  return roles.some((r) => ctx.user.roles.includes(r));
-}
+export {
+  hasPermission,
+  hasAllPermissions,
+  assertPermission,
+  assertAllPermissions,
+  hasRole,
+} from "./has-permission";
 
 /**
  * Privilege-escalation guard: an actor may only manage users whose *escalating* permission set is a subset
@@ -176,4 +164,3 @@ export async function assertCanManageUser(ctx: Ctx, targetUserId: string): Promi
   if (!canManagePermissionSet(ctx.user.permissions, targetCodes))
     throw new AppError("FORBIDDEN", "لا يمكن إدارة مستخدم يملك صلاحيات لا تملكها");
 }
-
