@@ -4,8 +4,8 @@
   "repo": "https://github.com/MoTechSys/scam2027",
   "entryPoint": "AGENTS.md",
   "updatedAt": "2026-09-05",
-  "updatedInPr": 13,
-  "mainHead": "0bba5d8",
+  "updatedInPr": 14,
+  "mainHead": "4f9c490",
   "branches": {
     "main": "main",
     "work": "genspark_ai_developer",
@@ -13,8 +13,8 @@
   },
   "progress": {
     "totalTasks": 65,
-    "doneTasks": 22,
-    "percent": 34,
+    "doneTasks": 23,
+    "percent": 35,
     "phases": {
       "P0": {
         "name": "Foundation",
@@ -29,7 +29,7 @@
       "P1": {
         "name": "Core LMS",
         "total": 15,
-        "done": 6,
+        "done": 7,
         "status": "IN_PROGRESS",
         "prs": [
           4,
@@ -38,7 +38,8 @@
           8,
           9,
           10,
-          13
+          13,
+          14
         ]
       },
       "P2": {
@@ -87,17 +88,19 @@
       "P1-02",
       "P1-03",
       "P1-04",
-      "P1-05"
+      "P1-05",
+      "P1-06",
+      "P1-07"
     ],
     "nextTask": {
-      "id": "P1-07",
-      "name": "الإشعارات",
+      "id": "P1-08",
+      "name": "سلة المحذوفات",
+      "status": "TODO",
+      "scope": "استرجاع/حذف نهائي موحّد لكل الكيانات ذات deletedAt (مستخدمون، مقررات، شُعب، ملفات، إشعارات) مع صلاحية restore/purge وتدقيق",
       "deliverables": [
-        "Notification model + prefs",
-        "in-app center /notifications + bell badge",
-        "email adapter (SMTP/Resend) with queue",
-        "triggers: enrollment, file upload, grade",
-        "i18n ar/en, tests desktop+mobile"
+        "features/trash: queries موحّدة عبر الكيانات، actions restore/purge",
+        "/trash UI بتبويبات لكل كيان + بحث",
+        "اختبارات unit/integration/e2e"
       ]
     }
   },
@@ -106,28 +109,28 @@
     "definition": "typecheck + lint + test + build must all pass; then playwright e2e against `pnpm build && pnpm start -p 3000`",
     "lastRun": {
       "date": "2026-09-05",
-      "commit": "auth redirect derived from request host (PR #12)",
+      "commit": "P1-07 notifications (PR #14)",
       "typecheck": "PASS (0 errors)",
       "lint": "PASS (0 errors)",
       "unitAndIntegration": {
         "runner": "vitest",
-        "passed": 124,
+        "passed": 167,
         "failed": 0,
-        "files": 20
+        "files": 23
       },
       "e2e": {
         "runner": "playwright",
-        "passed": 63,
-        "skipped": 5,
+        "passed": 72,
+        "skipped": 8,
         "failed": 0,
         "projects": [
           "desktop-chromium",
           "mobile-safari"
         ],
-        "skippedReason": "logout via Radix menu form action fixme (2) + Radix Select option tap on mobile-safari for create-course/create-section/bulk (3), covered on desktop"
+        "skippedReason": "logout via Radix menu form action fixme (2) + Radix Select option tap on mobile-safari for create-course/create-section/bulk (3), covered on desktop + compose notifications on mobile-safari (2), covered on desktop"
       },
       "build": "PASS",
-      "buildId": "bs9VBg6qoQeMq8Na8Dk1e"
+      "buildId": "3_DlrNx7tjKLVptmBJpNI"
     },
     "knownDebt": [
       "prettier --check flags ~120 pre-existing files; not part of `pnpm check`. Format ONLY files you touch (running --write on a folder pollutes the PR) or do a dedicated `style:` PR.",
@@ -356,8 +359,14 @@
       "date": "2026-09-05",
       "scope": "Fix post-login redirect to localhost:3000 on public/tenant hosts: unset AUTH_URL, src/lib/auth/forwarded.ts, proxy header normalisation, /api/auth request rebasing, 10 unit tests, real-browser verification",
       "pr": 12
+    },
+    {
+      "n": 14,
+      "date": "2026-09-05",
+      "scope": "P1-07 notifications: feature module (targets, fan-out ≤500 or Job, preferences), /notifications centre, header bell + unread API, seed, 18 unit + 12 integration + 4 e2e",
+      "pr": 14
     }
   ],
-  "nextTask": "P1-06 files",
-  "session": 13
+  "nextTask": "P1-08 trash",
+  "session": 15
 }

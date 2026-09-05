@@ -8,6 +8,8 @@ export type LayoutUser = {
   email: string;
   roles: string[];
   locale: string;
+  /** Unread notifications for the header bell; `null` hides the bell (no `notification.view`). */
+  unreadNotifications: number | null;
 };
 
 export type LayoutTenant = { name: string; logoUrl: string | null };

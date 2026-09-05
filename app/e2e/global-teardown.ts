@@ -10,6 +10,9 @@ export default async function globalTeardown(): Promise<void> {
   if (!url) return;
   const prisma = new PrismaClient({ datasources: { db: { url } } });
   try {
+    // Notifications (P1-07): e2e sends are titled `E2E*`; recipient rows cascade.
+    const notifs = await prisma.notification.deleteMany({ where: { title: { startsWith: "E2E" } } });
+    if (notifs.count) console.log(`[e2e teardown] removed ${notifs.count} e2e notification(s)`);
     // Files (P1-06): e2e uploads are named `E2E*`; download logs cascade. Objects stay in ./storage (gitignored, tiny).
     const files = await prisma.file.deleteMany({ where: { name: { startsWith: "E2E" } } });
     if (files.count) console.log(`[e2e teardown] removed ${files.count} e2e file(s)`);

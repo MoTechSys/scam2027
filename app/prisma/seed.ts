@@ -15,7 +15,7 @@
  *  Files (P1-06): two sample files on CS101 (section 1) uploaded by dr.ahmad, written to STORAGE_LOCAL_ROOT
  *    (local driver only — skipped when STORAGE_DRIVER=s3).
  */
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, type Prisma } from "@prisma/client";
 import { hash } from "@node-rs/argon2";
 import { createHash } from "node:crypto";
 import {
@@ -760,6 +760,149 @@ async function seedFiles(tenantId: string) {
   console.log(`✓ files: ${n} sample files on CS101 (local storage)`);
 }
 
+/**
+ * Sample notifications (P1-07): a tenant-wide announcement by the admin (everyone, ~half read), a section notice by
+ * dr.ahmad to CS101 s1 (students + co-instructors), and a system notice to the admin only. Idempotent: matched by
+ * (tenantId, title) and re-fanned out on every run.
+ */
+async function seedNotifications(tenantId: string) {
+  const [admin, instructor] = await Promise.all([
+    prisma.user.findUniqueOrThrow({
+      where: { tenantId_email: { tenantId, email: "admin@demo.edu" } },
+      select: { id: true },
+    }),
+    prisma.user.findUniqueOrThrow({
+      where: { tenantId_email: { tenantId, email: "dr.ahmad@demo.edu" } },
+      select: { id: true },
+    }),
+  ]);
+  const course = await prisma.course.findUniqueOrThrow({
+    where: { tenantId_code: { tenantId, code: "CS101" } },
+    select: { id: true },
+  });
+  const offering = await prisma.courseOffering.findFirstOrThrow({
+    where: { tenantId, courseId: course.id, section: "1", deletedAt: null },
+    select: { id: true },
+  });
+
+  type Sample = {
+    title: string;
+    body: string;
+    type: "ANNOUNCEMENT" | "ACADEMIC" | "SYSTEM";
+    priority: "NORMAL" | "HIGH";
+    link: string | null;
+    senderId: string | null;
+    target: Prisma.InputJsonObject;
+    recipients: () => Promise<string[]>;
+    readRatio: number;
+  };
+  const samples: Sample[] = [
+    {
+      title: "بدء الفصل الدراسي الأول 2026/2027",
+      body: "نرحّب بكم في الفصل الجديد. يُرجى مراجعة الجداول الدراسية وتحديث بياناتكم الشخصية قبل نهاية الأسبوع الأول.",
+      type: "ANNOUNCEMENT",
+      priority: "NORMAL",
+      link: "/dashboard",
+      senderId: admin.id,
+      target: { kind: "ALL" },
+      recipients: async () =>
+        (
+          await prisma.user.findMany({
+            where: { tenantId, deletedAt: null, status: "ACTIVE", id: { not: admin.id } },
+            select: { id: true },
+          })
+        ).map((u) => u.id),
+      readRatio: 0.5,
+    },
+    {
+      title: "CS101 — رُفعت محاضرة الأسبوع الأول",
+      body: "ملف المحاضرة الأولى متاح الآن في مكتبة الملفات. يُرجى قراءته قبل اللقاء القادم.",
+      type: "ACADEMIC",
+      priority: "HIGH",
+      link: "/files",
+      senderId: instructor.id,
+      target: { kind: "OFFERING", ids: [offering.id] },
+      recipients: async () => {
+        const [students, staff] = await Promise.all([
+          prisma.enrollment.findMany({
+            where: { tenantId, offeringId: offering.id, status: "ACTIVE" },
+            select: { studentId: true },
+          }),
+          prisma.offeringInstructor.findMany({
+            where: { tenantId, offeringId: offering.id, userId: { not: instructor.id } },
+            select: { userId: true },
+          }),
+        ]);
+        return [...students.map((s) => s.studentId), ...staff.map((s) => s.userId)];
+      },
+      readRatio: 0.3,
+    },
+    {
+      title: "تم تهيئة المستأجر بنجاح",
+      body: "أُنشئت بيانات العرض (الأدوار، المستخدمون، البنية الأكاديمية، المقررات، الملفات). هذا إشعار نظامي لا يخضع لتفضيلات الاستلام.",
+      type: "SYSTEM",
+      priority: "NORMAL",
+      link: "/developer",
+      senderId: null,
+      target: { kind: "USERS", ids: [admin.id] },
+      recipients: async () => [admin.id],
+      readRatio: 0,
+    },
+  ];
+
+  let delivered = 0;
+  for (const s of samples) {
+    const existing = await prisma.notification.findFirst({
+      where: { tenantId, title: s.title },
+      select: { id: true },
+    });
+    const ids = await s.recipients();
+    const now = new Date();
+    const n = existing
+      ? await prisma.notification.update({
+          where: { id: existing.id },
+          data: {
+            body: s.body,
+            type: s.type,
+            priority: s.priority,
+            link: s.link,
+            targetSpec: s.target,
+            recipientCount: ids.length,
+            deletedAt: null,
+          },
+          select: { id: true },
+        })
+      : await prisma.notification.create({
+          data: {
+            tenantId,
+            senderId: s.senderId,
+            type: s.type,
+            priority: s.priority,
+            title: s.title,
+            body: s.body,
+            link: s.link,
+            targetSpec: s.target,
+            recipientCount: ids.length,
+            sentAt: now,
+          },
+          select: { id: true },
+        });
+    const readUpTo = Math.floor(ids.length * s.readRatio);
+    await prisma.notificationRecipient.createMany({
+      data: ids.map((userId, i) => ({
+        tenantId,
+        notificationId: n.id,
+        userId,
+        deliveredAt: now,
+        readAt: i < readUpTo ? now : null,
+      })),
+      skipDuplicates: true,
+    });
+    delivered += ids.length;
+  }
+  console.log(`✓ notifications: ${samples.length} samples, ${delivered} recipient rows`);
+}
+
 async function main() {
   await seedPermissions();
   await seedPlatformAdmin();
@@ -767,6 +910,7 @@ async function main() {
   await seedAcademic(tenant.id);
   await seedCourses(tenant.id);
   await seedFiles(tenant.id);
+  await seedNotifications(tenant.id);
 }
 
 main()

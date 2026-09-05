@@ -60,7 +60,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
     href: "/notifications",
     icon: Bell,
     permission: "notification.view",
-    phase: "P3",
     bottom: true,
   },
   { key: "reports", href: "/reports", icon: BarChart3, permission: "report.view", phase: "P3" },
