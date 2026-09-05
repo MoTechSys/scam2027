@@ -23,7 +23,9 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: name, template: `%s · ${name}` },
     description: t("tagline"),
     applicationName: name,
-    icons: tenant?.branding?.logoUrl ? [{ url: tenant.branding.logoUrl }] : undefined,
+    icons: tenant?.branding?.logoUrl
+      ? [{ url: tenant.branding.logoUrl }]
+      : [{ url: "/icon.svg", type: "image/svg+xml" }],
   };
 }
 
@@ -47,17 +49,27 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const style = primary ? ({ "--primary": primary } as React.CSSProperties) : undefined;
 
   return (
-    <html lang={locale} dir={dirOf(locale)} className={`dark ${cairo.variable}`} style={style} suppressHydrationWarning>
+    <html
+      lang={locale}
+      dir={dirOf(locale)}
+      className={`dark ${cairo.variable}`}
+      style={style}
+      suppressHydrationWarning
+    >
       <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:start-2 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+          className="sr-only focus:not-sr-only focus:fixed focus:start-2 focus:top-2 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
         >
           {t("skipToContent")}
         </a>
         <NextIntlClientProvider locale={locale} messages={messages} now={now} timeZone={timeZone}>
           {children}
-          <Toaster position={dirOf(locale) === "rtl" ? "bottom-left" : "bottom-right"} richColors closeButton />
+          <Toaster
+            position={dirOf(locale) === "rtl" ? "bottom-left" : "bottom-right"}
+            richColors
+            closeButton
+          />
         </NextIntlClientProvider>
       </body>
     </html>

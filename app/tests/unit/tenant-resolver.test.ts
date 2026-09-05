@@ -15,6 +15,8 @@ describe("hostToSlug", () => {
   it("nested subdomains and foreign hosts are not slugs (→ customDomain lookup)", () => {
     expect(hostToSlug("a.b.localhost")).toEqual({ slug: null, isRoot: false });
     expect(hostToSlug("lms.university.edu")).toEqual({ slug: null, isRoot: false });
+    // sandbox/preview hosts (port-prefixed) must never be parsed as a tenant slug
+    expect(hostToSlug("3000-abc123-2e77fc33.sandbox.novita.ai")).toEqual({ slug: null, isRoot: false });
   });
 });
 

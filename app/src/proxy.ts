@@ -16,10 +16,19 @@ import { rateLimit } from "@/lib/ratelimit";
 import { env } from "@/lib/env";
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|icons/|fonts/|manifest.webmanifest|robots.txt).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|icons/|fonts/|manifest.webmanifest|robots.txt).*)",
+  ],
 };
 
-const PUBLIC_PATHS = new Set(["/login", "/developer", "/tenant-not-found", "/tenant-suspended", "/unauthorized", "/api/health"]);
+const PUBLIC_PATHS = new Set([
+  "/login",
+  "/developer",
+  "/tenant-not-found",
+  "/tenant-suspended",
+  "/unauthorized",
+  "/api/health",
+]);
 const TENANT_FREE_PATHS = new Set(["/tenant-not-found", "/tenant-suspended", "/developer", "/api/health"]);
 const SESSION_COOKIE = "scam.session";
 
@@ -30,7 +39,9 @@ function isPublic(pathname: string): boolean {
 }
 
 function clientIp(req: NextRequest): string {
-  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? req.headers.get("x-real-ip") ?? "unknown";
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? req.headers.get("x-real-ip") ?? "unknown"
+  );
 }
 
 function buildCsp(nonce: string): string {
@@ -66,7 +77,11 @@ export default async function proxy(req: NextRequest): Promise<NextResponse> {
     if (!rl.ok) {
       return new NextResponse(JSON.stringify({ ok: false, error: { code: "RATE_LIMITED" } }), {
         status: 429,
-        headers: { "content-type": "application/json", "retry-after": String(rl.retryAfterSec), "x-request-id": requestId },
+        headers: {
+          "content-type": "application/json",
+          "retry-after": String(rl.retryAfterSec),
+          "x-request-id": requestId,
+        },
       });
     }
   }
@@ -96,7 +111,12 @@ export default async function proxy(req: NextRequest): Promise<NextResponse> {
   // 4. Auth gate
   let clearSession = false;
   if (!isPublic(pathname) && !pathname.startsWith("/_next")) {
-    const token = await getToken({ req, secret: env.AUTH_SECRET, cookieName: SESSION_COOKIE, salt: SESSION_COOKIE });
+    const token = await getToken({
+      req,
+      secret: env.AUTH_SECRET,
+      cookieName: SESSION_COOKIE,
+      salt: SESSION_COOKIE,
+    });
     const url = req.nextUrl.clone();
     url.pathname = "/login";
     if (!token?.sid) {
@@ -111,7 +131,12 @@ export default async function proxy(req: NextRequest): Promise<NextResponse> {
     }
   } else if (pathname === "/login") {
     // Already signed in for this tenant → straight to the dashboard.
-    const token = await getToken({ req, secret: env.AUTH_SECRET, cookieName: SESSION_COOKIE, salt: SESSION_COOKIE });
+    const token = await getToken({
+      req,
+      secret: env.AUTH_SECRET,
+      cookieName: SESSION_COOKIE,
+      salt: SESSION_COOKIE,
+    });
     if (token?.sid && tenant && token.tid === tenant.id) {
       const url = req.nextUrl.clone();
       url.pathname = "/dashboard";

@@ -2,13 +2,17 @@
  * Host → Tenant resolution (docs/30-architecture/01-MULTI-TENANCY.md §4)
  *  - `<slug>.<ROOT_DOMAIN>` → slug
  *  - custom domain → Tenant.customDomain
- *  - bare ROOT_DOMAIN / localhost → DEFAULT_TENANT_SLUG (dev) or platform (null tenant)
+ *  - bare ROOT_DOMAIN / localhost → DEFAULT_TENANT_SLUG or platform (null tenant)
+ *  - unknown host (preview/sandbox URL) with no customDomain match → DEFAULT_TENANT_SLUG when set
+ * DEFAULT_TENANT_SLUG is an explicit opt-in (empty in production, see .env.example); it is NOT gated on NODE_ENV
+ * because `next start` forces NODE_ENV=production even for preview deployments.
  * Cached in-memory for 60 s. Tenant table has no RLS (app_user has SELECT); branding is read via db(tenantId).
  */
 import type { TenantStatus } from "@prisma/client";
 import { basePrisma } from "@/lib/db/prisma";
 import { db } from "@/lib/db/tenant";
 import { env } from "@/lib/env";
+import { logger } from "@/lib/logger";
 
 export type ResolvedTenant = {
   id: string;
@@ -52,7 +56,10 @@ export async function resolveTenant(hostHeader: string | null | undefined): Prom
     where,
     select: { id: true, slug: true, name: true, nameEn: true, status: true, locale: true, timezone: true },
   });
-  if (!tenant && !slug && env.DEFAULT_TENANT_SLUG && env.NODE_ENV !== "production") {
+  if (!tenant && !slug && env.DEFAULT_TENANT_SLUG) {
+    if (env.NODE_ENV === "production") {
+      logger.warn({ host, fallback: env.DEFAULT_TENANT_SLUG }, "tenant.fallback_default_slug_in_production");
+    }
     tenant = await basePrisma.tenant.findFirst({
       where: { slug: env.DEFAULT_TENANT_SLUG },
       select: { id: true, slug: true, name: true, nameEn: true, status: true, locale: true, timezone: true },

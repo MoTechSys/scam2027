@@ -4,8 +4,8 @@
   "repo": "https://github.com/MoTechSys/scam2027",
   "entryPoint": "AGENTS.md",
   "updatedAt": "2026-09-05",
-  "updatedInPr": 10,
-  "mainHead": "f54bf9c",
+  "updatedInPr": 11,
+  "mainHead": "fe294a8",
   "branches": {
     "main": "main",
     "work": "genspark_ai_developer",
@@ -124,7 +124,7 @@
     "definition": "typecheck + lint + test + build must all pass; then playwright e2e against `pnpm build && pnpm start -p 3000`",
     "lastRun": {
       "date": "2026-09-05",
-      "commit": "P1-05 part 2 (PR #10)",
+      "commit": "tenant fallback + icon (PR #11)",
       "typecheck": "PASS (0 errors)",
       "lint": "PASS (0 errors)",
       "unitAndIntegration": {
@@ -135,7 +135,7 @@
       },
       "e2e": {
         "runner": "playwright",
-        "passed": 61,
+        "passed": 63,
         "skipped": 5,
         "failed": 0,
         "projects": [
@@ -145,7 +145,7 @@
         "skippedReason": "logout via Radix menu form action fixme (2) + Radix Select option tap on mobile-safari for create-course/create-section/bulk (3), covered on desktop"
       },
       "build": "PASS",
-      "buildId": "EQsGcJ3LoZ3WJnk5Sk4Ex"
+      "buildId": "ehPA6d77qUKAn0lelU3FV"
     },
     "knownDebt": [
       "prettier --check flags ~120 pre-existing files; not part of `pnpm check`. Format ONLY files you touch (running --write on a folder pollutes the PR) or do a dedicated `style:` PR.",
@@ -153,7 +153,8 @@
       "docs/50-quality/01-TESTING-STRATEGY.md §5 references scripts e2e:mobile / e2e:crawl / test:a11y that are not yet in app/package.json (a11y is covered by e2e/a11y.spec.ts; a crawl spec is not written yet).",
       "e2e logout test is fixme in auth.spec.ts.",
       "Radix Select option tap is flaky on mobile-safari in Playwright; create dialogs are skipped on that project and asserted on desktop — mobile asserts list/detail/no-horizontal-scroll.",
-      "Modules imported by integration tests must import permission predicates from src/lib/auth/has-permission.ts, never runtime from rbac.ts (next-auth → next/server is not resolvable under vitest)."
+      "Modules imported by integration tests must import permission predicates from src/lib/auth/has-permission.ts, never runtime from rbac.ts (next-auth → next/server is not resolvable under vitest).",
+      "Never gate dev-only behaviour on NODE_ENV: `next start` (preview/sandbox) runs as production. Use an explicit env var (e.g. DEFAULT_TENANT_SLUG) instead."
     ]
   },
   "database": {
@@ -354,6 +355,12 @@
       "date": "2026-09-05",
       "scope": "P1-05 part 2: /offerings, /offerings/[id] roster, enrol/bulk dialogs, searchStudentsAction, seedCourses, has-permission extraction, tests",
       "pr": 10
+    },
+    {
+      "n": 11,
+      "date": "2026-09-05",
+      "scope": "Fix tenant fallback on preview hosts (NODE_ENV gate removed, warn in prod), app icon.svg + proxy matcher",
+      "pr": 11
     }
   ],
   "nextTask": "P1-06 files"

@@ -183,3 +183,7 @@ pnpm test && pnpm lint && pnpm typecheck
 4. اختبارات: unit (magic bytes/allowlist/اسم مُعاد التوليد)، integration (RLS + scope حسب الشعبة)، e2e upload/download desktop+mobile؛ seed ملفّين نموذجيين.
 5. ROADMAP P1-06 ☑، REQUIREMENTS FR-FIL-001..008/011 ☑، CHANGELOG، HANDOFF §11، STATUS.json (doneTasks 22)، AGENTS §0/§4.1/§5.
 
+## الجلسة 11 — إصلاح حلّ المستأجر على رابط المعاينة + أيقونة (PR #11)
+**السبب:** المالك أرسل لقطة «الجامعة غير موجودة» من الرابط العام للـsandbox. `resolveTenant` كان يرجع إلى `DEFAULT_TENANT_SLUG` فقط حين `NODE_ENV !== "production"`، و`next start` يفرض `production`. **الإصلاح:** الرجوع يعتمد على وجود المتغيّر (فارغ في الإنتاج + تحذير في السجل إن استُخدم). أُضيفت `icon.svg` واستُثنيت من مطابق الـproxy. البوابة: tsc 0 · eslint 0 · vitest 114 · Playwright 63 ✓ / 5 skip · build ✓ · كونسول نظيف على الرابط العام.
+**درس:** أي منطق «dev فقط» يجب أن يعتمد على متغيّر بيئة صريح لا على `NODE_ENV`، لأن خادم المعاينة يعمل في وضع الإنتاج.
+
