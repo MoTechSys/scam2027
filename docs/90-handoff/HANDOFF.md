@@ -90,6 +90,7 @@ pnpm test && pnpm lint && pnpm typecheck
 | 2026-09-04 | 2–3 — P0 كامل | `app/**` (bootstrap, RLS, Auth, RBAC, shell, tests, CI template) | #2, #3 |
 | 2026-09-05 | 4 — P1-02 المستخدمون | `app/src/features/users`, `app/src/app/(dashboard)/users`, e2e users, RBAC guard fix | #4 |
 | 2026-09-05 | 5 — P1-03 الأدوار | `app/src/features/roles`, `app/src/app/(dashboard)/roles`, مصفوفة الصلاحيات، e2e roles | #5 |
+| 2026-09-05 | 6 — P1-01 المخطط | 18 موديلاً + migrations + RLS + عقود Json + ADR-0006 | #6 |
 
 
 ## الجلسة 3 — إكمال P0 (PR #3)
@@ -119,3 +120,9 @@ pnpm test && pnpm lint && pnpm typecheck
 - **درس Playwright:** المصفوفة تفتح أول 3 فئات فقط → استخدم `openCategory()` (يعتمد `data-category` على `AccordionItem`) قبل النقر على صلاحية؛ وعلى الجوال طابق العناصر المرئية فقط (`.locator("visible=true")`) لأن جدول سطح المكتب موجود مخفيًا في DOM.
 - الحالة: tsc/lint/build ✓، vitest 60/60، e2e 39 ✓ + 2 fixme (سطح المكتب + الجوال).
 - التالي: P1-01 المخطط الأكاديمي (AcademicYear…PasswordResetToken) + `pnpm tsx scripts/gen-rls.ts`، ثم P1-04 الأكاديمي، P1-09 التدقيق، P1-10 الإعدادات، P1-14 الملف الشخصي، ثم بقية P1 → P2…P5.
+
+## الجلسة 6 — P1-01 مخطط البيانات (PR #6)
+- أُنجز: 18 موديلاً (انظر CHANGELOG) + migration بقيود SQL يدوية + RLS مولَّدة لـ30 جدولاً + عقود Json + ADR-0006. P1-01 ☑.
+- **إجراء إلزامي بعد كل migration:** `pnpm exec prisma migrate dev` على `.env` ثم `DIRECT_DATABASE_URL=<من .env.test> pnpm exec prisma migrate deploy` على قاعدة الاختبار `scam2027_test` — وإلا تفشل اختبارات التكامل بـ«table does not exist».
+- **قرار تصميمي:** `Level` تابع للتخصص (كل برنامج سلّمه الخاص) و`CourseMajor.levelId` يحدد مستوى المقرر داخل التخصص؛ `CourseOffering` = شعبة (course × semester × section). `File` يرتبط بمقرر و/أو شعبة (اختياري) ليخدم المكتبة العامة للمقرر والمواد الفصلية معاً.
+- التالي: P1-04 البنية الأكاديمية (`/academic/[tab]` كليات/أقسام/تخصصات/مستويات/سنوات/فصول + Wizard أول إعداد) ثم P1-05 المقررات/الشُعب/التسجيل.

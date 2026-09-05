@@ -39,6 +39,12 @@
 
 `*` = مرحلة P4/P5، يُضاف عند بلوغ المرحلة.
 
+### حالة التنفيذ في `schema.prisma`
+| المرحلة | الموديلات | Migration |
+|---|---|---|
+| P0 | Tenant, TenantBranding, Subscription, TenantSetting, PlatformUser, PlatformAuditLog, Permission, User, UserProfile, Role, RolePermission, UserRole, Session, LoginAttempt, VerificationCode, AuditLog | `20260904221859_init_p0` + `_rls_p0` |
+| P1-01 | AcademicYear, Semester (term FIRST/SECOND/SUMMER, status), College, Department, Major (degree), Level (per major), Course, CourseMajor (+levelId, isRequired), CourseOffering (section, schedule Json), OfferingInstructor (role), Enrollment (status, source), File (category, classification, status, checksum, storageKey), FileDownloadLog, Notification (type, priority, targetSpec Json), NotificationRecipient, NotificationPreference, Job (type, status, attempts, lock), PasswordResetToken (tokenHash) | `20260905015633_p1_01_*` + `20260905015700_rls_p1_01` (30 جدولاً محمياً) |
+
 ## 2. مخطط العلاقات المختصر
 
 ```
@@ -67,6 +73,9 @@ User 1─n Consent ; User 1─n DataSubjectRequest
 | Json | `targetSpec`, `before/after`, `payload`, `value` — مع Zod schema موثّق |
 | الأسرار | `AIProviderConfig.encryptedKey`, `TenantSetting.isSecret=true` مشفّرة AES-256-GCM بمفتاح `APP_ENCRYPTION_KEY` |
 | البيانات الشخصية | موثّقة في §4 لتغذية RoPA وتصدير DSAR |
+| إجراءات FK | ADR-0006: إسناد بلا FK · اختياري `NoAction` · آباء هيكليون `Restrict` · أبناء `Cascade` |
+| قيود SQL يدوية | سنة/فصل حالي واحد لكل مستأجر (فهرس فريد جزئي)، `CHECK` للتواريخ/الأعداد — في migration `p1_01` |
+| عقود Json | `src/lib/contracts/json-columns.ts` — `OfferingSchedule[]`, `NotificationTarget`, `Job.payload` حسب النوع |
 
 ## 4. تصنيف البيانات الشخصية (لـ PDPL)
 
