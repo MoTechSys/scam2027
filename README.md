@@ -2,7 +2,9 @@
 
 منصّة إدارة مقررات وتقييم أكاديمي **متعدّدة المستأجرين** (جامعة واحدة أو عدة جامعات على نفس المنصّة)، مبنيّة على واجهة **Omnitrix الخضراء** (React 19 + Tailwind 4 + shadcn/ui، RTL، جوال أولًا) ومحرّك خلفي حديث (Next.js 16 + Prisma + PostgreSQL RLS + Auth.js).
 
-> **الحالة الحالية:** مرحلة **التحليل والتخطيط مكتملة** (الجلسة 1). لم يُكتب كود تطبيق بعد؛ التنفيذ يبدأ بـ **P0** وفق [خارطة الطريق](docs/40-plan/01-ROADMAP.md) بعد اعتماد المالك للخطة.
+> **الحالة الحالية (2026-09-05):** **19 / 65 مهمة (29%)** — **P0 مكتمل (16/16)**: أساس Next.js 16 + Prisma + PostgreSQL RLS + Auth.js + RBAC (113 صلاحية) + واجهة Omnitrix + اختبارات (Vitest 69 ✅ · Playwright 39 ✅ سطح مكتب + جوال). **P1 قيد التنفيذ (3/15)**: مخطط البيانات P1-01، المستخدمون P1-02، الأدوار P1-03. **المهمة التالية: P1-04** (البنية الأكاديمية).
+>
+> 🤖 **لأي وكيل/مطوّر جديد: ابدأ من [`AGENTS.md`](AGENTS.md)** — نقطة الدخول الوحيدة (المصادر، الإقلاع، الحالة الفعلية، ما تبقّى، دورة العمل، المعايير). الحالة الآلية في [`docs/90-handoff/STATUS.json`](docs/90-handoff/STATUS.json).
 
 ---
 
@@ -33,14 +35,17 @@
 
 | المجلد | المحتوى |
 |---|---|
+| [`AGENTS.md`](AGENTS.md) | **نقطة الدخول للوكلاء**: من أين قرأنا (9 مستودعات تراثية)، الإقلاع، الحالة الفعلية المُتحقَّق منها، ما تبقّى بالتفصيل، دورة العمل الإلزامية، المعايير غير القابلة للتفاوض |
+| [`docs/90-handoff/STATUS.json`](docs/90-handoff/STATUS.json) | الحالة الآلية: عدّادات التقدّم لكل مرحلة، المهمة التالية ومخرجاتها، بوابة الجودة، الهجرات، الحسابات التجريبية، إجراءات المالك |
 | [`docs/00-analysis`](docs/00-analysis) | جرد المستودعات، تدقيق UI، تدقيق الخلفيات، فهرس الوثائق، **تحليل الفجوات GAP-01..27** |
 | [`docs/10-research`](docs/10-research) | مقارنة LMS، تعددية المستأجرين، ASVS 5.0، PDPL/NCA، المعايير والحزمة |
-| [`docs/20-product`](docs/20-product) | المتطلبات FR/NFR، **مصفوفة الصلاحيات (98 رمزًا)**، حالات الاستخدام |
+| [`docs/20-product`](docs/20-product) | المتطلبات FR/NFR، **مصفوفة الصلاحيات (113 رمزًا، 14 فئة — مصدر `permissions.ts` المولَّد)**، حالات الاستخدام |
 | [`docs/30-architecture`](docs/30-architecture) | المعمارية، تعددية المستأجرين، نموذج البيانات (68 نموذجًا)، Auth/RBAC، عقد الواجهة، نظام التصميم |
 | [`docs/40-plan`](docs/40-plan) | خارطة الطريق P0→P5 مع معايير القبول |
 | [`docs/50-quality`](docs/50-quality) | تعريف الإنجاز، استراتيجية الاختبار، سياسة التوثيق |
 | [`docs/60-adr`](docs/60-adr) | سجلّ القرارات المعمارية |
-| [`docs/90-handoff`](docs/90-handoff) | حالة التسليم، إجراءات المالك، أوامر الإقلاع، سجل الجلسات |
+| [`docs/90-handoff`](docs/90-handoff) | `HANDOFF.md` سجل الجلسات ودروسها، إجراءات المالك، أوامر الإقلاع؛ `STATUS.json` الحالة الآلية |
+| [`app/`](app) | كود التطبيق (Next.js 16 · Prisma · اختبارات Vitest/Playwright · سكربتات التوليد) — انظر `app/package.json` → `pnpm check` |
 | [`CHANGELOG.md`](CHANGELOG.md) | سجل التغييرات (Keep a Changelog) |
 
 ## الأدوار
@@ -55,9 +60,21 @@
 4. لا بيانات وهمية ولا placeholders في المنتج المُسلَّم؛ كل دور يُختبر على سطح المكتب والجوال (390×844 بلا تمرير أفقي).
 5. OWASP ASVS 5.0 L2 · WCAG 2.1 AA · PDPL.
 
-## البدء (بعد إنجاز P0)
+## البدء
 
-أوامر الإقلاع والحسابات التجريبية موثّقة في [`docs/90-handoff/HANDOFF.md`](docs/90-handoff/HANDOFF.md) و[`docs/50-quality/01-TESTING-STRATEGY.md`](docs/50-quality/01-TESTING-STRATEGY.md).
+```bash
+git clone https://github.com/MoTechSys/scam2027.git && cd scam2027/app
+sudo service postgresql start          # أو docker compose up -d db
+cp .env.example .env                   # ولّد AUTH_SECRET و APP_ENCRYPTION_KEY (openssl rand -base64 32)
+pnpm install
+pnpm exec prisma migrate deploy        # قاعدة التطوير (DIRECT_DATABASE_URL)
+DIRECT_DATABASE_URL="postgresql://postgres:postgres@localhost:5432/scam2027_test?schema=public" pnpm exec prisma migrate deploy   # قاعدة الاختبار — إلزامي
+pnpm tsx prisma/seed.ts                # مستأجر demo + الحسابات التجريبية
+pnpm check                             # typecheck + lint + test + build
+pnpm build && pnpm start -p 3000 &     # ثم: pnpm exec playwright test
+```
+
+التفاصيل الكاملة والحسابات التجريبية ونقاط التعثّر المعروفة: [`AGENTS.md`](AGENTS.md) §2 و§4، و[`docs/90-handoff/HANDOFF.md`](docs/90-handoff/HANDOFF.md).
 
 ## المطوّر
 

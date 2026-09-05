@@ -11,6 +11,10 @@
 
 ## [Unreleased]
 
+### Docs
+- **توثيق التسليم الكامل (PR #7):** `AGENTS.md` في الجذر كنقطة دخول وحيدة للوكلاء (سلالة 9 مستودعات تراثية وأين قرأنا، إقلاع 10 أوامر، خريطة الوثائق، الحالة الفعلية المتحقَّق منها ونقاط التعثّر، خطة ما تبقّى P1-04..P5 بمخرجات ملموسة، دورة العمل الإلزامية، المعايير غير القابلة للتفاوض، إجراءات المالك، قائمة تحقق)؛ `docs/90-handoff/STATUS.json` حالة آلية (19/65، عدّادات المراحل، `nextTask`، بوابة الجودة، الهجرات، الحسابات التجريبية)؛ `CLAUDE.md` مؤشّر.
+- تحديث `README.md` (الحالة الحقيقية بدل «لم يُكتب كود بعد»، خريطة التوثيق، أوامر البدء الفعلية مع هجرة قاعدة الاختبار)، و`HANDOFF.md` (الرأس، §0، §2 إجراءات المالك 6، §5 المشاكل المعروفة، §6 الخطوة التالية، الجلسة 7)، و`02-DOCUMENTATION-POLICY.md` (AGENTS.md وSTATUS.json وثائق إلزامية + قاعدة CI: عدد ☑ = `doneTasks`).
+
 ### Added
 - **P1-01 مخطط البيانات** (`prisma/schema.prisma`): 18 موديلاً جديداً — البنية الأكاديمية (AcademicYear, Semester, College, Department, Major, Level)، المقررات (Course, CourseMajor, CourseOffering, OfferingInstructor, Enrollment)، المحتوى (File, FileDownloadLog)، التواصل (Notification, NotificationRecipient, NotificationPreference)، النظام (Job, PasswordResetToken) — كلها بـ`tenantId` وFK مركّبة، مع 10 تعدادات (SemesterTerm, OfferingStatus, EnrollmentStatus, FileCategory, DataClassification, NotificationType…).
 - Migration `p1_01_academic_content_comms` + قيود SQL يدوية (سنة/فصل حالي واحد لكل مستأجر، `CHECK` للتواريخ/المستويات/الساعات/السعة) + migration `rls_p1_01` مولَّدة (30 جدولاً محمياً بـRLS).
