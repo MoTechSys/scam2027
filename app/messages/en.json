@@ -82,7 +82,8 @@
     "menu": "Main menu",
     "collapse": "Collapse menu",
     "expand": "Expand menu",
-    "offerings": "Sections"
+    "offerings": "Sections",
+    "files": "Files"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -975,5 +976,133 @@
       "statusChanged": "Enrolment status changed"
     },
     "notOpen": "The section is not open for enrolment"
+  },
+  "files": {
+    "title": "Files",
+    "subtitle": "Course and section files: safe upload, classification, short-lived download links",
+    "myTitle": "My files",
+    "tabs": {
+      "ALL": "All",
+      "MINE": "Mine",
+      "TRASH": "Trash"
+    },
+    "category": {
+      "LECTURE": "Lecture",
+      "ASSIGNMENT": "Assignment",
+      "EXAM": "Exam",
+      "REFERENCE": "Reference",
+      "OTHER": "Other"
+    },
+    "classification": {
+      "PUBLIC": "Public",
+      "INTERNAL": "Internal",
+      "CONFIDENTIAL": "Confidential",
+      "RESTRICTED": "Restricted"
+    },
+    "status": {
+      "PENDING": "Pending approval",
+      "APPROVED": "Published",
+      "REJECTED": "Rejected"
+    },
+    "searchPlaceholder": "Search by name, description or course code…",
+    "empty": "No matching files",
+    "emptyTrash": "Trash is empty",
+    "total": "{count} files",
+    "filters": {
+      "category": "Category",
+      "allCategories": "All categories",
+      "classification": "Classification",
+      "allClassifications": "All classifications",
+      "course": "Course",
+      "allCourses": "All courses",
+      "mine": "Mine only"
+    },
+    "columns": {
+      "name": "File",
+      "course": "Course",
+      "category": "Category",
+      "classification": "Classification",
+      "size": "Size",
+      "uploader": "Uploader",
+      "downloads": "Downloads",
+      "date": "Date",
+      "deletedAt": "Deleted"
+    },
+    "unattached": "Unattached",
+    "sectionLabel": "Section {section}",
+    "usage": {
+      "label": "Storage",
+      "of": "{used} of {cap}",
+      "percent": "{percent}% used"
+    },
+    "actions": {
+      "upload": "Upload",
+      "download": "Download",
+      "edit": "Edit",
+      "delete": "Delete",
+      "restore": "Restore",
+      "purge": "Delete permanently",
+      "emptyTrash": "Empty trash",
+      "details": "Details"
+    },
+    "form": {
+      "name": "Display name",
+      "category": "Category",
+      "classification": "Classification",
+      "course": "Course",
+      "offering": "Section",
+      "description": "Description",
+      "none": "None",
+      "choose": "Choose…",
+      "attachHint": "Attaching to a section shares the file with its students; attaching to a course only makes it visible to all its sections."
+    },
+    "upload": {
+      "title": "Upload files",
+      "dropHere": "Drag files here or",
+      "browse": "browse your device",
+      "limits": "Allowed types: {types}. Max per file: {max}.",
+      "queue": "{count} file(s) queued",
+      "start": "Start upload",
+      "done": "Done",
+      "failed": "Failed",
+      "uploading": "Uploading…",
+      "waiting": "Waiting",
+      "remove": "Remove from queue",
+      "clear": "Clear queue",
+      "close": "Close",
+      "allDone": "Uploaded {count} file(s)",
+      "someFailed": "{ok} uploaded, {failed} failed"
+    },
+    "errors": {
+      "EXTENSION_NOT_ALLOWED": "File type not allowed",
+      "CONTENT_MISMATCH": "File content does not match its extension",
+      "TOO_LARGE": "File exceeds the size limit",
+      "EMPTY": "File is empty",
+      "MISSING": "No file selected",
+      "QUOTA": "Storage quota exhausted",
+      "NETWORK": "Connection lost during upload",
+      "UNKNOWN": "Unexpected error"
+    },
+    "dialogs": {
+      "edit": "Edit file details"
+    },
+    "confirm": {
+      "delete": "The file will be moved to trash and can be restored later.",
+      "purge": "Permanently deletes the file and its data from storage. This cannot be undone.",
+      "emptyTrash": "Everything in trash will be permanently deleted ({count} files). This cannot be undone."
+    },
+    "toast": {
+      "updated": "File updated",
+      "deleted": "File moved to trash",
+      "restored": "File restored",
+      "purged": "Permanently deleted ({count})",
+      "downloadStarted": "Download started"
+    },
+    "detail": {
+      "checksum": "SHA-256 checksum",
+      "downloadLogs": "Download log",
+      "originalName": "Original name",
+      "mime": "Content type"
+    }
   }
 }
