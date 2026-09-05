@@ -81,7 +81,8 @@
     "developer": "Developer",
     "menu": "Main menu",
     "collapse": "Collapse menu",
-    "expand": "Expand menu"
+    "expand": "Expand menu",
+    "offerings": "Sections"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -666,5 +667,313 @@
       "skip": "Manage manually instead",
       "forbidden": "You need permissions to manage years, colleges, departments, majors and levels to run the wizard."
     }
+  },
+  "courses": {
+    "title": "Courses",
+    "subtitle": "Course catalogue and its mapping to majors and levels",
+    "myTitle": "My courses",
+    "tabs": {
+      "ALL": "All",
+      "ACTIVE": "Active",
+      "INACTIVE": "Inactive",
+      "DELETED": "Deleted"
+    },
+    "searchPlaceholder": "Search by code or name…",
+    "empty": "No matching courses",
+    "total": "{count} courses",
+    "filters": {
+      "department": "Department",
+      "allDepartments": "All departments",
+      "major": "Major",
+      "allMajors": "All majors"
+    },
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "department": "Department",
+      "creditHours": "Credits",
+      "majors": "Majors",
+      "offerings": "Sections",
+      "status": "Status",
+      "updatedAt": "Updated"
+    },
+    "credit": "{count} cr.",
+    "majorsCount": "{count} majors",
+    "offeringsCount": "{count} sections",
+    "noDepartment": "General (no department)",
+    "active": {
+      "true": "Active",
+      "false": "Inactive",
+      "deleted": "Deleted"
+    },
+    "actions": {
+      "create": "New course",
+      "edit": "Edit",
+      "majors": "Majors & levels",
+      "delete": "Delete",
+      "restore": "Restore",
+      "details": "Details",
+      "newOffering": "New section"
+    },
+    "form": {
+      "code": "Course code",
+      "codeHint": "Latin letters, digits, - _ (e.g. CS101)",
+      "name": "Course name",
+      "nameEn": "Name (English)",
+      "description": "Description",
+      "department": "Department",
+      "noDepartment": "No department (general course)",
+      "creditHours": "Credit hours",
+      "isActive": "Active",
+      "majors": "Majors",
+      "addMajor": "Add major",
+      "removeMajor": "Remove",
+      "level": "Level",
+      "anyLevel": "Any level",
+      "required": "Required",
+      "elective": "Elective",
+      "noMajors": "Not mapped to any major yet",
+      "choose": "Choose…"
+    },
+    "dialogs": {
+      "create": "New course",
+      "edit": "Edit course",
+      "majors": "Map course to majors",
+      "majorsHint": "Pick the majors this course belongs to and, optionally, the level at which it is taught."
+    },
+    "confirm": {
+      "delete": "The course moves to Deleted. Deletion is refused while it has non-archived sections.",
+      "restore": "The course returns to the list."
+    },
+    "toast": {
+      "created": "Course created",
+      "updated": "Course updated",
+      "majorsSaved": "Majors saved",
+      "deleted": "Course deleted",
+      "restored": "Course restored"
+    },
+    "detail": {
+      "info": "Course details",
+      "offerings": "Sections",
+      "noOfferings": "No sections for this course",
+      "majors": "Majors & levels",
+      "noMajors": "Not mapped to a major",
+      "createdAt": "Created",
+      "files": "Files",
+      "students": "Active students",
+      "section": "Section {section}",
+      "current": "Current semester"
+    }
+  },
+  "offerings": {
+    "title": "Sections",
+    "subtitle": "Course sections per semester: status, instructors, capacity, schedule",
+    "myTitle": "My sections",
+    "tabs": {
+      "ALL": "All",
+      "DRAFT": "Draft",
+      "OPEN": "Open",
+      "CLOSED": "Closed",
+      "ARCHIVED": "Archived"
+    },
+    "status": {
+      "DRAFT": "Draft",
+      "OPEN": "Open",
+      "CLOSED": "Closed",
+      "ARCHIVED": "Archived"
+    },
+    "role": {
+      "PRIMARY": "Primary",
+      "CO_INSTRUCTOR": "Co-instructor",
+      "ASSISTANT": "Assistant"
+    },
+    "day": {
+      "SUN": "Sun",
+      "MON": "Mon",
+      "TUE": "Tue",
+      "WED": "Wed",
+      "THU": "Thu",
+      "FRI": "Fri",
+      "SAT": "Sat"
+    },
+    "searchPlaceholder": "Search by course, section or instructor…",
+    "empty": "No matching sections",
+    "total": "{count} sections",
+    "filters": {
+      "semester": "Semester",
+      "allSemesters": "All semesters",
+      "mine": "Mine only"
+    },
+    "columns": {
+      "course": "Course",
+      "section": "Section",
+      "semester": "Semester",
+      "instructors": "Instructors",
+      "enrolled": "Enrolled",
+      "capacity": "Capacity",
+      "status": "Status",
+      "schedule": "Schedule",
+      "location": "Location"
+    },
+    "enrolledOf": "{active} / {capacity}",
+    "unlimited": "Unlimited",
+    "noInstructor": "No instructor",
+    "noSchedule": "No schedule",
+    "sectionLabel": "Section {section}",
+    "actions": {
+      "create": "New section",
+      "edit": "Edit",
+      "instructors": "Instructors",
+      "open": "Open enrolment",
+      "close": "Close enrolment",
+      "reopen": "Reopen",
+      "draft": "Back to draft",
+      "archive": "Archive",
+      "delete": "Delete",
+      "details": "Details",
+      "roster": "Roster"
+    },
+    "form": {
+      "course": "Course",
+      "semester": "Semester",
+      "section": "Section",
+      "sectionHint": "e.g. 1 or A",
+      "status": "Status",
+      "capacity": "Capacity",
+      "capacityHint": "Leave empty for unlimited",
+      "location": "Location / room",
+      "schedule": "Weekly schedule",
+      "addSlot": "Add slot",
+      "removeSlot": "Remove",
+      "day": "Day",
+      "start": "From",
+      "end": "To",
+      "room": "Room",
+      "instructors": "Instructors",
+      "addInstructor": "Add instructor",
+      "role": "Role",
+      "noInstructors": "No instructor assigned yet",
+      "choose": "Choose…"
+    },
+    "dialogs": {
+      "create": "New section",
+      "edit": "Edit section",
+      "instructors": "Assign instructors",
+      "status": "Change section status"
+    },
+    "confirm": {
+      "delete": "This section will be deleted. Refused while active enrolments exist.",
+      "archive": "Archiving is final: the section can no longer be opened or edited.",
+      "open": "Enrolled students will see the section and new students can be enrolled.",
+      "close": "New enrolments stop.",
+      "draft": "The section becomes a draft hidden from students."
+    },
+    "toast": {
+      "created": "Section created",
+      "updated": "Section updated",
+      "statusChanged": "Status changed",
+      "instructorsSaved": "Instructors saved",
+      "deleted": "Section deleted"
+    },
+    "detail": {
+      "info": "Section details",
+      "course": "Course",
+      "semester": "Semester",
+      "credits": "Credits",
+      "instructors": "Instructors",
+      "schedule": "Schedule",
+      "location": "Location",
+      "capacity": "Capacity",
+      "stats": {
+        "ACTIVE": "Active",
+        "WITHDRAWN": "Withdrawn",
+        "COMPLETED": "Completed"
+      },
+      "roster": "Roster",
+      "yourRole": "Your role",
+      "teaches": "Section instructor",
+      "enrolled": "Enrolled in this section"
+    }
+  },
+  "enrollment": {
+    "title": "Enrolments",
+    "myTitle": "My enrolments",
+    "subtitle": "Sections you are enrolled in this semester and before",
+    "tabs": {
+      "ALL": "All",
+      "ACTIVE": "Active",
+      "WITHDRAWN": "Withdrawn",
+      "COMPLETED": "Completed"
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "WITHDRAWN": "Withdrawn",
+      "COMPLETED": "Completed"
+    },
+    "source": {
+      "MANUAL": "Manual",
+      "BULK": "Bulk",
+      "IMPORT": "Import",
+      "SELF": "Self"
+    },
+    "searchPlaceholder": "Search by name or academic id…",
+    "empty": "No enrolled students",
+    "total": "{count} enrolments",
+    "noEnrollments": "You are not enrolled in any section yet",
+    "columns": {
+      "student": "Student",
+      "academicId": "Academic id",
+      "email": "Email",
+      "status": "Status",
+      "source": "Source",
+      "enrolledAt": "Enrolled",
+      "course": "Course",
+      "section": "Section",
+      "semester": "Semester",
+      "instructors": "Instructors"
+    },
+    "actions": {
+      "enroll": "Enrol student",
+      "bulk": "Bulk enrol",
+      "withdraw": "Withdraw",
+      "reactivate": "Re-enrol",
+      "complete": "Complete"
+    },
+    "form": {
+      "student": "Student",
+      "searchStudent": "Search by name, academic id or email…",
+      "noCandidates": "No matching students",
+      "identifiers": "Academic ids or emails",
+      "identifiersHint": "One identifier per line (or comma separated). Max 500.",
+      "count": "{count} identifiers"
+    },
+    "dialogs": {
+      "enroll": "Enrol a student",
+      "bulk": "Bulk enrolment",
+      "result": "Bulk enrolment result"
+    },
+    "result": {
+      "enrolled": "Enrolled",
+      "reactivated": "Re-enrolled",
+      "skipped": "Skipped",
+      "ENROLLED": "Enrolled",
+      "REACTIVATED": "Re-enrolled",
+      "ALREADY": "Already enrolled",
+      "NOT_FOUND": "Not found",
+      "NOT_STUDENT": "Not a student",
+      "FULL": "Section full"
+    },
+    "confirm": {
+      "withdraw": "The student is withdrawn from the section and can be re-enrolled later while it is open.",
+      "complete": "The enrolment is marked completed; this cannot be undone.",
+      "reactivate": "The student is re-enrolled (subject to capacity)."
+    },
+    "toast": {
+      "enrolled": "Student enrolled",
+      "reactivated": "Student re-enrolled",
+      "bulkDone": "{enrolled} enrolled, {reactivated} re-enrolled, {skipped} skipped",
+      "statusChanged": "Enrolment status changed"
+    },
+    "notOpen": "The section is not open for enrolment"
   }
 }

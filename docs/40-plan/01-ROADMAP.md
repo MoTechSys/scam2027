@@ -48,7 +48,7 @@
 | P1-02 | المستخدمون: list/add/edit/soft-delete/freeze/reset/assign-roles + رقم أكاديمي تلقائي + `/users/[tab]` | FR-USR-001..005, 009..012 | ☑ |
 | P1-03 | الأدوار: CRUD + مصفوفة صلاحيات هرمية + منع رفع الامتياز | FR-ROL-001..006 | ☑ |
 | P1-04 | البنية الأكاديمية: كليات/أقسام/تخصصات/مستويات/سنوات/فصول + Wizard أول إعداد + `/academic/[tab]` | FR-ACD-001..006 | ☑ |
-| P1-05 | المقررات + الشُعب + التسجيل (يدوي/جماعي) + `/courses`, `/course/[id]`, `/offerings/[id]` | FR-CRS-*, FR-OFF-001, FR-ENR-001/002 | ☐ |
+| P1-05 | المقررات + الشُعب + التسجيل (يدوي/جماعي) + `/courses`, `/course/[id]`, `/offerings/[id]` | FR-CRS-*, FR-OFF-001, FR-ENR-001/002 | ◐ (PR #9 جزء 1: /courses؛ جزء 2: /offerings+roster) |
 | P1-06 | الملفات: storage adapter (local/S3)، رفع stream، magic bytes، روابط موقّعة، تصنيف، `/files/[tab]` | FR-FIL-001..008, 011 | ☐ |
 | P1-07 | الإشعارات: send (targets)، inbox، sent+read stats، عدّاد Header، تفضيلات in-app | FR-NTF-001..005, 008 | ☐ |
 | P1-08 | سلة المحذوفات الموحّدة + حذف دائم تلقائي بعد 30 يوماً (job) | FR-SYS-001 | ☐ |

@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Small form primitives shared by the academic dialogs and the setup wizard.
+ * Small form primitives shared by feature dialogs (academic, courses, offerings) and the setup wizard.
  * Every field is labelled, ≥44px tall, and surfaces server `fieldErrors` via role="alert".
  */
 import { Loader2 } from "lucide-react";
@@ -11,9 +11,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { Option } from "@/features/academic/queries";
+import type { Option } from "@/lib/contracts/option";
 import type { FieldErrors } from "@/lib/result";
 
 export function FieldError({ errors, name }: { errors: FieldErrors; name: string }) {
@@ -25,16 +33,40 @@ export function FieldError({ errors, name }: { errors: FieldErrors; name: string
   ) : null;
 }
 
-type Common = { id: string; name: string; label: string; errors: FieldErrors; optional?: boolean; hint?: string; className?: string };
+type Common = {
+  id: string;
+  name: string;
+  label: string;
+  errors: FieldErrors;
+  optional?: boolean;
+  hint?: string;
+  className?: string;
+};
 
-export function TextField({ id, name, label, errors, optional, hint, className, ...input }: Common & Omit<React.ComponentProps<typeof Input>, "id" | "name">) {
+export function TextField({
+  id,
+  name,
+  label,
+  errors,
+  optional,
+  hint,
+  className,
+  ...input
+}: Common & Omit<React.ComponentProps<typeof Input>, "id" | "name">) {
   const tc = useTranslations("common");
   return (
     <div className={`space-y-1.5 ${className ?? ""}`}>
       <Label htmlFor={id}>
         {label} {optional && <span className="text-muted-foreground">({tc("optional")})</span>}
       </Label>
-      <Input id={id} name={name} className="min-h-11" aria-invalid={!!errors[name]} aria-describedby={`${hint ? `${id}-hint ` : ""}${name}-error`} {...input} />
+      <Input
+        id={id}
+        name={name}
+        className="min-h-11"
+        aria-invalid={!!errors[name]}
+        aria-describedby={`${hint ? `${id}-hint ` : ""}${name}-error`}
+        {...input}
+      />
       {hint && (
         <p id={`${id}-hint`} className="text-xs text-muted-foreground">
           {hint}
@@ -45,24 +77,47 @@ export function TextField({ id, name, label, errors, optional, hint, className, 
   );
 }
 
-export function TextAreaField({ id, name, label, errors, optional, className, ...ta }: Common & Omit<React.ComponentProps<typeof Textarea>, "id" | "name">) {
+export function TextAreaField({
+  id,
+  name,
+  label,
+  errors,
+  optional,
+  className,
+  ...ta
+}: Common & Omit<React.ComponentProps<typeof Textarea>, "id" | "name">) {
   const tc = useTranslations("common");
   return (
     <div className={`space-y-1.5 ${className ?? ""}`}>
       <Label htmlFor={id}>
         {label} {optional && <span className="text-muted-foreground">({tc("optional")})</span>}
       </Label>
-      <Textarea id={id} name={name} rows={2} aria-invalid={!!errors[name]} aria-describedby={`${name}-error`} {...ta} />
+      <Textarea
+        id={id}
+        name={name}
+        rows={2}
+        aria-invalid={!!errors[name]}
+        aria-describedby={`${name}-error`}
+        {...ta}
+      />
       <FieldError errors={errors} name={name} />
     </div>
   );
 }
 
 /** Date input bound to ISO `YYYY-MM-DD`. */
-export function DateField(props: Common & { defaultValue?: Date | string | null; required?: boolean; value?: string; onChange?: React.ChangeEventHandler<HTMLInputElement> }) {
+export function DateField(
+  props: Common & {
+    defaultValue?: Date | string | null;
+    required?: boolean;
+    value?: string;
+    onChange?: React.ChangeEventHandler<HTMLInputElement>;
+  },
+) {
   const { defaultValue, value, onChange, ...rest } = props;
   // Controlled when `value` is given (wizard); otherwise uncontrolled with a normalised default (dialogs).
-  if (value !== undefined) return <TextField {...rest} type="date" dir="ltr" value={value} onChange={onChange} />;
+  if (value !== undefined)
+    return <TextField {...rest} type="date" dir="ltr" value={value} onChange={onChange} />;
   const v = defaultValue instanceof Date ? defaultValue.toISOString().slice(0, 10) : (defaultValue ?? "");
   return <TextField {...rest} type="date" dir="ltr" defaultValue={v} />;
 }
@@ -72,8 +127,24 @@ export function DateField(props: Common & { defaultValue?: Date | string | null;
  * `options` may carry `group` for grouped rendering.
  */
 export function SelectField({
-  id, name, label, errors, optional, className, value, onChange, options, placeholder, disabled,
-}: Common & { value: string; onChange: (v: string) => void; options: Option[]; placeholder?: string; disabled?: boolean }) {
+  id,
+  name,
+  label,
+  errors,
+  optional,
+  className,
+  value,
+  onChange,
+  options,
+  placeholder,
+  disabled,
+}: Common & {
+  value: string;
+  onChange: (v: string) => void;
+  options: Option[];
+  placeholder?: string;
+  disabled?: boolean;
+}) {
   const tc = useTranslations("common");
   const groups = new Map<string | undefined, Option[]>();
   for (const o of options) groups.set(o.group, [...(groups.get(o.group) ?? []), o]);
@@ -84,7 +155,12 @@ export function SelectField({
       </Label>
       <input type="hidden" name={name} value={value} />
       <Select value={value || undefined} onValueChange={onChange} disabled={disabled}>
-        <SelectTrigger id={id} className="min-h-11 w-full" aria-invalid={!!errors[name]} aria-describedby={`${name}-error`}>
+        <SelectTrigger
+          id={id}
+          className="min-h-11 w-full"
+          aria-invalid={!!errors[name]}
+          aria-describedby={`${name}-error`}
+        >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
@@ -106,7 +182,19 @@ export function SelectField({
 }
 
 /** Checkbox that submits "on" via FormData when checked (read with `fd.get(name) === "on"`). */
-export function CheckField({ id, name, label, defaultChecked, className }: { id: string; name: string; label: string; defaultChecked?: boolean; className?: string }) {
+export function CheckField({
+  id,
+  name,
+  label,
+  defaultChecked,
+  className,
+}: {
+  id: string;
+  name: string;
+  label: string;
+  defaultChecked?: boolean;
+  className?: string;
+}) {
   return (
     <div className={`flex min-h-11 items-center gap-2 ${className ?? ""}`}>
       <Checkbox id={id} name={name} defaultChecked={defaultChecked} />
@@ -117,7 +205,15 @@ export function CheckField({ id, name, label, defaultChecked, className }: { id:
   );
 }
 
-export function FormFooter({ pending, onCancel, submitLabel }: { pending: boolean; onCancel: () => void; submitLabel?: string }) {
+export function FormFooter({
+  pending,
+  onCancel,
+  submitLabel,
+}: {
+  pending: boolean;
+  onCancel: () => void;
+  submitLabel?: string;
+}) {
   const tc = useTranslations("common");
   return (
     <DialogFooter className="gap-2">
@@ -133,7 +229,10 @@ export function FormFooter({ pending, onCancel, submitLabel }: { pending: boolea
 }
 
 /** FormData → plain object; checkboxes → boolean; empty strings for optional dates → null. */
-export function formValues(fd: FormData, opts: { bools?: string[]; nullable?: string[] } = {}): Record<string, unknown> {
+export function formValues(
+  fd: FormData,
+  opts: { bools?: string[]; nullable?: string[] } = {},
+): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [k, v] of fd.entries()) if (typeof v === "string") out[k] = v;
   for (const b of opts.bools ?? []) out[b] = fd.get(b) === "on";

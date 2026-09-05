@@ -22,7 +22,7 @@ import { setupWizardAction } from "@/features/academic/actions";
 import { DEGREE_TYPES, MAX_LEVELS, SEMESTER_TERMS, setupWizardSchema } from "@/features/academic/schemas";
 import type { FieldErrors } from "@/lib/result";
 import { cn } from "@/lib/utils";
-import { DateField, FieldError, TextAreaField, TextField } from "./form-fields";
+import { DateField, FieldError, TextAreaField, TextField } from "@/components/forms/fields";
 
 const STEPS = ["period", "structure", "major", "review"] as const;
 type Step = (typeof STEPS)[number];

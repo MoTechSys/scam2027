@@ -5,6 +5,7 @@
 import "server-only";
 import type { Prisma } from "@prisma/client";
 import type { Ctx } from "@/lib/auth/rbac";
+import type { Option } from "@/lib/contracts/option";
 import { db } from "@/lib/db/tenant";
 import type { CatalogueListQuery } from "./schemas";
 
@@ -181,7 +182,7 @@ export async function needsSetup(ctx: Ctx): Promise<boolean> {
 }
 
 /** Lightweight option lists for selects (active only). */
-export type Option = { id: string; label: string; group?: string };
+export type { Option };
 export async function collegeOptions(ctx: Ctx): Promise<Option[]> {
   const rows = await db(ctx.tenantId).college.findMany({ where: { isActive: true }, select: { id: true, name: true, code: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }] });
   return rows.map((r) => ({ id: r.id, label: `${r.name} (${r.code})` }));

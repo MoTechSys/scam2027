@@ -18,7 +18,7 @@ import {
 import type { CollegeRow, DepartmentRow, LevelRow, MajorRow, Option, SemesterRow, YearRow } from "@/features/academic/queries";
 import { DEGREE_TYPES, SEMESTER_STATUSES, SEMESTER_TERMS } from "@/features/academic/schemas";
 import type { FieldErrors, Result } from "@/lib/result";
-import { CheckField, DateField, FieldError, FormFooter, SelectField, TextAreaField, TextField, formValues } from "./form-fields";
+import { CheckField, DateField, FieldError, FormFooter, SelectField, TextAreaField, TextField, formValues } from "@/components/forms/fields";
 
 type Base = { open: boolean; onOpenChange: (o: boolean) => void };
 

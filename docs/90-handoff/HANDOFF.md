@@ -162,3 +162,13 @@ pnpm test && pnpm lint && pnpm typecheck
 - **البيانات:** seed موسّع وidempotent (سنة 2026/2027 حالية، الفصل الأول حالي، CCIS → CS/IS → CS-BSC/SE-BSC/IS-BSC → 4 مستويات لكل تخصص). teardown الـe2e يحذف صفوف `E2E*` من الأسفل للأعلى ويعيد الفصل الأول حاليًا.
 - **الجودة:** tsc 0 · eslint 0 · vitest 101/101 (17 ملفًا) · build ✓ · Playwright 50 ✓ / 2 fixme (desktop + mobile، 0 تمرير أفقي على 390px).
 - **التالي:** P1-05 المقررات/الشُعب/التسجيل.
+
+
+## الجلسة 9 — P1-05 جزء 1 (PR #9)
+**منجز:** `course.manage_all` (+regen 114)، `features/{courses,offerings,enrollment}` كاملة ومختبرة بالـtypecheck، `/courses` + `/courses/[id]` + حوارات المقرر ومحرّر التخصصات، i18n للمجالات الثلاثة، `components/forms/{fields,use-submit,dialog-shell}`، e2e `courses.spec.ts`، teardown يحذف `E2E*` مقررات. البوابة: typecheck ✓ lint ✓ vitest 102/102 ✓ build ✓ Playwright courses 5 ✓ (1 skip مقصود على mobile لحوار Radix Select).
+**التالي مباشرة (P1-05 جزء 2):**
+1. `src/app/(dashboard)/offerings/{page,offerings-client,offering-dialogs}.tsx` + `offerings/[id]/{page,roster-client,enrollment-dialogs}.tsx` — استخدم `listOfferings/offeringCounts/semesterOptions/instructorOptions/courseOptions`, `getOfferingDetail`, `listEnrollments`, actions الموجودة؛ أضف `searchStudentsAction({offeringId,q})` حول `studentCandidates` في `features/enrollment/actions.ts`.
+2. أزل `phase:"P1"` من عنصر `offerings` في `lib/nav/items.ts` وعدّل اختبار `login-helpers.test.ts` (`toContain("offerings")`).
+3. `seedCourses(tenantId)` في `prisma/seed.ts` (6 مقررات، 4 شُعب OPEN بالفصل الحالي مع EMP-0101 PRIMARY، 30 طالبًا، تسجيلات) ثم `pnpm db:seed`.
+4. اختبارات: unit (transitions/parseIdentifiers/urlBool)، integration (scope instructor/student/tenant-wide، enrolOne سعة/إعادة تفعيل)، e2e offerings (admin→open→enrol→withdraw؛ instructor يرى شعبته فقط).
+5. ROADMAP P1-05 ☑، REQUIREMENTS FR-CRS-003/005, FR-OFF-001, FR-ENR-001/002 ☑، STATUS.json (doneTasks 21, nextTask P1-06)، AGENTS §0/§4.1/§5.
