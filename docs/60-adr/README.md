@@ -7,5 +7,6 @@
 | [0003](0003-dotted-permission-codes.md) | صلاحيات `resource.action` | مقبول |
 | [0004](0004-server-actions-over-rest.md) | Server Actions أساساً | مقبول |
 | [0005](0005-docs-with-every-change.md) | الوثائق جزء من DoD | مقبول |
+| [0006](0006-referential-actions-and-json-contracts.md) | قواعد FK/الإسناد + عقود Json + قيود SQL يدوية | مقبول |
 
 قالب ADR جديد: `NNNN-title.md` بأقسام: الحالة، السياق، القرار، البدائل، العواقب.

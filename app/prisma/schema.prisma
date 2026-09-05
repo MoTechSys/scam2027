@@ -1,4 +1,4 @@
-// scam2027 — Prisma schema (P0 scope)
+// scam2027 — Prisma schema (P0 + P1-01 scope)
 // Source of truth: docs/30-architecture/02-DATA-MODEL.md, 01-MULTI-TENANCY.md
 //
 // Conventions (docs/30-architecture/02-DATA-MODEL.md §3):
@@ -66,13 +66,33 @@ model Tenant {
   verificationCodes VerificationCode[]
   auditLogs         AuditLog[]
   userProfiles      UserProfile[]
+
+  // P1-01
+  academicYears           AcademicYear[]
+  semesters               Semester[]
+  colleges                College[]
+  departments             Department[]
+  majors                  Major[]
+  levels                  Level[]
+  courses                 Course[]
+  courseMajors            CourseMajor[]
+  courseOfferings         CourseOffering[]
+  offeringInstructors     OfferingInstructor[]
+  enrollments             Enrollment[]
+  files                   File[]
+  fileDownloadLogs        FileDownloadLog[]
+  notifications           Notification[]
+  notificationRecipients  NotificationRecipient[]
+  notificationPreferences NotificationPreference[]
+  jobs                    Job[]
+  passwordResetTokens     PasswordResetToken[]
 }
 
 model TenantBranding {
-  tenantId     String  @id @db.Uuid
+  tenantId     String   @id @db.Uuid
   logoUrl      String?
   faviconUrl   String?
-  primaryColor String  @default("#39ff14")
+  primaryColor String   @default("#39ff14")
   accentColor  String?
   loginMessage String?
   updatedAt    DateTime @updatedAt
@@ -190,6 +210,15 @@ model User {
   sessions          Session[]
   verificationCodes VerificationCode[]
 
+  // P1-01
+  teaching                OfferingInstructor[]
+  enrollments             Enrollment[]
+  uploadedFiles           File[]
+  fileDownloads           FileDownloadLog[]
+  notificationRecipients  NotificationRecipient[]
+  notificationPreferences NotificationPreference[]
+  passwordResetTokens     PasswordResetToken[]
+
   @@unique([tenantId, id])
   @@unique([tenantId, email])
   @@unique([tenantId, academicId])
@@ -198,14 +227,14 @@ model User {
 }
 
 model UserProfile {
-  tenantId  String   @db.Uuid
-  userId    String   @db.Uuid
+  tenantId  String    @db.Uuid
+  userId    String    @db.Uuid
   avatarUrl String?
   bio       String?
   title     String? // e.g. "أستاذ مشارك"
   gender    String?
   birthDate DateTime?
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime  @updatedAt
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Cascade)
@@ -348,4 +377,519 @@ model AuditLog {
   @@index([tenantId, createdAt])
   @@index([tenantId, entity, entityId])
   @@index([tenantId, actorId, createdAt])
+}
+
+// ═════════════════════════════ P1-01 ═════════════════════════════
+// docs/30-architecture/02-DATA-MODEL.md §1 (academic / content / communication / system)
+// Referential-action rules (ADR-0006):
+//  - attribution columns (senderId, enrolledBy, reviewedBy, createdBy, …) have NO FK → survive actor hard-deletion
+//  - optional composite FKs use NoAction (SetNull would null tenantId; Restrict breaks tenant cascade)
+//  - structural parents (College→Department→Major, Course→Offering, Semester→Offering) use Restrict
+//  - "current" year/semester: partial unique index per tenant (hand-written SQL in the migration)
+
+// ───────────────────────────── Academic structure ─────────────────────────────
+
+model AcademicYear {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  code      String // "2026/2027"
+  name      String
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  isCurrent Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  semesters Semester[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, code])
+  @@index([tenantId, startDate])
+}
+
+enum SemesterTerm {
+  FIRST
+  SECOND
+  SUMMER
+}
+
+enum SemesterStatus {
+  PLANNED
+  ACTIVE
+  CLOSED
+  ARCHIVED
+}
+
+model Semester {
+  id                   String         @id @default(uuid()) @db.Uuid
+  tenantId             String         @db.Uuid
+  academicYearId       String         @db.Uuid
+  term                 SemesterTerm
+  name                 String
+  startDate            DateTime       @db.Date
+  endDate              DateTime       @db.Date
+  registrationOpensAt  DateTime?
+  registrationClosesAt DateTime?
+  status               SemesterStatus @default(PLANNED)
+  isCurrent            Boolean        @default(false)
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  tenant       Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  academicYear AcademicYear     @relation(fields: [tenantId, academicYearId], references: [tenantId, id], onDelete: Restrict)
+  offerings    CourseOffering[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, academicYearId, term])
+  @@index([tenantId, status])
+}
+
+model College {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @db.Uuid
+  code        String
+  name        String
+  nameEn      String?
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  departments Department[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, code])
+  @@index([tenantId, isActive, sortOrder])
+}
+
+model Department {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @db.Uuid
+  collegeId   String   @db.Uuid
+  code        String
+  name        String
+  nameEn      String?
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  college College  @relation(fields: [tenantId, collegeId], references: [tenantId, id], onDelete: Restrict)
+  majors  Major[]
+  courses Course[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, code])
+  @@index([tenantId, collegeId, sortOrder])
+}
+
+enum DegreeType {
+  DIPLOMA
+  BACHELOR
+  MASTER
+  PHD
+}
+
+model Major {
+  id            String     @id @default(uuid()) @db.Uuid
+  tenantId      String     @db.Uuid
+  departmentId  String     @db.Uuid
+  code          String
+  name          String
+  nameEn        String?
+  description   String?
+  degree        DegreeType @default(BACHELOR)
+  durationYears Int? // nominal length of study
+  sortOrder     Int        @default(0)
+  isActive      Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  tenant     Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  department Department    @relation(fields: [tenantId, departmentId], references: [tenantId, id], onDelete: Restrict)
+  levels     Level[]
+  courses    CourseMajor[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, code])
+  @@index([tenantId, departmentId, sortOrder])
+}
+
+/// Study level inside a major (المستوى الأول … الثامن). Levels belong to a major so each programme can define its own ladder.
+model Level {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  majorId   String   @db.Uuid
+  number    Int // 1..n
+  name      String
+  nameEn    String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant  Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  major   Major         @relation(fields: [tenantId, majorId], references: [tenantId, id], onDelete: Cascade)
+  courses CourseMajor[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, majorId, number])
+}
+
+// ───────────────────────────── Courses & offerings ─────────────────────────────
+
+model Course {
+  id           String    @id @default(uuid()) @db.Uuid
+  tenantId     String    @db.Uuid
+  departmentId String?   @db.Uuid // owning department (optional for university-wide courses)
+  code         String // "CS101"
+  name         String
+  nameEn       String?
+  description  String?
+  creditHours  Int       @default(3)
+  isActive     Boolean   @default(true)
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tenant     Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  department Department?      @relation(fields: [tenantId, departmentId], references: [tenantId, id], onDelete: NoAction)
+  majors     CourseMajor[]
+  offerings  CourseOffering[]
+  files      File[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, code])
+  @@index([tenantId, deletedAt])
+  @@index([tenantId, departmentId])
+}
+
+/// Course ↔ Major (M:N) with the level at which the course is taken in that major (FR-CRS-002).
+model CourseMajor {
+  tenantId   String   @db.Uuid
+  courseId   String   @db.Uuid
+  majorId    String   @db.Uuid
+  levelId    String?  @db.Uuid
+  isRequired Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [tenantId, courseId], references: [tenantId, id], onDelete: Cascade)
+  major  Major  @relation(fields: [tenantId, majorId], references: [tenantId, id], onDelete: Cascade)
+  level  Level? @relation(fields: [tenantId, levelId], references: [tenantId, id], onDelete: NoAction)
+
+  @@id([tenantId, courseId, majorId])
+  @@index([tenantId, majorId, levelId])
+}
+
+enum OfferingStatus {
+  DRAFT
+  OPEN
+  CLOSED
+  ARCHIVED
+}
+
+/// A section of a course taught in a specific semester (FR-OFF-001).
+model CourseOffering {
+  id         String         @id @default(uuid()) @db.Uuid
+  tenantId   String         @db.Uuid
+  courseId   String         @db.Uuid
+  semesterId String         @db.Uuid
+  section    String         @default("1")
+  status     OfferingStatus @default(DRAFT)
+  capacity   Int?
+  location   String?
+  schedule   Json? // Zod: OfferingSchedule[] {day, startTime, endTime, room?}
+  deletedAt  DateTime?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  tenant      Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  course      Course               @relation(fields: [tenantId, courseId], references: [tenantId, id], onDelete: Restrict)
+  semester    Semester             @relation(fields: [tenantId, semesterId], references: [tenantId, id], onDelete: Restrict)
+  instructors OfferingInstructor[]
+  enrollments Enrollment[]
+  files       File[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, courseId, semesterId, section])
+  @@index([tenantId, semesterId, status])
+  @@index([tenantId, deletedAt])
+}
+
+enum InstructorRole {
+  PRIMARY
+  CO_INSTRUCTOR
+  ASSISTANT
+}
+
+model OfferingInstructor {
+  tenantId   String         @db.Uuid
+  offeringId String         @db.Uuid
+  userId     String         @db.Uuid
+  role       InstructorRole @default(PRIMARY)
+  createdAt  DateTime       @default(now())
+
+  tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  offering CourseOffering @relation(fields: [tenantId, offeringId], references: [tenantId, id], onDelete: Cascade)
+  user     User           @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Cascade)
+
+  @@id([tenantId, offeringId, userId])
+  @@index([tenantId, userId])
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  WITHDRAWN
+  COMPLETED
+}
+
+enum EnrollmentSource {
+  MANUAL
+  BULK
+  IMPORT
+  SELF
+}
+
+model Enrollment {
+  id          String           @id @default(uuid()) @db.Uuid
+  tenantId    String           @db.Uuid
+  offeringId  String           @db.Uuid
+  studentId   String           @db.Uuid
+  status      EnrollmentStatus @default(ACTIVE)
+  source      EnrollmentSource @default(MANUAL)
+  enrolledBy  String?          @db.Uuid // attribution, no FK
+  enrolledAt  DateTime         @default(now())
+  withdrawnAt DateTime?
+  completedAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  offering CourseOffering @relation(fields: [tenantId, offeringId], references: [tenantId, id], onDelete: Cascade)
+  student  User           @relation(fields: [tenantId, studentId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, offeringId, studentId])
+  @@index([tenantId, studentId, status])
+  @@index([tenantId, offeringId, status])
+}
+
+// ───────────────────────────── Content ─────────────────────────────
+
+enum FileCategory {
+  LECTURE
+  ASSIGNMENT
+  EXAM
+  REFERENCE
+  OTHER
+}
+
+enum FileStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum DataClassification {
+  PUBLIC
+  INTERNAL
+  CONFIDENTIAL
+  RESTRICTED
+}
+
+model File {
+  id              String             @id @default(uuid()) @db.Uuid
+  tenantId        String             @db.Uuid
+  uploaderId      String             @db.Uuid
+  courseId        String?            @db.Uuid
+  offeringId      String?            @db.Uuid
+  name            String // display name (editable)
+  originalName    String
+  storageKey      String // <tenant>/<course|misc>/<uuid>.<ext> — never the original name
+  mimeType        String
+  size            Int // bytes (limit per subscription, default 50 MB)
+  checksum        String // sha256 hex
+  category        FileCategory       @default(OTHER)
+  classification  DataClassification @default(INTERNAL)
+  status          FileStatus         @default(APPROVED) // PENDING when tenant enables review (FR-FIL-009)
+  reviewedBy      String?            @db.Uuid // attribution, no FK
+  reviewedAt      DateTime?
+  rejectionReason String?
+  description     String?
+  downloads       Int                @default(0)
+  deletedAt       DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  tenant       Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  uploader     User              @relation(fields: [tenantId, uploaderId], references: [tenantId, id], onDelete: NoAction)
+  course       Course?           @relation(fields: [tenantId, courseId], references: [tenantId, id], onDelete: NoAction)
+  offering     CourseOffering?   @relation(fields: [tenantId, offeringId], references: [tenantId, id], onDelete: NoAction)
+  downloadLogs FileDownloadLog[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, storageKey])
+  @@index([tenantId, deletedAt, status])
+  @@index([tenantId, offeringId, category])
+  @@index([tenantId, courseId])
+  @@index([tenantId, uploaderId])
+}
+
+model FileDownloadLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  fileId    String   @db.Uuid
+  userId    String   @db.Uuid
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  file   File   @relation(fields: [tenantId, fileId], references: [tenantId, id], onDelete: Cascade)
+  user   User   @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Cascade)
+
+  @@index([tenantId, fileId, createdAt])
+  @@index([tenantId, createdAt]) // retention purge (12 months)
+}
+
+// ───────────────────────────── Communication ─────────────────────────────
+
+enum NotificationType {
+  ANNOUNCEMENT
+  SYSTEM
+  ACADEMIC
+  FILE
+  QUIZ
+  ASSIGNMENT
+  GRADE
+  ATTENDANCE
+  SECURITY
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  PUSH
+}
+
+model Notification {
+  id             String               @id @default(uuid()) @db.Uuid
+  tenantId       String               @db.Uuid
+  senderId       String?              @db.Uuid // null = system; attribution, no FK
+  type           NotificationType     @default(ANNOUNCEMENT)
+  priority       NotificationPriority @default(NORMAL)
+  title          String
+  body           String
+  link           String? // in-app path e.g. /offerings/<id>
+  targetSpec     Json // Zod: NotificationTarget {kind: ALL|ROLE|COLLEGE|MAJOR|LEVEL|OFFERING|USERS, ids[]}
+  recipientCount Int                  @default(0)
+  scheduledAt    DateTime?
+  sentAt         DateTime?
+  deletedAt      DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  tenant     Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  recipients NotificationRecipient[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, senderId, createdAt])
+  @@index([tenantId, deletedAt, createdAt])
+}
+
+model NotificationRecipient {
+  tenantId       String    @db.Uuid
+  notificationId String    @db.Uuid
+  userId         String    @db.Uuid
+  deliveredAt    DateTime  @default(now())
+  readAt         DateTime?
+  archivedAt     DateTime?
+
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  notification Notification @relation(fields: [tenantId, notificationId], references: [tenantId, id], onDelete: Cascade)
+  user         User         @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Cascade)
+
+  @@id([tenantId, notificationId, userId])
+  @@index([tenantId, userId, readAt, archivedAt])
+}
+
+model NotificationPreference {
+  tenantId  String              @db.Uuid
+  userId    String              @db.Uuid
+  channel   NotificationChannel
+  type      NotificationType
+  enabled   Boolean             @default(true)
+  updatedAt DateTime            @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Cascade)
+
+  @@id([tenantId, userId, channel, type])
+}
+
+// ───────────────────────────── System ─────────────────────────────
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+/// Tenant-scoped background job (trash purge, notification fan-out, bulk import, export, e-mail).
+/// The worker connects with the owner role (bypasses RLS) and sets the GUC per job.
+model Job {
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @db.Uuid
+  type        String // "trash.purge" | "notification.fanout" | "enrollment.import" | "mail.send" | …
+  status      JobStatus @default(PENDING)
+  payload     Json
+  result      Json?
+  error       String?
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(3)
+  runAt       DateTime  @default(now())
+  lockedAt    DateTime?
+  lockedBy    String?
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  createdBy   String?   @db.Uuid // attribution, no FK
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([status, runAt]) // worker poll
+  @@index([tenantId, type, createdAt])
+}
+
+/// Single-use, hashed link token for password reset (FR-AUTH-004). OTP path uses VerificationCode(RESET).
+model PasswordResetToken {
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @db.Uuid
+  userId      String    @db.Uuid
+  tokenHash   String    @unique // sha256(token)
+  expiresAt   DateTime
+  usedAt      DateTime?
+  requestedIp String?
+  createdAt   DateTime  @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Cascade)
+
+  @@index([tenantId, userId])
+  @@index([expiresAt]) // purge
 }

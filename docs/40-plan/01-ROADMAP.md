@@ -44,7 +44,7 @@
 
 | # | المهمة | المتطلبات | حالة |
 |---|---|---|---|
-| P1-01 | Schema P1: AcademicYear, Semester, College, Department, Major, Level, Course, CourseMajor, CourseOffering, OfferingInstructor, Enrollment, File, FileDownloadLog, Notification, NotificationRecipient, NotificationPreference, Job, PasswordResetToken | A2 | ☐ |
+| P1-01 | Schema P1: AcademicYear, Semester, College, Department, Major, Level, Course, CourseMajor, CourseOffering, OfferingInstructor, Enrollment, File, FileDownloadLog, Notification, NotificationRecipient, NotificationPreference, Job, PasswordResetToken | A2 | ☑ |
 | P1-02 | المستخدمون: list/add/edit/soft-delete/freeze/reset/assign-roles + رقم أكاديمي تلقائي + `/users/[tab]` | FR-USR-001..005, 009..012 | ☑ |
 | P1-03 | الأدوار: CRUD + مصفوفة صلاحيات هرمية + منع رفع الامتياز | FR-ROL-001..006 | ☑ |
 | P1-04 | البنية الأكاديمية: كليات/أقسام/تخصصات/مستويات/سنوات/فصول + Wizard أول إعداد + `/academic/[tab]` | FR-ACD-001..006 | ☐ |

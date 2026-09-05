@@ -48,7 +48,10 @@ test.describe("roles module (P1-03)", () => {
 
     // Delete (no members) → trash
     await page.getByRole("button", { name: /^حذف$|^Delete$/ }).click();
-    await page.getByRole("alertdialog").getByRole("button", { name: /^تأكيد$|^Confirm$/ }).click();
+    await page
+      .getByRole("alertdialog")
+      .getByRole("button", { name: /^تأكيد$|^Confirm$/ })
+      .click();
     await expect(page).toHaveURL(/tab=DELETED/);
     await expect(page.getByText(code, { exact: true }).locator("visible=true").first()).toBeVisible();
   });

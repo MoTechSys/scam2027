@@ -12,6 +12,12 @@
 ## [Unreleased]
 
 ### Added
+- **P1-01 مخطط البيانات** (`prisma/schema.prisma`): 18 موديلاً جديداً — البنية الأكاديمية (AcademicYear, Semester, College, Department, Major, Level)، المقررات (Course, CourseMajor, CourseOffering, OfferingInstructor, Enrollment)، المحتوى (File, FileDownloadLog)، التواصل (Notification, NotificationRecipient, NotificationPreference)، النظام (Job, PasswordResetToken) — كلها بـ`tenantId` وFK مركّبة، مع 10 تعدادات (SemesterTerm, OfferingStatus, EnrollmentStatus, FileCategory, DataClassification, NotificationType…).
+- Migration `p1_01_academic_content_comms` + قيود SQL يدوية (سنة/فصل حالي واحد لكل مستأجر، `CHECK` للتواريخ/المستويات/الساعات/السعة) + migration `rls_p1_01` مولَّدة (30 جدولاً محمياً بـRLS).
+- `src/lib/contracts/json-columns.ts`: عقود Zod لأعمدة Json (`OfferingSchedule`, `NotificationTarget`, `Job.payload` حسب النوع).
+- ADR-0006 قواعد إجراءات FK والإسناد وعقود Json؛ تحديث `02-DATA-MODEL.md` بجدول حالة التنفيذ.
+- اختبارات: `p1-schema-isolation` (RLS مفعّل/مفروض/سياسة لكل جدول جديد، عزل A/B للسلسلة الأكاديمية كاملة، رفض FK عبر المستأجرين، فهرس «الحالي» الجزئي، CHECK، Restrict) + `json-columns` وحدة.
+
 - **P1-03 الأدوار والصلاحيات** (`/roles`, `/roles/[id]`): تبويبات (الكل/النظام/مخصّصة/المحذوفة) مع عدّادات، بحث، عدد الأعضاء النشطين وعدد الصلاحيات لكل دور، جدول لسطح المكتب + كروت للجوال، صفحة تفاصيل مع مصفوفة صلاحيات (أكورديون 14 فئة، تحديد جماعي ثلاثي الحالة، قفل الصلاحيات غير المملوكة) وشريط حفظ لاصق مع تحذير عند مغادرة الصفحة بتغييرات غير محفوظة، قائمة الأعضاء، إنشاء/تعديل/نسخ/حذف (سلة)/استرجاع.
 - 6 Server Actions في `src/features/roles/actions.ts` (`create/update/set_permissions/clone/delete/restore`): أدوار النظام محمية (تُنسخ للتخصيص)، حارس رفع الامتياز عبر `canManagePermissionSet` (لا يمكن منح أو إدارة صلاحيات لا يملكها الفاعل)، رموز `^[A-Z][A-Z0-9_]{2,39}$` غير محجوزة، حذف فقط بلا أعضاء نشطين، تدقيق قبل/بعد مع فرق الصلاحيات المُضافة/المحذوفة.
 - `permissionCategories()` في مولّد الصلاحيات (`scripts/gen-permissions.py` → `permissions.ts`) لتجميع المصفوفة؛ نقل مساعدي الامتياز إلى قالب المولّد كي لا تُفقد عند إعادة التوليد.
