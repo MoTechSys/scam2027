@@ -4,8 +4,8 @@
   "repo": "https://github.com/MoTechSys/scam2027",
   "entryPoint": "AGENTS.md",
   "updatedAt": "2026-09-05",
-  "updatedInPr": 11,
-  "mainHead": "fe294a8",
+  "updatedInPr": 12,
+  "mainHead": "a57e5e8",
   "branches": {
     "main": "main",
     "work": "genspark_ai_developer",
@@ -124,14 +124,14 @@
     "definition": "typecheck + lint + test + build must all pass; then playwright e2e against `pnpm build && pnpm start -p 3000`",
     "lastRun": {
       "date": "2026-09-05",
-      "commit": "tenant fallback + icon (PR #11)",
+      "commit": "auth redirect derived from request host (PR #12)",
       "typecheck": "PASS (0 errors)",
       "lint": "PASS (0 errors)",
       "unitAndIntegration": {
         "runner": "vitest",
-        "passed": 114,
+        "passed": 124,
         "failed": 0,
-        "files": 19
+        "files": 20
       },
       "e2e": {
         "runner": "playwright",
@@ -145,7 +145,7 @@
         "skippedReason": "logout via Radix menu form action fixme (2) + Radix Select option tap on mobile-safari for create-course/create-section/bulk (3), covered on desktop"
       },
       "build": "PASS",
-      "buildId": "ehPA6d77qUKAn0lelU3FV"
+      "buildId": "bs9VBg6qoQeMq8Na8Dk1e"
     },
     "knownDebt": [
       "prettier --check flags ~120 pre-existing files; not part of `pnpm check`. Format ONLY files you touch (running --write on a folder pollutes the PR) or do a dedicated `style:` PR.",
@@ -154,7 +154,8 @@
       "e2e logout test is fixme in auth.spec.ts.",
       "Radix Select option tap is flaky on mobile-safari in Playwright; create dialogs are skipped on that project and asserted on desktop — mobile asserts list/detail/no-horizontal-scroll.",
       "Modules imported by integration tests must import permission predicates from src/lib/auth/has-permission.ts, never runtime from rbac.ts (next-auth → next/server is not resolvable under vitest).",
-      "Never gate dev-only behaviour on NODE_ENV: `next start` (preview/sandbox) runs as production. Use an explicit env var (e.g. DEFAULT_TENANT_SLUG) instead."
+      "Never gate dev-only behaviour on NODE_ENV: `next start` (preview/sandbox) runs as production. Use an explicit env var (e.g. DEFAULT_TENANT_SLUG) instead.",
+      "AUTH_URL must stay UNSET (multi-tenant): Auth.js pins every redirect to that origin. Origins come from x-forwarded-host/proto normalised in proxy.ts via src/lib/auth/forwarded.ts; /api/auth route rebases request.url because `next start` builds it from the server hostname. When adding a new reverse proxy, echo its headers first (some send x-client-proto only)."
     ]
   },
   "database": {
@@ -361,6 +362,12 @@
       "date": "2026-09-05",
       "scope": "Fix tenant fallback on preview hosts (NODE_ENV gate removed, warn in prod), app icon.svg + proxy matcher",
       "pr": 11
+    },
+    {
+      "n": 12,
+      "date": "2026-09-05",
+      "scope": "Fix post-login redirect to localhost:3000 on public/tenant hosts: unset AUTH_URL, src/lib/auth/forwarded.ts, proxy header normalisation, /api/auth request rebasing, 10 unit tests, real-browser verification",
+      "pr": 12
     }
   ],
   "nextTask": "P1-06 files"
