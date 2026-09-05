@@ -9,7 +9,8 @@
  */
 import "server-only";
 import type { Prisma } from "@prisma/client";
-import { hasPermission, type Ctx } from "@/lib/auth/rbac";
+import type { Ctx } from "@/lib/auth/rbac";
+import { hasPermission } from "@/lib/auth/has-permission";
 import { db, type TenantTx } from "@/lib/db/tenant";
 import { AppError } from "@/lib/result";
 

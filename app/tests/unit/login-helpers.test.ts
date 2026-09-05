@@ -7,7 +7,17 @@ describe("safeNext (open-redirect guard)", () => {
     expect(safeNext("/users?page=2")).toBe("/users?page=2");
   });
   it("falls back to /dashboard for anything unsafe", () => {
-    for (const bad of [undefined, null, "", "https://evil.example", "//evil.example", "/login", "/login?x=1", "javascript:alert(1)", "/a\r\nSet-Cookie: x"])
+    for (const bad of [
+      undefined,
+      null,
+      "",
+      "https://evil.example",
+      "//evil.example",
+      "/login",
+      "/login?x=1",
+      "javascript:alert(1)",
+      "/a\r\nSet-Cookie: x",
+    ])
       expect(safeNext(bad)).toBe("/dashboard");
   });
 });
@@ -42,7 +52,7 @@ describe("visibleNavItems", () => {
   it("shows courses/offerings when course.view / offering.view are granted (P1-05)", () => {
     const keys = visibleNavItems(new Set(["course.view", "offering.view"])).map((i) => i.key);
     expect(keys).toContain("courses");
-    expect(keys).not.toContain("offerings"); // /offerings page not shipped yet (P1-05 part 2)
+    expect(keys).toContain("offerings");
   });
   it("no permissions → only permission-free items", () => {
     expect(visibleNavItems(new Set()).map((i) => i.key)).toEqual(["developer"]);

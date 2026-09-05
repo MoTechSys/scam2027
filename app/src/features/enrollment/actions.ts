@@ -7,6 +7,7 @@
  *  setEnrollmentStatusAction — withdraw / complete / re-activate (enrollment.manage)
  */
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { audit } from "@/lib/audit";
 import { assertPermission, requireUserOrThrow } from "@/lib/auth/rbac";
 import { tx } from "@/lib/db/tenant";
@@ -14,6 +15,7 @@ import { AppError, type Result } from "@/lib/result";
 import { safeAction } from "@/lib/safe-action";
 import { assertOfferingScope } from "@/features/offerings/scope";
 import { assertOpen, enrolOne, lineFor, loadOfferingForEnrol, resolveIdentifiers } from "./core";
+import { studentCandidates, type StudentOption } from "./queries";
 import { bulkEnrollSchema, enrollSchema, setEnrollmentStatusSchema, type BulkEnrollResult } from "./schemas";
 
 function revalidateOffering(offeringId: string) {
@@ -172,5 +174,24 @@ export async function setEnrollmentStatusAction(input: unknown): Promise<Result<
       return { id: data.id };
     },
     { action: "enrollment.set_status" },
+  );
+}
+
+const searchSchema = z.object({
+  offeringId: z.string().uuid(),
+  q: z.string().trim().max(80).optional().default(""),
+});
+
+/** Candidate students for the single-enrol dialog (STUDENT role, not ACTIVE in the offering). Scope: teaching or tenant-wide. */
+export async function searchStudentsAction(input: unknown): Promise<Result<StudentOption[]>> {
+  return safeAction(
+    async () => {
+      const ctx = await requireUserOrThrow();
+      assertPermission(ctx, "offering.enroll_students");
+      const data = searchSchema.parse(input);
+      await assertOfferingScope(ctx, data.offeringId, "teaching");
+      return studentCandidates(ctx, data.offeringId, data.q);
+    },
+    { action: "enrollment.search_students" },
   );
 }

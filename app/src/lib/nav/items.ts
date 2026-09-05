@@ -51,8 +51,15 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { key: "roles", href: "/roles", icon: Shield, permission: "role.view" },
   { key: "academic", href: "/academic", icon: GraduationCap, permission: "academic.view" },
   { key: "courses", href: "/courses", icon: BookOpen, permission: "course.view", bottom: true },
-  { key: "offerings", href: "/offerings", icon: Layers, permission: "offering.view", phase: "P1" }, // unhide when /offerings page lands (P1-05 part 2)
-  { key: "notifications", href: "/notifications", icon: Bell, permission: "notification.view", phase: "P3", bottom: true },
+  { key: "offerings", href: "/offerings", icon: Layers, permission: "offering.view" },
+  {
+    key: "notifications",
+    href: "/notifications",
+    icon: Bell,
+    permission: "notification.view",
+    phase: "P3",
+    bottom: true,
+  },
   { key: "reports", href: "/reports", icon: BarChart3, permission: "report.view", phase: "P3" },
   { key: "audit", href: "/audit", icon: FileText, permission: "audit.view", phase: "P1" },
   { key: "settings", href: "/settings", icon: Settings, permission: "settings.view", phase: "P1" },

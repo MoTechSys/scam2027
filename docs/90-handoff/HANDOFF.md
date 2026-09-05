@@ -90,9 +90,9 @@ pnpm test && pnpm lint && pnpm typecheck
 - المراجع في `.refs/` قد تحوي `node_modules` لـ UniCore-OS-V2 (~1.3GB) — يمكن حذفها عند الحاجة للمساحة.
 - قد تكون هناك عملية `next` قديمة على المنفذ 3000 في الـ sandbox؛ استخدم `setsid scripts/restart-server.sh` (يقتل ويعيد التشغيل ويطبع `BUILD_ID`).
 
-## 6. الخطوة التالية (محدّث — الجلسة 8)
+## 6. الخطوة التالية (محدّث — الجلسة 10)
 
-**P1-05 المقررات والشُعب والتسجيل** ثم P1-06 → P1-15 بالترتيب، ثم P2 → P5. مخرجات P1-05 مفصّلة في `STATUS.json` → `progress.nextTask.deliverables` و`AGENTS.md` §5. كل مهمة = PR مستقل بدورة العمل السباعية (`AGENTS.md` §6) وتحديث ROADMAP + REQUIREMENTS + CHANGELOG + HANDOFF + **STATUS.json** في نفس الالتزام.
+**P1-06 الملفات** (storage adapter local/S3، رفع stream، magic bytes، روابط موقّعة، `/files`) ثم P1-07 → P1-15 بالترتيب، ثم P2 → P5. مخرجات P1-06 مفصّلة في `STATUS.json` → `progress.nextTask.deliverables` و`AGENTS.md` §5. كل مهمة = PR مستقل بدورة العمل السباعية (`AGENTS.md` §6) وتحديث ROADMAP + REQUIREMENTS + CHANGELOG + HANDOFF + **STATUS.json** في نفس الالتزام.
 
 ## 7. سجل الجلسات
 
@@ -172,3 +172,14 @@ pnpm test && pnpm lint && pnpm typecheck
 3. `seedCourses(tenantId)` في `prisma/seed.ts` (6 مقررات، 4 شُعب OPEN بالفصل الحالي مع EMP-0101 PRIMARY، 30 طالبًا، تسجيلات) ثم `pnpm db:seed`.
 4. اختبارات: unit (transitions/parseIdentifiers/urlBool)، integration (scope instructor/student/tenant-wide، enrolOne سعة/إعادة تفعيل)، e2e offerings (admin→open→enrol→withdraw؛ instructor يرى شعبته فقط).
 5. ROADMAP P1-05 ☑، REQUIREMENTS FR-CRS-003/005, FR-OFF-001, FR-ENR-001/002 ☑، STATUS.json (doneTasks 21, nextTask P1-06)، AGENTS §0/§4.1/§5.
+
+## الجلسة 10 — P1-05 جزء 2 (PR #10)
+**منجز:** `/offerings` + `/offerings/[id]` (roster) مع حوارات الشعبة (نموذج + جدول + مدرّسون + حالة) وحوارات التسجيل (فردي ببحث حيّ، جماعي بنتيجة لكل سطر)، `searchStudentsAction`، عنصر التنقل `offerings` مُفعّل، `seedCourses` (6 مقررات / 4 شُعب / 30 طالبًا / 68 تسجيلًا)، استخراج `lib/auth/has-permission.ts` (بلا next-auth) لتحميل الاستعلامات في vitest. البوابة: typecheck ✓ lint ✓ vitest **114/114** (19 ملفًا) ✓ build ✓ Playwright **offerings 8 ✓ / 2 skip** (سطح مكتب + جوال) والمجموعة الكاملة 61 ✓ / 5 skip.
+**دروس:** (1) أي وحدة تُستورَد من اختبار تكامل يجب ألا تسحب `@/lib/auth/rbac` وقت التشغيل (next-auth → `next/server` غير متاح في vitest) — استورد المسندات من `has-permission.ts`. (2) في e2e على الجوال استخدم `.locator("visible=true")` قبل `.first()` لأن جدول سطح المكتب المخفي يحمل نفس `data-testid`. (3) لا تشغّل `prettier --write` على مجلد كامل — الدَّين التنسيقي القديم (~120 ملفًا) يلوّث الـPR؛ اقتصر على الملفات المُعدَّلة.
+**التالي مباشرة (P1-06 الملفات):**
+1. `lib/storage/` واجهة `StorageAdapter{put,getSignedUrl,delete}` + `local` (مجلد `storage/` خارج `public`) و`s3` (AWS SDK v3، متغيرات `S3_*` اختيارية في `env.ts`).
+2. `features/files/{schemas,queries,actions}` + Route Handler `POST /api/files/upload` (stream، magic bytes عبر `file-type`، قائمة سماح، حد الحجم من الاشتراك) و`GET /api/files/[id]/download` (رابط موقّع قصير العمر + `FileDownloadLog`).
+3. `/files/[tab]` (كل الملفات/حسب المقرر/المحذوفات) + رفع متعدد بتقدّم + تصنيف `FileCategory`/`DataClassification` + حذف ناعم؛ صلاحيات `file.*` وفق المصفوفة.
+4. اختبارات: unit (magic bytes/allowlist/اسم مُعاد التوليد)، integration (RLS + scope حسب الشعبة)، e2e upload/download desktop+mobile؛ seed ملفّين نموذجيين.
+5. ROADMAP P1-06 ☑، REQUIREMENTS FR-FIL-001..008/011 ☑، CHANGELOG، HANDOFF §11، STATUS.json (doneTasks 22)، AGENTS §0/§4.1/§5.
+
