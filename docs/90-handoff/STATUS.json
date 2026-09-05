@@ -5,7 +5,7 @@
   "entryPoint": "AGENTS.md",
   "updatedAt": "2026-09-05",
   "updatedInPr": 14,
-  "mainHead": "4f9c490",
+  "mainHead": "7f6fc50",
   "branches": {
     "main": "main",
     "work": "genspark_ai_developer",
@@ -140,14 +140,18 @@
       "Radix Select option tap is flaky on mobile-safari in Playwright; create dialogs are skipped on that project and asserted on desktop — mobile asserts list/detail/no-horizontal-scroll.",
       "Modules imported by integration tests must import permission predicates from src/lib/auth/has-permission.ts, never runtime from rbac.ts (next-auth → next/server is not resolvable under vitest).",
       "Never gate dev-only behaviour on NODE_ENV: `next start` (preview/sandbox) runs as production. Use an explicit env var (e.g. DEFAULT_TENANT_SLUG) instead.",
-      "AUTH_URL must stay UNSET (multi-tenant): Auth.js pins every redirect to that origin. Origins come from x-forwarded-host/proto normalised in proxy.ts via src/lib/auth/forwarded.ts; /api/auth route rebases request.url because `next start` builds it from the server hostname. When adding a new reverse proxy, echo its headers first (some send x-client-proto only)."
+      "AUTH_URL must stay UNSET (multi-tenant): Auth.js pins every redirect to that origin. Origins come from x-forwarded-host/proto normalised in proxy.ts via src/lib/auth/forwarded.ts; /api/auth route rebases request.url because `next start` builds it from the server hostname. When adding a new reverse proxy, echo its headers first (some send x-client-proto only).",
+      "Prisma enums in tests must be read from schema.prisma (UserStatus: PENDING_ACTIVATION/ACTIVE/FROZEN/DISABLED; EnrollmentStatus: ACTIVE/WITHDRAWN/COMPLETED); JSON columns are typed Prisma.InputJsonObject.",
+      "features/*/actions.ts imports `after` from next/server → never import actions in vitest; test core/scope/schemas/queries instead.",
+      "Background jobs (notification.fanout) run inline via after(); no standalone worker until P1-12 — a Job left PENDING after a crash is re-run by processFanoutJob.",
+      "Full Playwright run under load may fail login `toHaveURL` in roles/users specs; rerun those files alone before treating as regression."
     ],
     "tsc": 0,
     "eslint": 0,
-    "vitest": "136/136 (21 files)",
-    "playwright": "67 passed / 6 skipped (9 files x 2 projects)",
+    "vitest": "167/167 (23 files)",
+    "playwright": "72 passed / 8 skipped (10 files x 2 projects)",
     "build": "ok",
-    "buildId": "hTOhr0Dxkd31Wx5zTfLOY"
+    "buildId": "3_DlrNx7tjKLVptmBJpNI"
   },
   "database": {
     "engine": "PostgreSQL 17",

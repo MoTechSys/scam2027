@@ -4,18 +4,20 @@
 >
 > **للوكيل الجديد:** لا تبدأ من هنا. ابدأ من [`/AGENTS.md`](../../AGENTS.md) (الدليل الكامل) و[`STATUS.json`](STATUS.json) (الحالة الآلية). هذا الملف هو **سجل الجلسات ودروسها** — أقدم الأقسام في الأعلى محفوظة للتاريخ وموسومة بجلستها.
 
-## 0. ملخص الحالة (محدّث — الجلسة 8)
+## 0. ملخص الحالة (محدّث — الجلسة 15؛ المصدر الآلي: `STATUS.json`)
 
 | البند | الحالة |
 |---|---|
-| المستودع | `MoTechSys/scam2027` (عام) — `main` = `93a3a5d` قبل PR #8 |
+| المستودع | `MoTechSys/scam2027` (عام) — `main` = `7f6fc50` بعد PR #14 |
 | الفرع الرئيسي | `main` |
-| فرع العمل | `genspark_ai_developer` → PR → `main` (squash-merge مباشر مصرّح به من المالك) → مزامنة الفرع |
-| التقدّم | **20 / 65 مهمة (31%)** — P0 16/16 ☑ · P1 4/15 (P1-01..P1-04) · P2–P5 لم تبدأ |
-| المهمة التالية | **P1-05** المقررات/الشُعب/التسجيل (المخرجات مفصّلة في `STATUS.json` → `progress.nextTask` و`AGENTS.md` §5) |
-| بوابة الجودة | `pnpm check` ✅ (tsc 0 · eslint 0 · vitest 101/101 · build) · Playwright 50 ✅ / 2 fixme (desktop + mobile) |
-| قاعدة البيانات | آخر هجرة `20260905015700_rls_p1_01` — 30 جدولاً محمياً بـRLS + 4 جداول منصة؛ **قاعدتان** (`scam2027`, `scam2027_test`) يجب هجرتهما معاً |
+| فرع العمل | `genspark_ai_developer` → PR → `main` (squash-merge مباشر مصرّح به من المالك) → مزامنة الفرع بـ`git reset --hard origin/main && git push -f` |
+| التقدّم | **23 / 65 مهمة (35%)** — P0 16/16 ☑ · P1 7/15 (P1-01..P1-07) · P2–P5 لم تبدأ |
+| المهمة التالية | **P1-08** سلة المحذوفات الموحّدة — النطاق في §6، المخرجات في `STATUS.json` → `progress.nextTask`، الصف في `AGENTS.md` §5 |
+| بوابة الجودة | tsc 0 · eslint 0 · Vitest 167/167 (23 ملفًا) · build `3_DlrNx7tjKLVptmBJpNI` · Playwright 72 ✅ / 8 skip (desktop + mobile) |
+| قاعدة البيانات | آخر هجرة في `app/prisma/migrations/` (لا هجرات جديدة منذ P1-01؛ P1-06/P1-07 استخدما الجداول الموجودة) — **قاعدتان** (`scam2027`, `scam2027_test`) يجب هجرتهما معًا؛ seed كامل: مستأجر demo + أدوار + مستخدمون + بنية أكاديمية + مقررات/شُعب + 30 طالبًا + ملفّان + 3 إشعارات |
 | بيئة التطوير | `/home/user/webapp` (sandbox)؛ المراجع التراثية في `.refs/` (غير ملتزمة، تُستنسخ بالحلقة في §3) |
+| الوحدات المبنية | users, roles, academic, courses, offerings, enrollment, files, notifications — كلها بنمط `features/<x>/{schemas,scope,queries,core,actions}` + صفحة `(dashboard)/<x>` + seed + unit/integration/e2e |
+| قواعد لا تُخالَف | `AGENTS.md` §6 (دورة العمل) و§7 (المعايير)؛ `STATUS.json.qualityGate.knownDebt` (نقاط التعثّر المتراكمة — اقرأها قبل أول سطر كود) |
 
 ## 1. ما تم في الجلسة 1 (تاريخي — 2026-09-04)
 
@@ -90,9 +92,13 @@ pnpm test && pnpm lint && pnpm typecheck
 - المراجع في `.refs/` قد تحوي `node_modules` لـ UniCore-OS-V2 (~1.3GB) — يمكن حذفها عند الحاجة للمساحة.
 - قد تكون هناك عملية `next` قديمة على المنفذ 3000 في الـ sandbox؛ استخدم `setsid scripts/restart-server.sh` (يقتل ويعيد التشغيل ويطبع `BUILD_ID`).
 
-## 6. الخطوة التالية (محدّث — الجلسة 14)
+## 6. الخطوة التالية (محدّث — الجلسة 15)
 
-**P1-07 الإشعارات — 🔄 قيد التنفيذ (PR #14)**. النطاق المُقرَّر: FR-NTF-001..005 + 008 (إرسال بهدف مرن، inbox، مقروء/أرشفة/حذف، عدّاد الجرس، «المُرسَلة» مع إحصاء القراءة، تفضيلات in-app). **خارج النطاق عمدًا**: البريد (FR-NTF-006 → P1-12/P2) والمشغّلات الآلية (FR-NTF-007 → P2). بعده P1-08 → P1-15 بالترتيب، ثم P2 → P5. المخرجات مفصّلة في `STATUS.json` → `progress.nextTask.deliverables` و`AGENTS.md` §5. كل مهمة = PR مستقل بدورة العمل السباعية (`AGENTS.md` §6) وتحديث ROADMAP + REQUIREMENTS + CHANGELOG + HANDOFF + **STATUS.json** في نفس الالتزام.
+**P1-08 سلة المحذوفات الموحّدة** (ROADMAP سطر P1-08، FR-SYS-001). النطاق المُقرَّر: صفحة `/trash` بتبويب لكل كيان ذي `deletedAt` (مستخدمون، أدوار، كليات/أقسام/تخصصات، مقررات، شُعب، ملفات، إشعارات) مع بحث واسترجاع وحذف نهائي (صلاحيات `*.restore`/`*.purge` أو `trash.manage` — راجع كتالوج `lib/auth/permissions.ts` قبل إضافة أي صلاحية جديدة)، وتدقيق كل عملية، و**Job `trash.purge`** يحذف نهائيًا ما تجاوز 30 يومًا (يُنفَّذ الآن inline عبر `after()` كنمط `notification.fanout`، ويُلتقط لاحقًا بعامل P1-12). التنفيذ يعيد استخدام وحدات الاسترجاع الموجودة في `features/{users,courses,offerings,files}` بدل تكرارها (ابحث عن `restore`/`purge` فيها أولًا). خارج النطاق: سياسات احتفاظ PDPL المتقدمة (P2).
+
+بعده P1-09 → P1-15 بالترتيب، ثم P2 → P5. كل مهمة = PR مستقل بدورة العمل السباعية (`AGENTS.md` §6) وتحديث ROADMAP + REQUIREMENTS + CHANGELOG + HANDOFF + **STATUS.json** + AGENTS + README **في نفس الالتزام**، مع تحديث تقدّم الجلسة في HANDOFF «أول بأول» (ليس فقط في النهاية).
+
+**قبل البدء بأي مهمة:** اقرأ `AGENTS.md` كاملًا → `STATUS.json` (`progress.nextTask`, `qualityGate.knownDebt`) → آخر جلسة هنا → سطر المهمة في ROADMAP وFR المرتبط في REQUIREMENTS → الوحدة المشابهة الأحدث (`features/notifications` نموذج مكتمل: schemas/scope/core/queries/actions + UI + seed + 3 طبقات اختبار).
 
 ## 7. سجل الجلسات
 
@@ -198,7 +204,8 @@ pnpm test && pnpm lint && pnpm typecheck
   - ☑ seed: 3 إشعارات نموذجية (إعلان ALL، أكاديمي OFFERING CS101، SYSTEM لأدمن) + 53 صف مستلم؛ ☑ تنظيف e2e لعناوين `E2E*`.
   - ☑ اختبارات: unit 18 (schemas/رابط داخلي/تفضيلات/recipientsWhere/allowedTargetKinds) + integration 12 (fanOut ALL/OFFERING/USERS/SYSTEM + تفضيلات + idempotency، نطاق inbox/sent، assertCanTarget، processFanoutJob، عزل المستأجر).
   - ☑ e2e 4 (`e2e/notifications.spec.ts`)؛ ☑ البوابة: lint 0، typecheck 0، vitest 167/167، build `3_DlrNx7tjKLVptmBJpNI`، Playwright 72 ✅ / 8 skipped (فشلان بسبب مهلة login تحت الحمل الكامل نجحا عند الإعادة — غير مرتبطين بالإشعارات)؛ ☑ التوثيق النهائي؛ ☑ PR #14 مُدمج.
-  - **التالي:** P1-08 سلة المحذوفات.
+  - **الباقي بعد هذه الجلسة: 42 / 65** (P1: 8 — P1-08…P1-15؛ P2–P5: 34). التالي: P1-08 (§6).
+  - دروس: enums Prisma في الاختبارات تُقرأ من `schema.prisma` لا من الذاكرة (`UserStatus` = PENDING_ACTIVATION/ACTIVE/FROZEN/DISABLED، `EnrollmentStatus` = ACTIVE/WITHDRAWN/COMPLETED)؛ أعمدة JSON تُصنَّف `Prisma.InputJsonObject`؛ لا تستورد `actions.ts` في vitest (يستورد `after` من `next/server`)؛ الحوارات على الجوال: رقائق + checkbox بدل Radix Select؛ فشل `toHaveURL` في login تحت الحمل الكامل (روتين — أعد الملفَين وحدهما).
 
 ## الجلسة 13 — P1-06 الملفات (PR #13)
 
