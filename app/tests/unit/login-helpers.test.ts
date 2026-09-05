@@ -29,10 +29,14 @@ describe("visibleNavItems", () => {
     expect(keys).toContain("developer");
     expect(keys).toContain("users"); // shipped in P1-02 and permitted
     expect(keys).not.toContain("roles"); // shipped in P1-03 but role.view not granted here
-    expect(keys).not.toContain("academic"); // still a future phase
+    expect(keys).not.toContain("academic"); // shipped in P1-04 but academic.view not granted here
+    expect(keys).not.toContain("courses"); // still a future phase
   });
   it("shows roles when role.view is granted", () => {
     expect(visibleNavItems(new Set(["role.view"])).map((i) => i.key)).toContain("roles");
+  });
+  it("shows academic when academic.view is granted", () => {
+    expect(visibleNavItems(new Set(["academic.view"])).map((i) => i.key)).toContain("academic");
   });
   it("no permissions → only permission-free items", () => {
     expect(visibleNavItems(new Set()).map((i) => i.key)).toEqual(["developer"]);
