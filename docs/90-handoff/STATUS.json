@@ -181,7 +181,7 @@
     "rule": "After ANY migration, run migrate deploy on BOTH databases or integration tests fail with 'table does not exist'."
   },
   "permissions": {
-    "count": 113,
+    "count": 114,
     "categories": 14,
     "source": "docs/20-product/02-PERMISSIONS-MATRIX.md",
     "generator": "python3 app/scripts/gen-permissions.py -> app/src/lib/rbac/permissions.ts",
@@ -341,5 +341,26 @@
       "scope": "P1-04 academic structure: /academic/[tab], 23 actions, setup wizard, seed, tests",
       "pr": 8
     }
-  ]
+  ],
+  "nextTask": "P1-05 (part 2: /offerings, /offerings/[id] roster, enrol/bulk dialogs, seedCourses, integration tests) → then P1-06",
+  "inProgress": {
+    "task": "P1-05",
+    "pr": 9,
+    "done": [
+      "course.manage_all permission (114)",
+      "features/courses|offerings|enrollment (schemas/scope/queries/actions)",
+      "/courses list+dialogs+majors editor",
+      "/courses/[id]",
+      "i18n courses/offerings/enrollment",
+      "e2e courses.spec + teardown E2E* courses"
+    ],
+    "remaining": [
+      "/offerings + /offerings/[id] roster UI (feature layer ready)",
+      "searchStudentsAction",
+      "seedCourses (6 courses, 4 offerings, 30 students)",
+      "unit+integration tests for scope/enrolOne",
+      "unhide nav offerings (phase P1 flag)",
+      "ROADMAP P1-05 ☑ after part 2"
+    ]
+  }
 }

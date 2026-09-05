@@ -80,7 +80,7 @@ pnpm exec playwright test                    # 39 ✓ + 2 fixme (سطح المك
 
 | الدور | المعرّف | كلمة المرور | الصلاحيات |
 |---|---|---|---|
-| مدير المستأجر | `admin@demo.edu` | `Admin@123456` | 110/113 |
+| مدير المستأجر | `admin@demo.edu` | `Admin@123456` | 111/114 |
 | مدير أكاديمي | `academic@demo.edu` | `Academic@123456` | 70 |
 | مدرّس | `EMP-0101` | `Doctor@123456` | 51 |
 | طالب | `443100001` | `Student@123456` | 20 |
@@ -94,7 +94,7 @@ pnpm exec playwright test                    # 39 ✓ + 2 fixme (سطح المك
 | السؤال | الوثيقة |
 |---|---|
 | ما المطلوب بالضبط؟ (≈150 FR/NFR بمعرّفات وحالة ☐/◐/☑) | `docs/20-product/01-REQUIREMENTS.md` |
-| ما الصلاحيات؟ (**113 رمزًا** `resource.action`، 30 موردًا، 4 أدوار نظام) — **المصدر الوحيد**؛ `permissions.ts` يُولَّد منه | `docs/20-product/02-PERMISSIONS-MATRIX.md` → `python3 app/scripts/gen-permissions.py` |
+| ما الصلاحيات؟ (**114 رمزًا** `resource.action`، 30 موردًا، 4 أدوار نظام) — **المصدر الوحيد**؛ `permissions.ts` يُولَّد منه | `docs/20-product/02-PERMISSIONS-MATRIX.md` → `python3 app/scripts/gen-permissions.py` |
 | تدفقات المستخدم | `docs/20-product/03-USE-CASES.md` |
 | المعمارية ودورة الطلب | `docs/30-architecture/00-ARCHITECTURE.md` |
 | عزل المستأجرين (RLS، GUC، `db(tenantId)`) | `docs/30-architecture/01-MULTI-TENANCY.md` |

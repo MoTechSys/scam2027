@@ -81,7 +81,8 @@
     "developer": "المطوّر",
     "menu": "القائمة الرئيسية",
     "collapse": "طيّ القائمة",
-    "expand": "توسيع القائمة"
+    "expand": "توسيع القائمة",
+    "offerings": "الشُعب"
   },
   "dashboard": {
     "title": "لوحة التحكم",
@@ -666,5 +667,313 @@
       "skip": "إدارة يدوية بدل المعالج",
       "forbidden": "تحتاج صلاحيات إدارة السنوات والكليات والأقسام والتخصصات والمستويات لتشغيل المعالج."
     }
+  },
+  "courses": {
+    "title": "المقررات",
+    "subtitle": "دليل المقررات وربطها بالتخصصات والمستويات",
+    "myTitle": "مقرراتي",
+    "tabs": {
+      "ALL": "الكل",
+      "ACTIVE": "نشطة",
+      "INACTIVE": "معطّلة",
+      "DELETED": "محذوفة"
+    },
+    "searchPlaceholder": "ابحث بالرمز أو الاسم…",
+    "empty": "لا توجد مقررات مطابقة",
+    "total": "{count} مقرر",
+    "filters": {
+      "department": "القسم",
+      "allDepartments": "كل الأقسام",
+      "major": "التخصص",
+      "allMajors": "كل التخصصات"
+    },
+    "columns": {
+      "code": "الرمز",
+      "name": "الاسم",
+      "department": "القسم",
+      "creditHours": "الساعات",
+      "majors": "التخصصات",
+      "offerings": "الشُعب",
+      "status": "الحالة",
+      "updatedAt": "آخر تحديث"
+    },
+    "credit": "{count} ساعة",
+    "majorsCount": "{count} تخصص",
+    "offeringsCount": "{count} شعبة",
+    "noDepartment": "عام (بدون قسم)",
+    "active": {
+      "true": "نشط",
+      "false": "معطّل",
+      "deleted": "محذوف"
+    },
+    "actions": {
+      "create": "مقرر جديد",
+      "edit": "تعديل",
+      "majors": "التخصصات والمستويات",
+      "delete": "حذف",
+      "restore": "استرجاع",
+      "details": "التفاصيل",
+      "newOffering": "شعبة جديدة"
+    },
+    "form": {
+      "code": "رمز المقرر",
+      "codeHint": "أحرف لاتينية وأرقام و - _ (مثال: CS101)",
+      "name": "اسم المقرر",
+      "nameEn": "الاسم بالإنجليزية",
+      "description": "الوصف",
+      "department": "القسم",
+      "noDepartment": "بدون قسم (مقرر عام)",
+      "creditHours": "الساعات المعتمدة",
+      "isActive": "نشط",
+      "majors": "التخصصات",
+      "addMajor": "إضافة تخصص",
+      "removeMajor": "إزالة",
+      "level": "المستوى",
+      "anyLevel": "أي مستوى",
+      "required": "إلزامي",
+      "elective": "اختياري",
+      "noMajors": "لم يُربط المقرر بأي تخصص بعد",
+      "choose": "اختر…"
+    },
+    "dialogs": {
+      "create": "مقرر جديد",
+      "edit": "تعديل المقرر",
+      "majors": "ربط المقرر بالتخصصات",
+      "majorsHint": "حدّد التخصصات التي يظهر فيها هذا المقرر والمستوى الذي يُدرَّس فيه (اختياري)."
+    },
+    "confirm": {
+      "delete": "سيُنقل المقرر إلى المحذوفات. لا يمكن الحذف إذا كانت له شُعب غير مؤرشفة.",
+      "restore": "سيُسترجع المقرر إلى القائمة."
+    },
+    "toast": {
+      "created": "تم إنشاء المقرر",
+      "updated": "تم تحديث المقرر",
+      "majorsSaved": "تم حفظ التخصصات",
+      "deleted": "تم حذف المقرر",
+      "restored": "تم استرجاع المقرر"
+    },
+    "detail": {
+      "info": "بيانات المقرر",
+      "offerings": "الشُعب",
+      "noOfferings": "لا توجد شُعب لهذا المقرر",
+      "majors": "التخصصات والمستويات",
+      "noMajors": "غير مربوط بتخصص",
+      "createdAt": "أُنشئ في",
+      "files": "الملفات",
+      "students": "الطلاب النشطون",
+      "section": "شعبة {section}",
+      "current": "الفصل الحالي"
+    }
+  },
+  "offerings": {
+    "title": "الشُعب",
+    "subtitle": "شُعب المقررات لكل فصل: الحالة، المدرّسون، السعة، الجدول",
+    "myTitle": "شُعبي",
+    "tabs": {
+      "ALL": "الكل",
+      "DRAFT": "مسودة",
+      "OPEN": "مفتوحة",
+      "CLOSED": "مغلقة",
+      "ARCHIVED": "مؤرشفة"
+    },
+    "status": {
+      "DRAFT": "مسودة",
+      "OPEN": "مفتوحة",
+      "CLOSED": "مغلقة",
+      "ARCHIVED": "مؤرشفة"
+    },
+    "role": {
+      "PRIMARY": "أساسي",
+      "CO_INSTRUCTOR": "مشارك",
+      "ASSISTANT": "مساعد"
+    },
+    "day": {
+      "SUN": "الأحد",
+      "MON": "الاثنين",
+      "TUE": "الثلاثاء",
+      "WED": "الأربعاء",
+      "THU": "الخميس",
+      "FRI": "الجمعة",
+      "SAT": "السبت"
+    },
+    "searchPlaceholder": "ابحث بالمقرر أو الشعبة أو المدرّس…",
+    "empty": "لا توجد شُعب مطابقة",
+    "total": "{count} شعبة",
+    "filters": {
+      "semester": "الفصل",
+      "allSemesters": "كل الفصول",
+      "mine": "شُعبي فقط"
+    },
+    "columns": {
+      "course": "المقرر",
+      "section": "الشعبة",
+      "semester": "الفصل",
+      "instructors": "المدرّسون",
+      "enrolled": "المسجّلون",
+      "capacity": "السعة",
+      "status": "الحالة",
+      "schedule": "الجدول",
+      "location": "المكان"
+    },
+    "enrolledOf": "{active} / {capacity}",
+    "unlimited": "غير محدود",
+    "noInstructor": "بدون مدرّس",
+    "noSchedule": "بدون جدول",
+    "sectionLabel": "شعبة {section}",
+    "actions": {
+      "create": "شعبة جديدة",
+      "edit": "تعديل",
+      "instructors": "المدرّسون",
+      "open": "فتح التسجيل",
+      "close": "إغلاق التسجيل",
+      "reopen": "إعادة الفتح",
+      "draft": "إعادة إلى مسودة",
+      "archive": "أرشفة",
+      "delete": "حذف",
+      "details": "التفاصيل",
+      "roster": "قائمة الطلاب"
+    },
+    "form": {
+      "course": "المقرر",
+      "semester": "الفصل الدراسي",
+      "section": "رقم الشعبة",
+      "sectionHint": "مثال: 1 أو A",
+      "status": "الحالة",
+      "capacity": "السعة",
+      "capacityHint": "اتركها فارغة لسعة غير محدودة",
+      "location": "المكان/القاعة",
+      "schedule": "الجدول الأسبوعي",
+      "addSlot": "إضافة موعد",
+      "removeSlot": "إزالة",
+      "day": "اليوم",
+      "start": "من",
+      "end": "إلى",
+      "room": "القاعة",
+      "instructors": "المدرّسون",
+      "addInstructor": "إضافة مدرّس",
+      "role": "الدور",
+      "noInstructors": "لم يُعيَّن مدرّس بعد",
+      "choose": "اختر…"
+    },
+    "dialogs": {
+      "create": "شعبة جديدة",
+      "edit": "تعديل الشعبة",
+      "instructors": "تعيين المدرّسين",
+      "status": "تغيير حالة الشعبة"
+    },
+    "confirm": {
+      "delete": "سيُحذف هذا القسم (شعبة). لا يمكن الحذف مع وجود تسجيلات نشطة.",
+      "archive": "الأرشفة نهائية: لا يمكن فتح الشعبة أو تعديلها بعدها.",
+      "open": "سيتمكن الطلاب المسجَّلون من رؤية الشعبة، ويمكن تسجيل طلاب جدد.",
+      "close": "سيتوقف تسجيل طلاب جدد.",
+      "draft": "ستعود الشعبة مسودة غير مرئية للطلاب."
+    },
+    "toast": {
+      "created": "تم إنشاء الشعبة",
+      "updated": "تم تحديث الشعبة",
+      "statusChanged": "تم تغيير الحالة",
+      "instructorsSaved": "تم حفظ المدرّسين",
+      "deleted": "تم حذف الشعبة"
+    },
+    "detail": {
+      "info": "بيانات الشعبة",
+      "course": "المقرر",
+      "semester": "الفصل",
+      "credits": "الساعات",
+      "instructors": "المدرّسون",
+      "schedule": "الجدول",
+      "location": "المكان",
+      "capacity": "السعة",
+      "stats": {
+        "ACTIVE": "نشط",
+        "WITHDRAWN": "منسحب",
+        "COMPLETED": "مكتمل"
+      },
+      "roster": "قائمة الطلاب",
+      "yourRole": "دورك",
+      "teaches": "مدرّس الشعبة",
+      "enrolled": "مسجَّل في الشعبة"
+    }
+  },
+  "enrollment": {
+    "title": "التسجيلات",
+    "myTitle": "تسجيلاتي",
+    "subtitle": "الشُعب المسجَّل بها هذا الفصل وما سبق",
+    "tabs": {
+      "ALL": "الكل",
+      "ACTIVE": "نشط",
+      "WITHDRAWN": "منسحب",
+      "COMPLETED": "مكتمل"
+    },
+    "status": {
+      "ACTIVE": "نشط",
+      "WITHDRAWN": "منسحب",
+      "COMPLETED": "مكتمل"
+    },
+    "source": {
+      "MANUAL": "يدوي",
+      "BULK": "جماعي",
+      "IMPORT": "استيراد",
+      "SELF": "ذاتي"
+    },
+    "searchPlaceholder": "ابحث بالاسم أو الرقم الأكاديمي…",
+    "empty": "لا يوجد طلاب مسجّلون",
+    "total": "{count} تسجيل",
+    "noEnrollments": "لست مسجَّلًا في أي شعبة بعد",
+    "columns": {
+      "student": "الطالب",
+      "academicId": "الرقم الأكاديمي",
+      "email": "البريد",
+      "status": "الحالة",
+      "source": "المصدر",
+      "enrolledAt": "تاريخ التسجيل",
+      "course": "المقرر",
+      "section": "الشعبة",
+      "semester": "الفصل",
+      "instructors": "المدرّسون"
+    },
+    "actions": {
+      "enroll": "تسجيل طالب",
+      "bulk": "تسجيل جماعي",
+      "withdraw": "انسحاب",
+      "reactivate": "إعادة التسجيل",
+      "complete": "إكمال"
+    },
+    "form": {
+      "student": "الطالب",
+      "searchStudent": "ابحث بالاسم أو الرقم الأكاديمي أو البريد…",
+      "noCandidates": "لا يوجد طلاب مطابقون",
+      "identifiers": "الأرقام الأكاديمية أو البريد",
+      "identifiersHint": "معرّف في كل سطر (أو مفصولة بفواصل). الحد الأقصى 500.",
+      "count": "{count} معرّف"
+    },
+    "dialogs": {
+      "enroll": "تسجيل طالب في الشعبة",
+      "bulk": "تسجيل جماعي",
+      "result": "نتيجة التسجيل الجماعي"
+    },
+    "result": {
+      "enrolled": "سُجِّل",
+      "reactivated": "أُعيد تسجيله",
+      "skipped": "تخطّي",
+      "ENROLLED": "سُجِّل",
+      "REACTIVATED": "أُعيد تسجيله",
+      "ALREADY": "مسجّل مسبقًا",
+      "NOT_FOUND": "غير موجود",
+      "NOT_STUDENT": "ليس طالبًا",
+      "FULL": "الشعبة مكتملة"
+    },
+    "confirm": {
+      "withdraw": "سيُسحب الطالب من الشعبة ويمكن إعادة تسجيله لاحقًا إذا كانت مفتوحة.",
+      "complete": "سيُعلَّم التسجيل مكتملًا ولا يمكن التراجع.",
+      "reactivate": "سيُعاد تسجيل الطالب في الشعبة (تخضع للسعة)."
+    },
+    "toast": {
+      "enrolled": "تم تسجيل الطالب",
+      "reactivated": "تمت إعادة تسجيل الطالب",
+      "bulkDone": "سُجِّل {enrolled} وأُعيد {reactivated} وتُخطّي {skipped}",
+      "statusChanged": "تم تغيير حالة التسجيل"
+    },
+    "notOpen": "الشعبة ليست مفتوحة للتسجيل"
   }
 }

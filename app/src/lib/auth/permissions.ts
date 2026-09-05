@@ -102,6 +102,12 @@ export const PERMISSIONS = [
   { code: "course.edit", group: "course", description: "تعديل" },
   { code: "course.delete", group: "course", description: "حذف" },
   { code: "course.view_stats", group: "course", description: "إحصائيات" },
+  {
+    code: "course.manage_all",
+    group: "course",
+    description:
+      "نطاق كامل على المقررات/الشُعب/التسجيل (بدونها: المدرس يرى شُعبه والطالب تسجيلاته فقط — FR-ENR-002)",
+  },
   // ── offering — المقررات والشُعب والتسجيل
   { code: "offering.view", group: "offering", description: "عرض الشُعب" },
   { code: "offering.create", group: "offering", description: "إنشاء" },
@@ -251,6 +257,7 @@ export const SYSTEM_ROLE_GRANTS: Record<
     "course.edit": "all",
     "course.delete": "all",
     "course.view_stats": "all",
+    "course.manage_all": "all",
     "offering.view": "all",
     "offering.create": "all",
     "offering.edit": "all",
@@ -354,6 +361,7 @@ export const SYSTEM_ROLE_GRANTS: Record<
     "course.edit": "all",
     "course.delete": "all",
     "course.view_stats": "all",
+    "course.manage_all": "all",
     "offering.view": "all",
     "offering.create": "all",
     "offering.edit": "all",

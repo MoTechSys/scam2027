@@ -1,7 +1,7 @@
 /**
  * Playwright global teardown — hard-deletes rows created by e2e specs so repeated local runs keep the demo
  * tenant pristine. Uses DIRECT_DATABASE_URL (bypasses RLS; superuser) and only touches e2e-owned patterns:
- * roles `E2E_*`, users `e2e-*@demo.edu`, academic rows whose code starts with `E2E` (levels cascade from majors).
+ * roles `E2E_*`, users `e2e-*@demo.edu`, academic rows and courses/offerings/enrollments whose code starts with `E2E` (levels cascade from majors).
  */
 import { PrismaClient } from "@prisma/client";
 
@@ -11,6 +11,10 @@ export default async function globalTeardown(): Promise<void> {
   const prisma = new PrismaClient({ datasources: { db: { url } } });
   try {
     // Academic structure (P1-04): bottom-up so Restrict FKs are satisfied; the seeded FIRST semester is re-flagged current.
+    await prisma.enrollment.deleteMany({ where: { offering: { course: { code: { startsWith: "E2E" } } } } });
+    await prisma.courseOffering.deleteMany({ where: { course: { code: { startsWith: "E2E" } } } });
+    const courses = await prisma.course.deleteMany({ where: { code: { startsWith: "E2E" } } });
+    void courses;
     const majors = await prisma.major.deleteMany({ where: { code: { startsWith: "E2E" } } });
     const departments = await prisma.department.deleteMany({ where: { code: { startsWith: "E2E" } } });
     const colleges = await prisma.college.deleteMany({ where: { code: { startsWith: "E2E" } } });
