@@ -12,6 +12,23 @@
 ## [Unreleased]
 
 ### Added
+- **P1-02 المستخدمون** (`/users`, `/users/[id]`): تبويبات الحالة مع عدّادات، بحث (اسم/بريد/رقم أكاديمي/هاتف)، فلتر الأدوار، ترقيم صفحات خادمي، جدول لسطح المكتب + كروت للجوال (390px بدون تمرير أفقي)، قائمة إجراءات لكل صف، صفحة تفاصيل (البيانات/الأمان/النشاط).
+- 8 Server Actions في `src/features/users/actions.ts`: إنشاء (رقم أكاديمي تلقائي `YYYY-NNNNN` قابل للضبط عبر `TenantSetting users.academicIdFormat`، كلمة مرور مؤقتة تُعرض مرة واحدة)، تعديل، تغيير الحالة (التجميد/الإيقاف يُبطل الجلسات)، حذف ناعم، استرجاع، تعيين أدوار متعددة، إعادة تعيين كلمة المرور، إنهاء الجلسات — كلها عبر `requireUserOrThrow → assertPermission → assertCanManageUser → tx(RLS) → audit → revalidatePath`.
+- `SELF_SCOPE_PERMISSIONS` / `isEscalatingPermission` / `canManagePermissionSet` في `permissions.ts`: حارس رفع الامتياز (FR-ROL-006) يتجاهل الصلاحيات الذاتية (`quiz.take`, `assignment.submit`, `grade.view_own`) لأنها لا تمنح أي نفوذ إداري.
+- i18n: مجال `users` كامل (ar/en) + مفاتيح `common.confirm/close/optional/filters/reset`.
+- اختبارات: وحدة (`academic-id`, `users-schemas`, `rbac-escalation`)، تكامل (`users-queries` بمستأجر مستقل)، E2E `users.spec.ts` (قائمة/بحث/تفاصيل، إنشاء→تجميد→حذف→سلة المحذوفات، منع الطالب) على سطح المكتب والجوال؛ `e2e/global-teardown.ts` يحذف بيانات الاختبار تلقائيًا.
+- `scripts/restart-server.sh`: إعادة تشغيل خادم الإنتاج المحلي بأمان (يقتل ما يحتجز المنفذ).
+
+### Changed
+- عنصر «المستخدمون» في التنقّل لم يعد مقيّدًا بـ `phase` — يظهر لكل من يملك `user.view`.
+
+### Fixed
+- `assertCanManageUser` كان يمنع `TENANT_ADMIN` من إدارة الطلاب (صلاحيات ذاتية لا يملكها المدير) — أُصلح عبر `canManagePermissionSet`.
+- إنشاء `UserRole` عبر العلاقة المتداخلة كان يفشل (`Unknown argument tenantId` — مفتاح مركّب) — أصبح `userRole.createMany` منفصلًا.
+- تسميات إغلاق `Dialog`/`Sheet` كانت إنجليزية ثابتة (`sr-only Close`) — أصبحت مترجمة (WCAG 3.1.2).
+- `auth.spec.ts`: كان يتحقق من `h1` بينما عنوان صفحة الدخول هو `h2` (الـ`h1` اسم المستأجر)، واصطدام `role=alert` مع مُعلِن مسارات Next.
+
+### Added
 - App shell: `DashboardLayout`, `Sidebar` (collapsible, tooltips), `Header` (locale/theme toggles, user menu + logout), `BottomNavigation`, `MobileDrawer` — nav derived from the permission matrix (P0-04).
 - Root layout: Cairo font, tenant `--primary`, `dir`/`lang` per locale, skip link, `NextIntlClientProvider` with `now`/`timeZone` (tenant TZ via `x-tenant-tz`), Sonner toaster.
 - Pages: `/login` (Server Action + Auth.js error mapping + `?reason=` messages), `/dashboard` (real role-gated stats, my sessions with revoke, recent audit), `/developer`, `/unauthorized`, `/tenant-not-found`, `/tenant-suspended`, `not-found`, `error` (P0-12).

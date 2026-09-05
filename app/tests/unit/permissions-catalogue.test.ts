@@ -9,7 +9,9 @@ import {
   PERMISSION_CODES,
   PERMISSIONS,
   PLATFORM_PERMISSIONS,
+  SELF_SCOPE_PERMISSIONS,
   SYSTEM_ROLE_GRANTS,
+  isEscalatingPermission,
   SYSTEM_ROLES,
   isPermissionCode,
 } from "@/lib/auth/permissions";
@@ -25,7 +27,15 @@ const platformDocCodes = [...matrix.matchAll(/^\| (`platform\.[^|]+) \|/gm)].fla
   return parts.map((p) => (p.startsWith(".") ? `${prefix}${p}` : p));
 });
 // Own-scope codes only make sense for the actor themself; admins act through the full-scope code instead.
-const OWN_SCOPE_ONLY = ["quiz.take", "assignment.submit", "grade.view_own"];
+const OWN_SCOPE_ONLY = [...SELF_SCOPE_PERMISSIONS];
+
+describe("self-scope permissions (escalation guard)", () => {
+  it("self-scope codes are not escalating; admin codes are", () => {
+    for (const c of OWN_SCOPE_ONLY) expect(isEscalatingPermission(c)).toBe(false);
+    expect(isEscalatingPermission("user.create")).toBe(true);
+    expect(isEscalatingPermission("role.assign")).toBe(true);
+  });
+});
 
 describe("permission catalogue", () => {
   it("codes are unique, dotted resource.action", () => {

@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * Seed — docs/50-quality/01-TESTING-STRATEGY.md (demo credentials) & docs/40-plan/01-ROADMAP.md P0-11
  *

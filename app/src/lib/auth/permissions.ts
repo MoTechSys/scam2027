@@ -491,6 +491,34 @@ export function isPermissionCode(value: string): value is PermissionCode {
   return (PERMISSION_CODES as readonly string[]).includes(value);
 }
 
+/**
+ * Self-scope permissions: they only act on the holder's own data (take a quiz, submit an assignment,
+ * view own grades) and confer no administrative power. Admin roles intentionally do not hold them, so the
+ * privilege-escalation guard (FR-ROL-006) ignores them when checking whether an actor may grant a role.
+ */
+export const SELF_SCOPE_PERMISSIONS: ReadonlySet<PermissionCode> = new Set<PermissionCode>([
+  "quiz.take",
+  "assignment.submit",
+  "grade.view_own",
+]);
+
+/** True when `code` grants administrative reach beyond the holder's own records. */
+export function isEscalatingPermission(code: PermissionCode): boolean {
+  return !SELF_SCOPE_PERMISSIONS.has(code);
+}
+
+/**
+ * Pure core of the privilege-escalation guard (FR-ROL-006): may an actor holding `actor` manage a user / grant a
+ * role whose permission codes are `target`? Unknown codes are never manageable; self-scope codes are ignored.
+ */
+export function canManagePermissionSet(actor: ReadonlySet<PermissionCode>, target: Iterable<string>): boolean {
+  for (const code of target) {
+    if (!isPermissionCode(code)) return false;
+    if (isEscalatingPermission(code) && !actor.has(code)) return false;
+  }
+  return true;
+}
+
 export function permissionsByGroup(): Record<PermissionGroup, PermissionDef[]> {
   const out = {} as Record<PermissionGroup, PermissionDef[]>;
   for (const g of Object.keys(PERMISSION_GROUPS) as PermissionGroup[]) out[g] = [];

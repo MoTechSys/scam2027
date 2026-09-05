@@ -27,8 +27,9 @@ describe("visibleNavItems", () => {
     const keys = items.map((i) => i.key);
     expect(keys).toContain("dashboard");
     expect(keys).toContain("developer");
-    expect(keys).not.toContain("users"); // P1
-    expect(keys).not.toContain("roles");
+    expect(keys).toContain("users"); // shipped in P1-02 and permitted
+    expect(keys).not.toContain("roles"); // role.view not granted here
+    expect(keys).not.toContain("academic"); // still a future phase
   });
   it("no permissions → only permission-free items", () => {
     expect(visibleNavItems(new Set()).map((i) => i.key)).toEqual(["developer"]);

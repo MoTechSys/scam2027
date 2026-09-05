@@ -13,7 +13,7 @@ import { randomUUID } from "node:crypto";
 import { auth } from "./auth";
 import { db } from "@/lib/db/tenant";
 import { AppError } from "@/lib/result";
-import type { PermissionCode } from "./permissions";
+import { canManagePermissionSet, type PermissionCode } from "./permissions";
 
 export type Ctx = {
   tenantId: string;
@@ -154,8 +154,9 @@ export function hasRole(ctx: Pick<Ctx, "user">, ...roles: string[]): boolean {
 }
 
 /**
- * Privilege-escalation guard: an actor may only manage users whose permission set is a subset of theirs,
- * and never a TENANT_ADMIN unless they are one.
+ * Privilege-escalation guard: an actor may only manage users whose *escalating* permission set is a subset
+ * of theirs (self-scope codes such as quiz.take carry no admin power and are ignored), and never a TENANT_ADMIN
+ * unless they are one.
  */
 export async function assertCanManageUser(ctx: Ctx, targetUserId: string): Promise<void> {
   if (targetUserId === ctx.user.id) return;
@@ -171,8 +172,8 @@ export async function assertCanManageUser(ctx: Ctx, targetUserId: string): Promi
   const targetIsAdmin = target.roles.some((r) => r.role.code === "TENANT_ADMIN");
   if (targetIsAdmin && !hasRole(ctx, "TENANT_ADMIN"))
     throw new AppError("FORBIDDEN", "لا يمكن إدارة مستخدم أعلى صلاحية");
-  for (const r of target.roles)
-    for (const p of r.role.permissions)
-      if (!ctx.user.permissions.has(p.permissionCode as PermissionCode))
-        throw new AppError("FORBIDDEN", "لا يمكن إدارة مستخدم يملك صلاحيات لا تملكها");
+  const targetCodes = target.roles.flatMap((r) => r.role.permissions.map((p) => p.permissionCode));
+  if (!canManagePermissionSet(ctx.user.permissions, targetCodes))
+    throw new AppError("FORBIDDEN", "لا يمكن إدارة مستخدم يملك صلاحيات لا تملكها");
 }
+

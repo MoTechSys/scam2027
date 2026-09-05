@@ -74,7 +74,7 @@ pnpm test && pnpm lint && pnpm typecheck
 
 ## 5. المشاكل المعروفة
 
-- لا شيء في الكود (لا كود بعد).
+- اختبار logout في Playwright معلَّم `fixme` (قائمة Radix + form action).
 - المراجع في `.refs/` تحوي `node_modules` لـ UniCore-OS-V2 (~1.3GB) — يمكن حذفها عند الحاجة للمساحة.
 - قد تكون هناك عملية `next dev` قديمة على المنفذ 3000 من مسار سابق في الـ sandbox؛ تُقتل قبل التشغيل.
 
@@ -87,6 +87,8 @@ pnpm test && pnpm lint && pnpm typecheck
 | التاريخ | الجلسة | الناتج | PR |
 |---|---|---|---|
 | 2026-09-04 | 1 — تحليل وتخطيط | `docs/**`, `README.md`, `CHANGELOG.md`, `.gitignore` | #1 |
+| 2026-09-04 | 2–3 — P0 كامل | `app/**` (bootstrap, RLS, Auth, RBAC, shell, tests, CI template) | #2, #3 |
+| 2026-09-05 | 4 — P1-02 المستخدمون | `app/src/features/users`, `app/src/app/(dashboard)/users`, e2e users, RBAC guard fix | #4 |
 
 
 ## الجلسة 3 — إكمال P0 (PR #3)
@@ -97,3 +99,12 @@ pnpm test && pnpm lint && pnpm typecheck
 - حسابات demo: admin@demo.edu/Admin@123456 · academic@demo.edu/Academic@123456 · EMP-0101/Doctor@123456 · 443100001/Student@123456.
 
 > **CI:** الملف `.github/ci.yml.template` يجب نقله يدويًا إلى `.github/workflows/ci.yml` (توكن GitHub App لا يملك صلاحية `workflows`).
+
+## الجلسة 4 — P1-02 المستخدمون (PR #4)
+- أُنجز: وحدة المستخدمين كاملة (`src/features/users/*`, `src/app/(dashboard)/users/**`) — انظر CHANGELOG «Unreleased». P1-02 ☑؛ 17 متطلبًا FR ☑ في `01-REQUIREMENTS.md`.
+- **درس مهم (RBAC):** الأدوار الإدارية لا تحمل الصلاحيات الذاتية (`quiz.take`, `assignment.submit`, `grade.view_own`) عمدًا، لذا أي فحص «هل صلاحيات الهدف ⊆ صلاحياتي؟» يجب أن يمرّ عبر `canManagePermissionSet` من `permissions.ts` (يتجاهلها) — وليس مقارنة مباشرة. استخدمه في P1-03 (الأدوار) أيضًا.
+- **درس Prisma:** الجداول ذات المفتاح المركّب `(tenantId, …)` لا تُنشأ عبر العلاقة المتداخلة (`roles: { create }`) — استخدم `createMany` منفصلًا داخل نفس `tx`.
+- **لماذا القائمة الجانبية قصيرة؟** `src/lib/nav/items.ts` يخفي العناصر ذات `phase` (صفحاتها لم تُبنَ) إضافة إلى فلترة الصلاحيات. عند إكمال كل وحدة: احذف `phase` من عنصرها، وحدّث اختبار `login-helpers.test.ts` (يتحقق من العناصر المرئية).
+- تشغيل محلي: `pnpm build && scripts/restart-server.sh` (يقتل أي عملية تحتجز :3000 — خادم `next-server` قديم قد يبقى بعد قتل الأب ويقدّم chunks قديمة → 500/MIME). ثم `pnpm exec playwright test` (34 ✓ + 2 fixme؛ `global-teardown` ينظّف مستخدمي `e2e-*@demo.edu`).
+- أداة Bash في الـsandbox تفشل أحيانًا (exit −1) مع الأوامر الطويلة: وجّه المخرجات إلى `/tmp/*.txt` ثم اقرأها، وشغّل الخوادم بـ `setsid`/خلفية.
+- التالي: P1-03 الأدوار (CRUD + مصفوفة صلاحيات مجمّعة + منع رفع الامتياز + حذف/نسخ دور)، ثم P1-01 المخطط الأكاديمي + RLS، P1-04، P1-09، P1-10، P1-14.

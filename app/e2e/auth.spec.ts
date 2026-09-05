@@ -13,7 +13,8 @@ test.describe("authentication", () => {
   test("unauthenticated visit to a protected route redirects to /login?next=", async ({ page }) => {
     await page.goto("/dashboard");
     await expect(page).toHaveURL(/\/login\?next=%2Fdashboard/);
-    await expect(page.getByRole("heading", { level: 1 })).toContainText(/تسجيل الدخول|Sign in/);
+    // h1 is the tenant name (branding); the login card title is the h2.
+    await expect(page.getByRole("heading", { level: 2 })).toContainText(/تسجيل الدخول|Sign in/);
   });
 
   test("root redirects to /login when signed out", async ({ page }) => {
@@ -26,7 +27,8 @@ test.describe("authentication", () => {
     await page.getByRole("textbox", { name: /البريد|Email/i }).fill(USERS.admin.id);
     await page.locator('input[name="password"]').fill("Wrong@123456");
     await page.getByRole("button", { name: /^دخول$|Sign in/i }).click();
-    await expect(page.getByRole("alert")).toContainText(/غير صحيحة|invalid/i);
+    // Exclude Next's empty route announcer (also role=alert).
+    await expect(page.getByRole("alert").filter({ hasText: /\S/ })).toContainText(/غير صحيحة|invalid/i);
     await expect(page).toHaveURL(/\/login/);
   });
 

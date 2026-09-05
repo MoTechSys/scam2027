@@ -56,5 +56,17 @@ export default defineConfig([
     files: ["src/lib/db/**/*.ts", "prisma/**/*.ts", "e2e/**/*.ts", "vitest.config.ts", "playwright.config.ts", "scripts/**"],
     rules: { "no-restricted-imports": "off" },
   },
-  globalIgnores([".next/**", "out/**", "build/**", "coverage/**", "playwright-report/**", "test-results/**", "next-env.d.ts", "src/generated/**"]),
+  // scripts/ui-upstream/** is vendored shadcn source consumed by scripts/port-ui.py — never compiled; the ported
+  // output in src/components/ui is what gets linted.
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "coverage/**",
+    "playwright-report/**",
+    "test-results/**",
+    "next-env.d.ts",
+    "src/generated/**",
+    "scripts/ui-upstream/**",
+  ]),
 ]);

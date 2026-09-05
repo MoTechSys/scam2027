@@ -45,7 +45,7 @@ export interface NavItem {
 
 export const NAV_ITEMS: readonly NavItem[] = [
   { key: "dashboard", href: "/dashboard", icon: LayoutDashboard, permission: "dashboard.view", bottom: true },
-  { key: "users", href: "/users", icon: Users, permission: "user.view", phase: "P1", bottom: true },
+  { key: "users", href: "/users", icon: Users, permission: "user.view", bottom: true },
   { key: "roles", href: "/roles", icon: Shield, permission: "role.view", phase: "P1" },
   { key: "academic", href: "/academic", icon: GraduationCap, permission: "academic.view", phase: "P1" },
   { key: "courses", href: "/courses", icon: BookOpen, permission: "course.view", phase: "P2", bottom: true },
