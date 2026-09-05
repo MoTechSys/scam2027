@@ -82,7 +82,8 @@
     "menu": "القائمة الرئيسية",
     "collapse": "طيّ القائمة",
     "expand": "توسيع القائمة",
-    "offerings": "الشُعب"
+    "offerings": "الشُعب",
+    "files": "الملفات"
   },
   "dashboard": {
     "title": "لوحة التحكم",
@@ -975,5 +976,133 @@
       "statusChanged": "تم تغيير حالة التسجيل"
     },
     "notOpen": "الشعبة ليست مفتوحة للتسجيل"
+  },
+  "files": {
+    "title": "الملفات",
+    "subtitle": "ملفات المقررات والشُعب: رفع آمن، تصنيف، روابط تنزيل مؤقتة",
+    "myTitle": "ملفاتي",
+    "tabs": {
+      "ALL": "الكل",
+      "MINE": "ملفاتي",
+      "TRASH": "سلة المحذوفات"
+    },
+    "category": {
+      "LECTURE": "محاضرة",
+      "ASSIGNMENT": "تكليف",
+      "EXAM": "اختبار",
+      "REFERENCE": "مرجع",
+      "OTHER": "أخرى"
+    },
+    "classification": {
+      "PUBLIC": "عام",
+      "INTERNAL": "داخلي",
+      "CONFIDENTIAL": "سري",
+      "RESTRICTED": "مقيَّد"
+    },
+    "status": {
+      "PENDING": "بانتظار الموافقة",
+      "APPROVED": "منشور",
+      "REJECTED": "مرفوض"
+    },
+    "searchPlaceholder": "ابحث بالاسم أو الوصف أو رمز المقرر…",
+    "empty": "لا توجد ملفات مطابقة",
+    "emptyTrash": "سلة المحذوفات فارغة",
+    "total": "{count} ملف",
+    "filters": {
+      "category": "الفئة",
+      "allCategories": "كل الفئات",
+      "classification": "التصنيف",
+      "allClassifications": "كل التصنيفات",
+      "course": "المقرر",
+      "allCourses": "كل المقررات",
+      "mine": "ملفاتي فقط"
+    },
+    "columns": {
+      "name": "الملف",
+      "course": "المقرر",
+      "category": "الفئة",
+      "classification": "التصنيف",
+      "size": "الحجم",
+      "uploader": "الرافع",
+      "downloads": "التنزيلات",
+      "date": "التاريخ",
+      "deletedAt": "حُذف"
+    },
+    "unattached": "غير مرتبط",
+    "sectionLabel": "شعبة {section}",
+    "usage": {
+      "label": "سعة التخزين",
+      "of": "{used} من {cap}",
+      "percent": "{percent}% مستخدمة"
+    },
+    "actions": {
+      "upload": "رفع ملف",
+      "download": "تنزيل",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "restore": "استرجاع",
+      "purge": "حذف نهائي",
+      "emptyTrash": "إفراغ السلة",
+      "details": "التفاصيل"
+    },
+    "form": {
+      "name": "اسم العرض",
+      "category": "الفئة",
+      "classification": "التصنيف",
+      "course": "المقرر",
+      "offering": "الشعبة",
+      "description": "الوصف",
+      "none": "بدون",
+      "choose": "اختر…",
+      "attachHint": "اختيار شعبة يربط الملف بطلابها؛ اختيار مقرر فقط يجعله مرئيًا لكل شُعبه."
+    },
+    "upload": {
+      "title": "رفع ملفات",
+      "dropHere": "اسحب الملفات هنا أو",
+      "browse": "اختر من الجهاز",
+      "limits": "الأنواع المسموحة: {types}. الحد الأقصى للملف: {max}.",
+      "queue": "{count} ملف في القائمة",
+      "start": "ابدأ الرفع",
+      "done": "تم",
+      "failed": "فشل",
+      "uploading": "جارٍ الرفع…",
+      "waiting": "بالانتظار",
+      "remove": "إزالة من القائمة",
+      "clear": "مسح القائمة",
+      "close": "إغلاق",
+      "allDone": "تم رفع {count} ملف",
+      "someFailed": "تم رفع {ok} وفشل {failed}"
+    },
+    "errors": {
+      "EXTENSION_NOT_ALLOWED": "نوع الملف غير مسموح",
+      "CONTENT_MISMATCH": "محتوى الملف لا يطابق امتداده",
+      "TOO_LARGE": "الملف أكبر من الحد المسموح",
+      "EMPTY": "الملف فارغ",
+      "MISSING": "لم يُختر ملف",
+      "QUOTA": "سعة التخزين ممتلئة",
+      "NETWORK": "انقطع الاتصال أثناء الرفع",
+      "UNKNOWN": "حدث خطأ غير متوقع"
+    },
+    "dialogs": {
+      "edit": "تعديل بيانات الملف"
+    },
+    "confirm": {
+      "delete": "سيُنقل الملف إلى سلة المحذوفات ويمكن استرجاعه لاحقًا.",
+      "purge": "حذف نهائي للملف وبياناته من التخزين. لا يمكن التراجع.",
+      "emptyTrash": "سيُحذف كل ما في سلة المحذوفات نهائيًا ({count} ملف). لا يمكن التراجع."
+    },
+    "toast": {
+      "updated": "تم تحديث الملف",
+      "deleted": "نُقل الملف إلى سلة المحذوفات",
+      "restored": "تم استرجاع الملف",
+      "purged": "تم الحذف النهائي ({count})",
+      "downloadStarted": "بدأ التنزيل"
+    },
+    "detail": {
+      "checksum": "بصمة SHA-256",
+      "downloadLogs": "سجل التنزيل",
+      "originalName": "الاسم الأصلي",
+      "mime": "نوع المحتوى"
+    }
   }
 }

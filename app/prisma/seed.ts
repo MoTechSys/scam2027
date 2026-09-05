@@ -12,9 +12,12 @@
  *    student1@demo.edu    / Student@123456    STUDENT
  *  Academic structure (P1-04, TESTING-STRATEGY §4): year 2026/2027 (current) with FIRST (current) + SECOND semesters,
  *    college CCIS → departments CS, IS → majors CS-BSC, SE-BSC, IS-BSC → 4 levels each.
+ *  Files (P1-06): two sample files on CS101 (section 1) uploaded by dr.ahmad, written to STORAGE_LOCAL_ROOT
+ *    (local driver only — skipped when STORAGE_DRIVER=s3).
  */
 import { PrismaClient } from "@prisma/client";
 import { hash } from "@node-rs/argon2";
+import { createHash } from "node:crypto";
 import {
   PERMISSIONS,
   SYSTEM_ROLE_GRANTS,
@@ -22,6 +25,9 @@ import {
   type SystemRoleCode,
 } from "../src/lib/auth/permissions";
 import { levelName } from "../src/features/academic/schemas";
+import { LocalStorage } from "../src/lib/storage/local";
+import path from "node:path";
+import { Readable } from "node:stream";
 
 const prisma = new PrismaClient({ datasourceUrl: process.env.DIRECT_DATABASE_URL });
 const ARGON = { algorithm: 2, memoryCost: 65536, timeCost: 3, parallelism: 1 } as const;
@@ -644,12 +650,123 @@ async function seedCourses(tenantId: string) {
   );
 }
 
+/** Minimal single-page PDF (valid magic bytes + xref) so the download really opens. */
+function samplePdf(title: string): Buffer {
+  const text = `BT /F1 24 Tf 72 720 Td (${title.replace(/[()\\]/g, "")}) Tj ET`;
+  const objs = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+    `<< /Length ${text.length} >>\nstream\n${text}\nendstream`,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+  ];
+  let out = "%PDF-1.4\n";
+  const offsets: number[] = [];
+  objs.forEach((o, i) => {
+    offsets.push(out.length);
+    out += `${i + 1} 0 obj\n${o}\nendobj\n`;
+  });
+  const xref = out.length;
+  out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+  for (const off of offsets) out += `${String(off).padStart(10, "0")} 00000 n \n`;
+  out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  return Buffer.from(out, "latin1");
+}
+
+async function seedFiles(tenantId: string) {
+  if ((process.env.STORAGE_DRIVER ?? "local") !== "local") {
+    console.log("✓ files: skipped (STORAGE_DRIVER != local)");
+    return;
+  }
+  const storage = new LocalStorage(
+    path.resolve(process.cwd(), process.env.STORAGE_LOCAL_ROOT ?? "./storage"),
+  );
+  const uploader = await prisma.user.findUniqueOrThrow({
+    where: { tenantId_email: { tenantId, email: "dr.ahmad@demo.edu" } },
+    select: { id: true },
+  });
+  const course = await prisma.course.findUniqueOrThrow({
+    where: { tenantId_code: { tenantId, code: "CS101" } },
+  });
+  const offering = await prisma.courseOffering.findFirstOrThrow({
+    where: { tenantId, courseId: course.id, section: "1", deletedAt: null },
+    select: { id: true },
+  });
+  const samples: {
+    slug: string;
+    name: string;
+    mimeType: string;
+    category: "LECTURE" | "REFERENCE";
+    classification: "INTERNAL" | "PUBLIC";
+    description: string;
+    body: Buffer;
+    offeringId: string | null;
+  }[] = [
+    {
+      slug: "seed-cs101-lecture-01.pdf",
+      name: "المحاضرة 1 — مقدمة في البرمجة.pdf",
+      mimeType: "application/pdf",
+      category: "LECTURE",
+      classification: "INTERNAL",
+      description: "شرائح المحاضرة الأولى: ما البرمجة؟ المتغيرات والأنواع.",
+      body: samplePdf("CS101 - Lecture 1"),
+      offeringId: offering.id,
+    },
+    {
+      slug: "seed-cs101-syllabus.md",
+      name: "خطة المقرر CS101.md",
+      mimeType: "text/markdown",
+      category: "REFERENCE",
+      classification: "PUBLIC",
+      description: "توصيف المقرر، التقييم، والمراجع لكل شُعب CS101.",
+      body: Buffer.from(
+        "# CS101 — مقدمة في البرمجة\n\n- الساعات: 4\n- التقييم: واجبات 20٪، اختبار نصفي 30٪، نهائي 50٪\n- المرجع: Think Python\n",
+        "utf8",
+      ),
+      offeringId: null,
+    },
+  ];
+  let n = 0;
+  for (const f of samples) {
+    const storageKey = `${tenantId}/${course.id}/${f.slug}`;
+    if (!(await storage.exists(storageKey)))
+      await storage.put(storageKey, Readable.from(f.body), {
+        contentType: f.mimeType,
+        maxBytes: 1024 * 1024,
+      });
+    const checksum = createHash("sha256").update(f.body).digest("hex");
+    await prisma.file.upsert({
+      where: { tenantId_storageKey: { tenantId, storageKey } },
+      update: { deletedAt: null, size: f.body.length, checksum },
+      create: {
+        tenantId,
+        uploaderId: uploader.id,
+        courseId: course.id,
+        offeringId: f.offeringId,
+        name: f.name,
+        originalName: f.slug,
+        storageKey,
+        mimeType: f.mimeType,
+        size: f.body.length,
+        checksum,
+        category: f.category,
+        classification: f.classification,
+        status: "APPROVED",
+        description: f.description,
+      },
+    });
+    n++;
+  }
+  console.log(`✓ files: ${n} sample files on CS101 (local storage)`);
+}
+
 async function main() {
   await seedPermissions();
   await seedPlatformAdmin();
   const tenant = await seedDemoTenant();
   await seedAcademic(tenant.id);
   await seedCourses(tenant.id);
+  await seedFiles(tenant.id);
 }
 
 main()

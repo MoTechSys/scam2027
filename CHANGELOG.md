@@ -11,6 +11,15 @@
 
 ## [Unreleased]
 
+### Added — P1-06 الملفات (PR #13)
+- **طبقة تخزين** `src/lib/storage/`: واجهة `StorageAdapter` بمحرّكين `LocalStorage` (مسار آمن، `wx`, 0600، حارس traversal) و`S3Storage` (lib-storage Upload، MinIO/R2 عبر `S3_ENDPOINT`)، عدّاد بايتات + SHA-256 يوقف الرفع عند تجاوز الحد (`StorageLimitError`)، متغيرات `STORAGE_DRIVER/STORAGE_LOCAL_ROOT/MAX_UPLOAD_BYTES/S3_*`.
+- **رفع stream** `POST /api/files/upload`: busboy → معاينة أول 4 KB → فحص magic bytes (`file-type`) مقابل قائمة سماح بالامتدادات (pdf/docx/pptx/xlsx/صور/mp4/zip/txt/csv/md) → حد حجم = min(`MAX_UPLOAD_BYTES`، سعة الاشتراك المتبقية) → مفتاح `tenant/course/uuid.ext` لا يحمل الاسم الأصلي → صف + تدقيق في معاملة واحدة؛ تنظيف الكائن عند أي فشل؛ 401/403/413/429 JSON.
+- **تنزيل موقّع** `GET /api/files/[id]/download?exp&uid&sig`: HMAC-SHA256 مرتبط بالملف والمستخدم و5 دقائق، إعادة فحص الجلسة والنطاق، `attachment` + `nosniff` + `no-store`، سجل `FileDownloadLog` + عدّاد التنزيلات.
+- **`/files`**: تبويبات الكل/ملفاتي/سلة المحذوفات بعدّادات، بحث، مرشّحات فئة/تصنيف/مقرر، مفتاح «ملفاتي فقط» للمدير، شريط سعة التخزين، جدول سطح مكتب + قائمة جوال، إجراءات تنزيل/تعديل/حذف ناعم/استرجاع/حذف نهائي (مدير)، حوار رفع متعدد بسحب/إفلات وتقدّم لكل ملف (XHR) ورفض مبكر للأنواع غير المسموحة، حوار تعديل البيانات وربط مقرر/شعبة.
+- **النطاق** (`fileScopeWhere`): `file.manage_all` كل شيء؛ وإلا ملفاتي + ملفات شُعبي (مدرّس/طالب) + ملفات المقرر غير المرتبطة بشعبة؛ التعديل/الحذف للمالك أو المدير.
+- عنصر تنقّل «الملفات» (`file.view`)، نطاق i18n `files` ar/en، seed ملفَّين على CS101 (PDF صالح + Markdown)، تنظيف e2e لملفات `E2E*`.
+- اختبارات: `files-storage.test.ts` (11 — تحقق/توقيع/تخزين محلي)، `login-helpers` (+1)، `e2e/files.spec.ts` (مدير رفع→تنزيل→تعديل→حذف→استرجاع، مدرّس، طالب قراءة فقط، جوال بلا تمرير أفقي).
+
 ### Fixed — PR #12
 - **إعادة التوجيه بعد الدخول إلى `localhost:3000`:** على الرابط العام كان المتصفح يُحوَّل بعد الدخول إلى `http://localhost:3000/dashboard` (`ERR_CONNECTION_REFUSED`). سببان: (1) `AUTH_URL="http://localhost:3000"` في `.env` يجعل Auth.js يثبّت كل إعادة توجيه على أصل واحد؛ (2) نفق المعاينة لا يرسل `x-forwarded-host`/`x-forwarded-proto` (يرسل `x-client-proto` فقط) وNext يبني `request.url` لمعالِجات المسار من `hostname:port` الخاص بالخادم لا من `Host`. **الإصلاح:** أُلغي `AUTH_URL` نهائيًا (`.env.example`/`.env.test` توثّق ذلك)، ووحدة نقية جديدة `src/lib/auth/forwarded.ts` (`normalizeForwardedHeaders`, `forwardedOrigin`, `rebaseUrlToForwardedOrigin`) يستدعيها الـproxy لتطبيع الترويسات، ومعالِج `/api/auth/[...nextauth]` يعيد بناء `request.url` على أصل الطلب الفعلي. النتيجة: كل إعادات التوجيه (دخول، `next=`، خطأ، خروج، بوابة الجلسة) تبقى على نفس المضيف الذي استخدمه المتصفح — نطاق مستأجر فرعي أو رابط معاينة. 10 اختبارات وحدة (`forwarded.test.ts`) + تحقّق بمتصفح حقيقي على الرابط العام (مدير/مدرّس/طالب، خطأ كلمة المرور، تسجيل خروج).
 

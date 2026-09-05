@@ -4,8 +4,8 @@
   "repo": "https://github.com/MoTechSys/scam2027",
   "entryPoint": "AGENTS.md",
   "updatedAt": "2026-09-05",
-  "updatedInPr": 12,
-  "mainHead": "a57e5e8",
+  "updatedInPr": 13,
+  "mainHead": "0bba5d8",
   "branches": {
     "main": "main",
     "work": "genspark_ai_developer",
@@ -13,8 +13,8 @@
   },
   "progress": {
     "totalTasks": 65,
-    "doneTasks": 21,
-    "percent": 32,
+    "doneTasks": 22,
+    "percent": 34,
     "phases": {
       "P0": {
         "name": "Foundation",
@@ -29,7 +29,7 @@
       "P1": {
         "name": "Core LMS",
         "total": 15,
-        "done": 5,
+        "done": 6,
         "status": "IN_PROGRESS",
         "prs": [
           4,
@@ -37,7 +37,8 @@
           6,
           8,
           9,
-          10
+          10,
+          13
         ]
       },
       "P2": {
@@ -89,33 +90,14 @@
       "P1-05"
     ],
     "nextTask": {
-      "id": "P1-06",
-      "title": "Files: storage adapter (local/S3), streamed upload with magic-byte check, signed download links, classification, /files/[tab]",
-      "requirements": [
-        "FR-FIL-001..008",
-        "FR-FIL-011"
-      ],
+      "id": "P1-07",
+      "name": "الإشعارات",
       "deliverables": [
-        "src/lib/storage/{index,local,s3}.ts — StorageAdapter{put(stream),getSignedUrl(ttl),delete}; env S3_* optional (local default, folder outside public/)",
-        "src/features/files/{schemas,queries,actions}.ts (safeAction + audit + assertPermission; file.manage_all tenant-wide, else scope by offerings the user teaches/is enrolled in)",
-        "app/api/files/upload/route.ts — multipart stream, allowlist + magic bytes (file-type), size cap from subscription, regenerated name tenant/course/uuid.ext",
-        "app/api/files/[id]/download/route.ts — short-lived HMAC-signed URL + FileDownloadLog",
-        "/files/[tab] (all | by course/offering | trash) with multi-upload progress, FileCategory + DataClassification, soft delete/restore; desktop table + mobile list",
-        "nav item files unhidden + login-helpers test; seed 2 sample files; i18n ar/en files domain",
-        "tests: unit (magic bytes/allowlist/name), integration (RLS + scope), e2e files.spec.ts desktop+mobile (+ teardown E2E*)",
-        "docs: ROADMAP ☑, REQUIREMENTS ☑, CHANGELOG, HANDOFF session 11, STATUS.json (doneTasks 22), AGENTS.md §0/§4.1/§5"
-      ],
-      "remainingInPhaseOrder": [
-        "P1-06",
-        "P1-07",
-        "P1-08",
-        "P1-09",
-        "P1-10",
-        "P1-11",
-        "P1-12",
-        "P1-13",
-        "P1-14",
-        "P1-15"
+        "Notification model + prefs",
+        "in-app center /notifications + bell badge",
+        "email adapter (SMTP/Resend) with queue",
+        "triggers: enrollment, file upload, grade",
+        "i18n ar/en, tests desktop+mobile"
       ]
     }
   },
@@ -156,7 +138,13 @@
       "Modules imported by integration tests must import permission predicates from src/lib/auth/has-permission.ts, never runtime from rbac.ts (next-auth → next/server is not resolvable under vitest).",
       "Never gate dev-only behaviour on NODE_ENV: `next start` (preview/sandbox) runs as production. Use an explicit env var (e.g. DEFAULT_TENANT_SLUG) instead.",
       "AUTH_URL must stay UNSET (multi-tenant): Auth.js pins every redirect to that origin. Origins come from x-forwarded-host/proto normalised in proxy.ts via src/lib/auth/forwarded.ts; /api/auth route rebases request.url because `next start` builds it from the server hostname. When adding a new reverse proxy, echo its headers first (some send x-client-proto only)."
-    ]
+    ],
+    "tsc": 0,
+    "eslint": 0,
+    "vitest": "136/136 (21 files)",
+    "playwright": "67 passed / 6 skipped (9 files x 2 projects)",
+    "build": "ok",
+    "buildId": "hTOhr0Dxkd31Wx5zTfLOY"
   },
   "database": {
     "engine": "PostgreSQL 17",
@@ -370,5 +358,6 @@
       "pr": 12
     }
   ],
-  "nextTask": "P1-06 files"
+  "nextTask": "P1-06 files",
+  "session": 13
 }

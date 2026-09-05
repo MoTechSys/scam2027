@@ -54,6 +54,11 @@ describe("visibleNavItems", () => {
     expect(keys).toContain("courses");
     expect(keys).toContain("offerings");
   });
+  it("shows files when file.view is granted (P1-06)", () => {
+    const keys = visibleNavItems(new Set(["file.view"])).map((i) => i.key);
+    expect(keys).toContain("files");
+    expect(visibleNavItems(new Set(["course.view"])).map((i) => i.key)).not.toContain("files");
+  });
   it("no permissions → only permission-free items", () => {
     expect(visibleNavItems(new Set()).map((i) => i.key)).toEqual(["developer"]);
   });

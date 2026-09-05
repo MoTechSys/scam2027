@@ -11,6 +11,7 @@ import {
   Layers,
   Code2,
   FileText,
+  FolderOpen,
   GraduationCap,
   LayoutDashboard,
   Settings,
@@ -27,6 +28,7 @@ export type NavKey =
   | "academic"
   | "courses"
   | "offerings"
+  | "files"
   | "notifications"
   | "reports"
   | "audit"
@@ -52,6 +54,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { key: "academic", href: "/academic", icon: GraduationCap, permission: "academic.view" },
   { key: "courses", href: "/courses", icon: BookOpen, permission: "course.view", bottom: true },
   { key: "offerings", href: "/offerings", icon: Layers, permission: "offering.view" },
+  { key: "files", href: "/files", icon: FolderOpen, permission: "file.view" },
   {
     key: "notifications",
     href: "/notifications",

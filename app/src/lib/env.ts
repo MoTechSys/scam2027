@@ -17,6 +17,22 @@ const serverSchema = z.object({
   APP_ENCRYPTION_KEY: z
     .string()
     .regex(/^base64:[A-Za-z0-9+/=]{40,}$/, "APP_ENCRYPTION_KEY must be `base64:<32 random bytes>`"),
+  /* ---- Files (FR-FIL-011) ---- */
+  STORAGE_DRIVER: z.enum(["local", "s3"]).default("local"),
+  /** Local driver root — MUST be outside `public/`. Relative paths resolve from the app cwd. */
+  STORAGE_LOCAL_ROOT: z.string().min(1).default("./storage"),
+  /** Hard per-file cap (bytes); the subscription may lower it, never raise it. */
+  MAX_UPLOAD_BYTES: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(50 * 1024 * 1024),
+  S3_BUCKET: z.string().optional(),
+  S3_REGION: z.string().optional(),
+  S3_ENDPOINT: z.string().url().optional(),
+  S3_ACCESS_KEY_ID: z.string().optional(),
+  S3_SECRET_ACCESS_KEY: z.string().optional(),
+  S3_FORCE_PATH_STYLE: z.coerce.boolean().optional(),
 });
 
 export type Env = z.infer<typeof serverSchema>;
