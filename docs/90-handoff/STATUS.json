@@ -1,0 +1,153 @@
+{
+  "$comment": "Machine-readable project status. MUST be updated in the same commit as any roadmap task completion. Human narrative lives in AGENTS.md (entry point) and HANDOFF.md (session log). Source of truth for task list: docs/40-plan/01-ROADMAP.md.",
+  "project": "MoTechSys/scam2027",
+  "repo": "https://github.com/MoTechSys/scam2027",
+  "entryPoint": "AGENTS.md",
+  "updatedAt": "2026-09-05",
+  "updatedInPr": 7,
+  "mainHead": "590df59",
+  "branches": {
+    "main": "main",
+    "work": "genspark_ai_developer",
+    "policy": "commit -> push work branch -> PR to main -> squash-merge -> sync work branch to main"
+  },
+  "progress": {
+    "totalTasks": 65,
+    "doneTasks": 19,
+    "percent": 29,
+    "phases": {
+      "P0": { "name": "Foundation", "total": 16, "done": 16, "status": "DONE", "prs": [2, 3] },
+      "P1": { "name": "Core LMS", "total": 15, "done": 3, "status": "IN_PROGRESS", "prs": [4, 5, 6] },
+      "P2": { "name": "Assessment, files viewer, AI, SIS import, PDPL basic", "total": 12, "done": 0, "status": "NOT_STARTED" },
+      "P3": { "name": "Assignments, MFA, platform, PDPL full, OpenAPI, EN", "total": 12, "done": 0, "status": "NOT_STARTED" },
+      "P4": { "name": "SSO, Push, attendance, PWA, webhooks", "total": 7, "done": 0, "status": "NOT_STARTED" },
+      "P5": { "name": "Interop: LTI 1.3, QTI 3.0, OneRoster 1.2", "total": 3, "done": 0, "status": "NOT_STARTED" }
+    },
+    "doneTaskIds": [
+      "P0-01", "P0-02", "P0-03", "P0-04", "P0-05", "P0-06", "P0-07", "P0-08",
+      "P0-09", "P0-10", "P0-11", "P0-12", "P0-13", "P0-14", "P0-15", "P0-16",
+      "P1-01", "P1-02", "P1-03"
+    ],
+    "nextTask": {
+      "id": "P1-04",
+      "title": "Academic structure: colleges/departments/majors/levels/years/semesters + first-setup wizard + /academic/[tab]",
+      "requirements": ["FR-ACD-001", "FR-ACD-002", "FR-ACD-003", "FR-ACD-004", "FR-ACD-005", "FR-ACD-006"],
+      "deliverables": [
+        "src/features/academic/{schemas,queries,actions}.ts (safeAction + audit + assertPermission)",
+        "src/app/(dashboard)/academic/[tab]/ pages: years, semesters, colleges, departments, majors, levels (desktop table + mobile cards)",
+        "first-setup wizard when tenant has no AcademicYear",
+        "setCurrent year/semester action (partial unique index already enforces one current per tenant)",
+        "seed.ts extension per docs/50-quality/01-TESTING-STRATEGY.md §4 (1 college, 2 depts, 3 majors, 4 levels, year+semester)",
+        "remove `phase` from nav item `academic` + update tests/unit/login-helpers.test.ts",
+        "i18n ar/en domain `academic`",
+        "unit (schemas) + integration (queries isolation) + e2e academic.spec.ts desktop+mobile",
+        "docs: ROADMAP ☑, REQUIREMENTS FR-ACD ☑, CHANGELOG, HANDOFF session, STATUS.json"
+      ],
+      "remainingInPhaseOrder": [
+        "P1-04", "P1-05", "P1-06", "P1-07", "P1-08", "P1-09", "P1-10",
+        "P1-11", "P1-12", "P1-13", "P1-14", "P1-15"
+      ]
+    }
+  },
+  "qualityGate": {
+    "command": "cd app && pnpm check",
+    "definition": "typecheck + lint + test + build must all pass; then playwright e2e against `pnpm build && pnpm start -p 3000`",
+    "lastRun": {
+      "date": "2026-09-05",
+      "commit": "590df59",
+      "typecheck": "PASS (0 errors)",
+      "lint": "PASS (0 errors)",
+      "unitAndIntegration": { "runner": "vitest", "passed": 69, "failed": 0, "files": 15 },
+      "e2e": { "runner": "playwright", "passed": 39, "skipped": 2, "failed": 0, "projects": ["desktop-chromium", "mobile-safari"], "skippedReason": "logout via Radix menu form action marked fixme (both projects)" },
+      "build": "PASS",
+      "buildId": "2FOU6I9blXQU9_lVcIxGx"
+    },
+    "knownDebt": [
+      "prettier --check flags 10 pre-existing files; not part of `pnpm check`. Format only files you touch or do a dedicated `style:` PR.",
+      "CI lives in .github/ci.yml.template because the agent token lacks `workflows` scope; owner must move it to .github/workflows/ci.yml.",
+      "docs/50-quality/01-TESTING-STRATEGY.md §5 references scripts e2e:mobile / e2e:crawl / test:a11y that are not yet in app/package.json (a11y is covered by e2e/a11y.spec.ts; a crawl spec is not written yet).",
+      "prisma/seed.ts has no academic structure yet (to be extended in P1-04/P1-05).",
+      "e2e logout test is fixme in auth.spec.ts."
+    ]
+  },
+  "database": {
+    "engine": "PostgreSQL 17",
+    "orm": "Prisma 6.19.3",
+    "databases": {
+      "dev": { "name": "scam2027", "envFile": "app/.env" },
+      "test": { "name": "scam2027_test", "envFile": "app/.env.test", "migrateCommand": "DIRECT_DATABASE_URL=\"postgresql://postgres:postgres@localhost:5432/scam2027_test?schema=public\" pnpm exec prisma migrate deploy" }
+    },
+    "latestMigration": "20260905015700_rls_p1_01",
+    "migrations": [
+      "20260904221859_init_p0",
+      "20260904222500_rls_p0",
+      "20260905015633_p1_01_academic_content_comms",
+      "20260905015700_rls_p1_01"
+    ],
+    "tenantScopedTables": 30,
+    "platformTables": 4,
+    "rlsGenerator": "pnpm tsx scripts/gen-rls.ts > prisma/migrations/<ts>_rls_<name>/migration.sql",
+    "rule": "After ANY migration, run migrate deploy on BOTH databases or integration tests fail with 'table does not exist'."
+  },
+  "permissions": {
+    "count": 113,
+    "categories": 14,
+    "source": "docs/20-product/02-PERMISSIONS-MATRIX.md",
+    "generator": "python3 app/scripts/gen-permissions.py -> app/src/lib/rbac/permissions.ts",
+    "rule": "Never edit permissions.ts by hand; edit the matrix doc and regenerate."
+  },
+  "demoCredentials": {
+    "tenant": "demo",
+    "note": "Development only. Source: app/prisma/seed.ts. Permission counts as of 113 codes.",
+    "accounts": [
+      { "role": "TENANT_ADMIN", "login": "admin@demo.edu", "academicId": "EMP-0001", "password": "Admin@123456", "permissions": 110 },
+      { "role": "ACADEMIC_ADMIN", "login": "academic@demo.edu", "academicId": "EMP-0002", "password": "Academic@123456", "permissions": 70 },
+      { "role": "INSTRUCTOR", "login": "dr.ahmad@demo.edu", "academicId": "EMP-0101", "password": "Doctor@123456", "permissions": 51 },
+      { "role": "STUDENT", "login": "student1@demo.edu", "academicId": "443100001", "password": "Student@123456", "permissions": 20 },
+      { "role": "PLATFORM_SUPER_ADMIN", "login": "super@scam.local", "academicId": null, "password": "Super@123456", "permissions": null }
+    ]
+  },
+  "legacySources": {
+    "note": "Cloned read-only into .refs/ (git-ignored). None is continued; scam2027 is a clean unification. See AGENTS.md §1 and docs/00-analysis/00-INVENTORY.md.",
+    "repos": [
+      "MoTechSys/S-ACM-Project",
+      "MoTechSys/s-acm-frontend",
+      "MoTechSys/s-acm-master",
+      "MoTechSys/s-acm",
+      "MoTechSys/s-acm-backend",
+      "MoTechSys/SCAM",
+      "MoTechSys/scamV9",
+      "MoTechSys/UniCore-OS",
+      "MoTechSys/UniCore-OS-V2"
+    ],
+    "primaryUiSource": "MoTechSys/s-acm (apps/web) — green Omnitrix UI, ported via app/scripts/port-ui.py",
+    "primaryBackendReference": "UniCore-OS-V2 (Next/Prisma) — chosen as engine per ADR-0001"
+  },
+  "standards": {
+    "security": "OWASP ASVS 5.0 L2",
+    "privacy": "PDPL (KSA) + NCA ECC",
+    "accessibility": "WCAG 2.1 AA (axe in e2e/a11y.spec.ts)",
+    "mobile": "390x844 no horizontal scroll; every role tested desktop+mobile",
+    "i18n": "next-intl ar (primary, RTL) / en; logical CSS properties only",
+    "commits": "Conventional Commits",
+    "changelog": "Keep a Changelog 1.1.0",
+    "interop": "LTI 1.3, QTI 3.0, OneRoster 1.2 (P5)"
+  },
+  "ownerActions": [
+    { "id": 1, "action": "Rotate Supabase DB password of legacy project hmqmtxgyuarccyrioics (exposed in MoTechSys/SCAM/HANDOVER.md, SEC-01)", "status": "OPEN", "priority": "HIGH" },
+    { "id": 2, "action": "Move .github/ci.yml.template to .github/workflows/ci.yml (agent token lacks workflows scope)", "status": "OPEN", "priority": "HIGH" },
+    { "id": 3, "action": "Decide production root domain for tenant subdomains", "status": "OPEN", "priority": "MEDIUM" },
+    { "id": 4, "action": "Provide AI provider + dev key (OpenAI-compatible or Gemini) for P2-05", "status": "OPEN", "priority": "MEDIUM" },
+    { "id": 5, "action": "Provide SMTP credentials for P1-12 platform mail", "status": "OPEN", "priority": "MEDIUM" },
+    { "id": 6, "action": "Confirm final license", "status": "OPEN", "priority": "LOW" }
+  ],
+  "sessions": [
+    { "n": 1, "date": "2026-09-04", "scope": "Analysis & planning (docs/**)", "pr": 1 },
+    { "n": 2, "date": "2026-09-04", "scope": "P0 partial", "pr": 2 },
+    { "n": 3, "date": "2026-09-04", "scope": "P0 complete", "pr": 3 },
+    { "n": 4, "date": "2026-09-05", "scope": "P1-02 users", "pr": 4 },
+    { "n": 5, "date": "2026-09-05", "scope": "P1-03 roles & permissions", "pr": 5 },
+    { "n": 6, "date": "2026-09-05", "scope": "P1-01 schema (18 models, RLS, Json contracts, ADR-0006)", "pr": 6 },
+    { "n": 7, "date": "2026-09-05", "scope": "Handoff documentation: AGENTS.md, STATUS.json, README/HANDOFF refresh", "pr": 7 }
+  ]
+}
