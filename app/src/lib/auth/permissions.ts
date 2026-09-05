@@ -511,7 +511,10 @@ export function isEscalatingPermission(code: PermissionCode): boolean {
  * Pure core of the privilege-escalation guard (FR-ROL-006): may an actor holding `actor` manage a user / grant a
  * role whose permission codes are `target`? Unknown codes are never manageable; self-scope codes are ignored.
  */
-export function canManagePermissionSet(actor: ReadonlySet<PermissionCode>, target: Iterable<string>): boolean {
+export function canManagePermissionSet(
+  actor: ReadonlySet<PermissionCode>,
+  target: Iterable<string>,
+): boolean {
   for (const code of target) {
     if (!isPermissionCode(code)) return false;
     if (isEscalatingPermission(code) && !actor.has(code)) return false;
@@ -524,4 +527,30 @@ export function permissionsByGroup(): Record<PermissionGroup, PermissionDef[]> {
   for (const g of Object.keys(PERMISSION_GROUPS) as PermissionGroup[]) out[g] = [];
   for (const p of PERMISSIONS) out[p.group].push(p);
   return out;
+}
+
+export interface PermissionCategory {
+  /** Stable key derived from the first group in the category (e.g. "academic"); used for i18n + DOM ids. */
+  readonly key: PermissionGroup;
+  /** Arabic label from the matrix (fallback when no translation exists). */
+  readonly label: string;
+  readonly permissions: readonly PermissionDef[];
+}
+
+/**
+ * Permissions grouped by matrix category (several `group` keys share one label, e.g. college/department/major →
+ * "البنية الأكاديمية"). Order follows the matrix. Used by the roles permission-matrix UI (FR-ROL-002).
+ */
+export function permissionCategories(): readonly PermissionCategory[] {
+  const byLabel = new Map<string, { key: PermissionGroup; label: string; permissions: PermissionDef[] }>();
+  for (const p of PERMISSIONS) {
+    const label = PERMISSION_GROUPS[p.group];
+    let cat = byLabel.get(label);
+    if (!cat) {
+      cat = { key: p.group, label, permissions: [] };
+      byLabel.set(label, cat);
+    }
+    cat.permissions.push(p);
+  }
+  return [...byLabel.values()];
 }

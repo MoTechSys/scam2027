@@ -63,3 +63,17 @@ describe("permission catalogue", () => {
     for (const item of NAV_ITEMS) if (item.permission) expect(isPermissionCode(item.permission)).toBe(true);
   });
 });
+
+describe("permissionCategories (matrix UI grouping)", () => {
+  it("covers every permission exactly once and keeps matrix order", async () => {
+    const { permissionCategories, PERMISSIONS, PERMISSION_GROUPS } = await import("@/lib/auth/permissions");
+    const cats = permissionCategories();
+    const all = cats.flatMap((c) => c.permissions.map((p) => p.code));
+    expect(all).toEqual(PERMISSIONS.map((p) => p.code));
+    expect(new Set(cats.map((c) => c.label)).size).toBe(cats.length);
+    expect(new Set(Object.values(PERMISSION_GROUPS)).size).toBe(cats.length);
+    // academic sub-resources collapse into one category keyed by the first group.
+    const academic = cats.find((c) => c.key === "academic")!;
+    expect(academic.permissions.map((p) => p.group)).toEqual(expect.arrayContaining(["college", "department", "major", "level", "semester", "year"]));
+  });
+});

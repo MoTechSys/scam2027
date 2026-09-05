@@ -89,6 +89,7 @@ pnpm test && pnpm lint && pnpm typecheck
 | 2026-09-04 | 1 — تحليل وتخطيط | `docs/**`, `README.md`, `CHANGELOG.md`, `.gitignore` | #1 |
 | 2026-09-04 | 2–3 — P0 كامل | `app/**` (bootstrap, RLS, Auth, RBAC, shell, tests, CI template) | #2, #3 |
 | 2026-09-05 | 4 — P1-02 المستخدمون | `app/src/features/users`, `app/src/app/(dashboard)/users`, e2e users, RBAC guard fix | #4 |
+| 2026-09-05 | 5 — P1-03 الأدوار | `app/src/features/roles`, `app/src/app/(dashboard)/roles`, مصفوفة الصلاحيات، e2e roles | #5 |
 
 
 ## الجلسة 3 — إكمال P0 (PR #3)
@@ -108,3 +109,13 @@ pnpm test && pnpm lint && pnpm typecheck
 - تشغيل محلي: `pnpm build && scripts/restart-server.sh` (يقتل أي عملية تحتجز :3000 — خادم `next-server` قديم قد يبقى بعد قتل الأب ويقدّم chunks قديمة → 500/MIME). ثم `pnpm exec playwright test` (34 ✓ + 2 fixme؛ `global-teardown` ينظّف مستخدمي `e2e-*@demo.edu`).
 - أداة Bash في الـsandbox تفشل أحيانًا (exit −1) مع الأوامر الطويلة: وجّه المخرجات إلى `/tmp/*.txt` ثم اقرأها، وشغّل الخوادم بـ `setsid`/خلفية.
 - التالي: P1-03 الأدوار (CRUD + مصفوفة صلاحيات مجمّعة + منع رفع الامتياز + حذف/نسخ دور)، ثم P1-01 المخطط الأكاديمي + RLS، P1-04، P1-09، P1-10، P1-14.
+
+## الجلسة 5 — P1-03 الأدوار والصلاحيات (PR #5)
+- أُنجز: وحدة الأدوار كاملة (`src/features/roles/*`, `src/app/(dashboard)/roles/**`) — انظر CHANGELOG «Unreleased». P1-03 ☑؛ FR-ROL-001..006 ☑. القائمة الجانبية تُظهر «الأدوار» لحاملي `role.view`.
+- **السيناريو المطلوب من المالك يعمل الآن:** المدير ينشئ دورًا → يحدد صلاحياته من المصفوفة (لا يمكنه منح ما لا يملك) → يعيّن المستخدمين عليه من `/users` → لا يظهر لهؤلاء في القائمة والصفحات إلا ما يغطيه الدور (تُحسب الصلاحيات في كل طلب داخل `loadCtx`، بلا حاجة لتسجيل خروج).
+- **درس Prisma/اختبارات:** `Permission` جدول عام (غير مستأجري) ومرجع FK لـ`RolePermission.permissionCode`؛ قاعدة اختبارات التكامل غير مبذورة → `platformPrisma.permission.upsert` قبل إنشاء صفوف الصلاحيات.
+- **درس React 19/ESLint:** قاعدة `react-hooks/set-state-in-effect` تمنع مزامنة الحالة في `useEffect`؛ استُخدم نمط الحالة المشتقّة (`edited {key,value}` مفتاحها الرموز الأولية) في `permissions-editor.tsx`.
+- **درس next-intl:** النقاط في المفاتيح تُعشّش → رموز الصلاحيات تُخزَّن بـ`_` (`codes.user_view`)، مع `t.has()` للرجوع إلى التسمية الافتراضية.
+- **درس Playwright:** المصفوفة تفتح أول 3 فئات فقط → استخدم `openCategory()` (يعتمد `data-category` على `AccordionItem`) قبل النقر على صلاحية؛ وعلى الجوال طابق العناصر المرئية فقط (`.locator("visible=true")`) لأن جدول سطح المكتب موجود مخفيًا في DOM.
+- الحالة: tsc/lint/build ✓، vitest 60/60، e2e 39 ✓ + 2 fixme (سطح المكتب + الجوال).
+- التالي: P1-01 المخطط الأكاديمي (AcademicYear…PasswordResetToken) + `pnpm tsx scripts/gen-rls.ts`، ثم P1-04 الأكاديمي، P1-09 التدقيق، P1-10 الإعدادات، P1-14 الملف الشخصي، ثم بقية P1 → P2…P5.
