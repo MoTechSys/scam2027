@@ -4,8 +4,8 @@
   "repo": "https://github.com/MoTechSys/scam2027",
   "entryPoint": "AGENTS.md",
   "updatedAt": "2026-09-06",
-  "updatedInPr": 16,
-  "mainHead": "7f6fc50",
+  "updatedInPr": 17,
+  "mainHead": "660dad6",
   "branches": {
     "main": "main",
     "work": "genspark_ai_developer",
@@ -376,8 +376,14 @@
       "date": "2026-09-06",
       "scope": "Hotfix: rebuild app/src/lib/storage (types/local/s3/validate/signed-url/index) lost to an unanchored .gitignore rule; anchor /storage/ and /storage-test/; full gate green",
       "pr": 16
+    },
+    {
+      "n": 17,
+      "date": "2026-09-06",
+      "scope": "Handoff: HANDOFF §0 + session 16 log + detailed 9-step P1-08 execution plan; AGENTS pitfall #12; STATUS mainHead",
+      "pr": 17
     }
   ],
   "nextTask": "P1-08 trash",
-  "session": 16
+  "session": 17
 }

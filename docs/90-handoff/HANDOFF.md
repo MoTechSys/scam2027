@@ -4,16 +4,16 @@
 >
 > **للوكيل الجديد:** لا تبدأ من هنا. ابدأ من [`/AGENTS.md`](../../AGENTS.md) (الدليل الكامل) و[`STATUS.json`](STATUS.json) (الحالة الآلية). هذا الملف هو **سجل الجلسات ودروسها** — أقدم الأقسام في الأعلى محفوظة للتاريخ وموسومة بجلستها.
 
-## 0. ملخص الحالة (محدّث — الجلسة 15؛ المصدر الآلي: `STATUS.json`)
+## 0. ملخص الحالة (محدّث — الجلسة 16؛ المصدر الآلي: `STATUS.json`)
 
 | البند | الحالة |
 |---|---|
-| المستودع | `MoTechSys/scam2027` (عام) — `main` = `7f6fc50` بعد PR #14 |
+| المستودع | `MoTechSys/scam2027` (عام) — `main` = `660dad6` بعد PR #16 |
 | الفرع الرئيسي | `main` |
 | فرع العمل | `genspark_ai_developer` → PR → `main` (squash-merge مباشر مصرّح به من المالك) → مزامنة الفرع بـ`git reset --hard origin/main && git push -f` |
 | التقدّم | **23 / 65 مهمة (35%)** — P0 16/16 ☑ · P1 7/15 (P1-01..P1-07) · P2–P5 لم تبدأ |
 | المهمة التالية | **P1-08** سلة المحذوفات الموحّدة — النطاق في §6، المخرجات في `STATUS.json` → `progress.nextTask`، الصف في `AGENTS.md` §5 |
-| بوابة الجودة | tsc 0 · eslint 0 · Vitest 167/167 (23 ملفًا) · build `3_DlrNx7tjKLVptmBJpNI` · Playwright 72 ✅ / 8 skip (desktop + mobile) |
+| بوابة الجودة | tsc 0 · eslint 0 · Vitest 167/167 (23 ملفًا) · build `Enuu5iZdN-cBSrnuoaTY-` · Playwright 72 ✅ / 8 skip (desktop + mobile) — **مُتحقَّق منها على استنساخ نظيف** (الجلسة 16) |
 | قاعدة البيانات | آخر هجرة في `app/prisma/migrations/` (لا هجرات جديدة منذ P1-01؛ P1-06/P1-07 استخدما الجداول الموجودة) — **قاعدتان** (`scam2027`, `scam2027_test`) يجب هجرتهما معًا؛ seed كامل: مستأجر demo + أدوار + مستخدمون + بنية أكاديمية + مقررات/شُعب + 30 طالبًا + ملفّان + 3 إشعارات |
 | بيئة التطوير | `/home/user/webapp` (sandbox)؛ المراجع التراثية في `.refs/` (غير ملتزمة، تُستنسخ بالحلقة في §3) |
 | الوحدات المبنية | users, roles, academic, courses, offerings, enrollment, files, notifications — كلها بنمط `features/<x>/{schemas,scope,queries,core,actions}` + صفحة `(dashboard)/<x>` + seed + unit/integration/e2e |
@@ -218,3 +218,24 @@ pnpm test && pnpm lint && pnpm typecheck
 **السبب:** لقطة من المالك: بعد الدخول من الرابط العام يُحوَّل المتصفح إلى `http://localhost:3000/dashboard`. **التشخيص:** `AUTH_URL="http://localhost:3000"` في `.env` يجعل `createActionURL`/`reqWithEnvURL` في Auth.js تثبّت الأصل؛ والنفق يرسل `x-client-proto` بدل `x-forwarded-proto` ولا يرسل `x-forwarded-host`؛ وNext في `next start` يبني `request.url` لمعالِجات المسار من `hostname:port` الخادم (`http://localhost:3000`) لا من `Host`. **الإصلاح (3 طبقات):** (1) `AUTH_URL` غير مضبوط إطلاقًا — `.env.example`/`.env.test` توثّق السبب؛ (2) `src/lib/auth/forwarded.ts` وحدة نقية بلا next-auth: `normalizeForwardedHeaders` (يستدعيها الـproxy قبل أي منطق؛ يرقّي `http` الافتراضي من Next إلى `https` عند وجود ترويسة مورد ولا يخفّض `https` أبدًا)، `forwardedOrigin`, `rebaseUrlToForwardedOrigin`; (3) `api/auth/[...nextauth]/route.ts` يعيد بناء `NextRequest` على الأصل المُمرَّر قبل تسليمه لـAuth.js. **التحقّق:** متصفح حقيقي على الرابط العام: مدير مع `next=/users` → `/users`، طالب/مدرّس → `/dashboard`، كلمة مرور خاطئة → `/login` + تنبيه، خروج → `/login?reason=signed_out`، ثم `/dashboard` → `/login?next=/dashboard`؛ صفر إعادة توجيه إلى localhost. البوابة: tsc 0 · eslint 0 · vitest 124 (20 ملف) · Playwright 63 ✓ / 5 skip · build ✓.
 **درس:** في نظام متعدد المستأجرين لا يُضبط `AUTH_URL` أبدًا؛ الأصل يُشتق من الطلب. وأي وكيل عكسي جديد يجب فحص ترويساته الفعلية (خادم صدى على منفذ جانبي) قبل الافتراض. وعند إعادة بناء URL لا تعدّل `host` في WHATWG URL (يحتفظ بالمنفذ القديم) — ابنِ من الأصل.
 
+
+## الجلسة 16 — إقلاع نظيف + إصلاح طبقة التخزين المفقودة (PR #16) — ☑ مُدمَج
+
+**السياق:** بدأت الجلسة بتحليل كامل للتوثيق (AGENTS/STATUS/HANDOFF/ROADMAP/REQUIREMENTS/PERMISSIONS) ثم إقلاع بيئة **نظيفة** (Postgres 17 + pnpm 10 من الصفر). اكتشاف: `app/src/lib/storage/` **لم يكن في Git في أي التزام** — قاعدة `storage` غير المثبَّتة في `app/.gitignore` طابقت مسار الكود. أي استنساخ: `tsc` 13 خطأ، seed/build يفشلان. البوابات «الخضراء» السابقة كانت تعمل فقط لأن الملفات موجودة محليًا في sandbox الوكيل السابق.
+
+**ما تم:** إعادة بناء الطبقة (6 ملفات) وفق عقدها الموثّق بدون تعديل أي اختبار أو موقع استدعاء؛ تثبيت `/storage/` و`/storage-test/`؛ البوابة الكاملة خضراء؛ squash-merge → `660dad6`.
+
+**دروس:** (1) قواعد `.gitignore` غير المثبَّتة تطابق أي عمق — ثبّت مجلدات التشغيل بـ`/`. (2) قبل دمج أي PR يضيف مجلدًا جديدًا: `git status --ignored` أو `pnpm check` على استنساخ نظيف. (3) `.env.test` غير ملتزم — يُشتق من `.env` بتبديل `scam2027`→`scam2027_test` و`STORAGE_LOCAL_ROOT=./storage-test`. (4) في sandbox جديد: `sudo apt-get install postgresql` ثم `sudo pg_ctlcluster 17 main start` و`ALTER USER postgres PASSWORD 'postgres'`؛ Playwright يحتاج `install-deps chromium` بـsudo.
+
+### خطة تنفيذ P1-08 (مدروسة في هذه الجلسة — نفّذها كما هي)
+**الصلاحيات موجودة** في الكتالوج: `trash.view` / `trash.restore` / `trash.permanent_delete` (المدير فقط) — لا تُضاف صلاحيات. **`Job.payload["trash.purge"]`** موجود في `json-columns.ts` (`{olderThanDays: 30}`). **الكيانات ذات `deletedAt` (7):** User, Role, Course, CourseOffering, File, Notification (+ لا شيء أكاديمي — College/Department/Major/Level تستخدم `isActive` وحذفها صلب محمي بالتبعيات؛ **خارج نطاق السلة**).
+
+1. `features/trash/schemas.ts`: `TRASH_KINDS = ["USER","ROLE","COURSE","OFFERING","FILE","NOTIFICATION"]`، `trashQuerySchema {kind, q, page, pageSize}`، `trashItemsSchema {kind, ids[1..200]}`.
+2. `features/trash/registry.ts` (server-only): لكل kind — `model`, `label`, `list(t, where, skip, take) → TrashRow{id,title,subtitle,deletedAt,meta}`, `count`, `restore(ctx,t,id)`, `purge(ctx,t,id)`, `restoreGuard`. **أعد استخدام** حراس الاسترجاع الموجودة بدل تكرارها: `assertCodeFree` (courses — صدّرها)، `loadManageableRole(allowDeleted)` (roles — صدّرها)، `assertCanManageUser` (users)، `storage().delete(storageKey)` بعد commit (files — نمط `purgeFilesAction`). Offering restore: تحقّق أن المقرر والفصل غير محذوفَين. Notification restore: بسيط.
+3. `features/trash/queries.ts`: `listTrash(ctx,q)`, `trashCounts(ctx)` (عدّاد لكل kind)، `purgeCandidates(t, olderThan)`.
+4. `features/trash/core.ts`: `purgeExpired(tenantId, olderThanDays, workerId)` بنمط `processFanoutJob` (قفل PENDING→RUNNING، نتيجة `{purged: {kind: n}}`)، حذف Files أولًا (كائنات بعد commit)، ثم Notifications/Offerings/Courses/Roles/Users (Users آخرًا — Cascade على Enrollment/UserRole). تدقيق `trash.purge_auto` بـ`actorId=null`.
+5. `features/trash/actions.ts`: `restoreItemsAction`, `purgeItemsAction`, `emptyTrashAction(kind?)`, `schedulePurgeJobAction` (ينشئ Job `trash.purge` + `after()`); كل واحد `safeAction → requireUserOrThrow → assertPermission → tx → audit → revalidatePath("/trash" + صفحات الكيان)`.
+6. UI `app/(dashboard)/trash/{page,trash-client}.tsx`: `PageTabs` لكل kind بعدّاد، بحث، جدول سطح مكتب + `MobileDataTable`، تحديد متعدد + استرجاع/حذف نهائي/تفريغ التبويب (تأكيد مزدوج بكتابة `DELETE`)، عمود «يُحذف نهائيًا بعد» = `deletedAt + 30d`. `data-testid`: `trash-tab-*`, `trash-row`, `restore`, `purge`, `empty-trash`.
+7. Nav: أضف `{ key: "trash", href: "/trash", icon: Trash2, permission: "trash.view" }` إلى `NAV_ITEMS` + `NavKey` + `messages/{ar,en}.json → nav.trash` + نطاق i18n `trash`؛ حدّث `login-helpers.test.ts`.
+8. اختبارات: unit (schemas, `purgeCandidates` cutoff, registry labels) · integration `trash-queries.test.ts` (مستأجر مستقل: لكل kind soft-delete → يظهر → restore → يختفي؛ purge يحذف الصف + الكائن؛ عزل A/B؛ `purgeExpired` يحذف > 30 يومًا فقط) · e2e `trash.spec.ts` (مدير: حذف مقرر E2E → /trash → استرجاع؛ حذف نهائي ملف؛ الطالب يُحوَّل إلى /unauthorized؛ جوال بلا تمرير أفقي).
+9. Docs في نفس الالتزام: ROADMAP P1-08 ☑، REQUIREMENTS FR-SYS-001 ☑، CHANGELOG، HANDOFF الجلسة 17، STATUS.json (doneTasks 24, nextTask P1-09)، AGENTS §0/§4.1/§5، README.
