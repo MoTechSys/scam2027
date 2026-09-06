@@ -3,8 +3,8 @@
   "project": "MoTechSys/scam2027",
   "repo": "https://github.com/MoTechSys/scam2027",
   "entryPoint": "AGENTS.md",
-  "updatedAt": "2026-09-05",
-  "updatedInPr": 14,
+  "updatedAt": "2026-09-06",
+  "updatedInPr": 16,
   "mainHead": "7f6fc50",
   "branches": {
     "main": "main",
@@ -108,8 +108,8 @@
     "command": "cd app && pnpm check",
     "definition": "typecheck + lint + test + build must all pass; then playwright e2e against `pnpm build && pnpm start -p 3000`",
     "lastRun": {
-      "date": "2026-09-05",
-      "commit": "P1-07 notifications (PR #14)",
+      "date": "2026-09-06",
+      "commit": "storage layer restored (PR #16)",
       "typecheck": "PASS (0 errors)",
       "lint": "PASS (0 errors)",
       "unitAndIntegration": {
@@ -130,9 +130,10 @@
         "skippedReason": "logout via Radix menu form action fixme (2) + Radix Select option tap on mobile-safari for create-course/create-section/bulk (3), covered on desktop + compose notifications on mobile-safari (2), covered on desktop"
       },
       "build": "PASS",
-      "buildId": "3_DlrNx7tjKLVptmBJpNI"
+      "buildId": "Enuu5iZdN-cBSrnuoaTY-"
     },
     "knownDebt": [
+      "Unanchored .gitignore patterns bite: `storage` (P1-06) silently excluded app/src/lib/storage from every commit until PR #16. Anchor runtime dirs (`/storage/`) and run `git status --ignored` / a clean-clone `pnpm check` before merging a PR that adds a new top-level folder.",
       "prettier --check flags ~120 pre-existing files; not part of `pnpm check`. Format ONLY files you touch (running --write on a folder pollutes the PR) or do a dedicated `style:` PR.",
       "CI lives in .github/ci.yml.template because the agent token lacks `workflows` scope; owner must move it to .github/workflows/ci.yml.",
       "docs/50-quality/01-TESTING-STRATEGY.md §5 references scripts e2e:mobile / e2e:crawl / test:a11y that are not yet in app/package.json (a11y is covered by e2e/a11y.spec.ts; a crawl spec is not written yet).",
@@ -151,7 +152,7 @@
     "vitest": "167/167 (23 files)",
     "playwright": "72 passed / 8 skipped (10 files x 2 projects)",
     "build": "ok",
-    "buildId": "3_DlrNx7tjKLVptmBJpNI"
+    "buildId": "Enuu5iZdN-cBSrnuoaTY-"
   },
   "database": {
     "engine": "PostgreSQL 17",
@@ -369,8 +370,14 @@
       "date": "2026-09-05",
       "scope": "P1-07 notifications: feature module (targets, fan-out ≤500 or Job, preferences), /notifications centre, header bell + unread API, seed, 18 unit + 12 integration + 4 e2e",
       "pr": 14
+    },
+    {
+      "n": 16,
+      "date": "2026-09-06",
+      "scope": "Hotfix: rebuild app/src/lib/storage (types/local/s3/validate/signed-url/index) lost to an unanchored .gitignore rule; anchor /storage/ and /storage-test/; full gate green",
+      "pr": 16
     }
   ],
   "nextTask": "P1-08 trash",
-  "session": 15
+  "session": 16
 }

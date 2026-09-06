@@ -11,6 +11,10 @@
 
 ## [Unreleased]
 
+### Fixed — طبقة التخزين المفقودة من المستودع (PR #16)
+- **`app/src/lib/storage/` لم تكن في Git إطلاقًا**: قاعدة `storage` غير المُثبَّتة في `app/.gitignore` (أُضيفت في P1-06 لتجاهل مجلد الكائنات المحلي) طابقت أيضًا مسار الكود `src/lib/storage/`، فلم يُلتزم أيٌّ من `types/local/s3/validate/signed-url/index` في PR #13 ولا بعده. أي استنساخ نظيف كان يفشل في `tsc` (13 خطأ) و`seed` و`build`. أُعيد بناء الطبقة وفق عقدها الموثّق (CHANGELOG #13 + `files-storage.test.ts` + كل مواقع الاستدعاء): `StorageAdapter{put,get,exists,delete}`، `LocalStorage` (مفتاح آمن، `wx` + 0600، عدّاد + SHA-256، حذف الجزئي عند التجاوز)، `S3Storage` (lib-storage Upload + نفس العدّاد)، `validateUpload`/`buildStorageKey`/`sanitizeDisplayName`/`formatBytes`/`ACCEPT_ATTRIBUTE`، `signDownload`/`verifyDownload` (HMAC + `timingSafeEqual`)، و`storage()` مفرد يختار المحرّك من `env`. القاعدة صارت مثبَّتة `/storage/` و`/storage-test/`.
+- التحقّق: `tsc` 0 · `eslint` 0 · Vitest 167/167 · build ✓ · Playwright 72 ✓ / 8 skip (بما فيها `files.spec.ts`: رفع حقيقي → تنزيل موقّع → تعديل → سلة → استرجاع).
+
 ### Added — P1-07 الإشعارات (PR #14)
 - **وحدة `features/notifications`**: `sendNotificationSchema` (رابط داخلي فقط `^/`، أنواع قابلة للإرسال بدون SYSTEM/SECURITY)، `allowedTargetKinds`/`assertCanTarget` (الكل/كلية/قسم/تخصص/مستوى ← `send_to_all`، دور ← `send_to_role`، شعبة ← `send_to_offering` + يدرّسها، أفراد ← ضمن شُعبه)، `recipientsWhere` لكل نوع هدف (نشطون فقط، المرسل مستثنى، الوحدات الأكاديمية عبر التسجيل النشط)، `fanOut` idempotent (createMany skipDuplicates بدفعات 1000) يحترم تفضيل IN_APP إلا لـ SYSTEM/SECURITY، `processFanoutJob` لجمهور > 500 عبر `Job notification.fanout` (قفل PENDING→RUNNING، إعادة محاولة حتى maxAttempts) يُطلق فورًا بـ `after()`.
 - **إجراءات**: send (rate-limit 20/10 دقائق + تدقيق) / preview / search recipients / read / unread / archive / unarchive / readAll / delete (المالك أو `notification.manage`) / preferences (upsert).

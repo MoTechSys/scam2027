@@ -12,5 +12,6 @@ next-env.d.ts
 tsconfig.tsbuildinfo
 src/generated
 
-# local storage (P1-06)
-storage
+# local object storage roots (P1-06) — anchored so src/lib/storage is NOT ignored
+/storage/
+/storage-test/
