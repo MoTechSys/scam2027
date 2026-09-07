@@ -18,6 +18,16 @@ export async function login(page: Page, user: { id: string; password: string }) 
 }
 
 export async function expectNoHorizontalScroll(page: Page) {
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
   expect(overflow, "page must not scroll horizontally").toBeLessThanOrEqual(0);
+}
+
+/** ADR-0008: the app viewport itself never scrolls — only ScrollRegions inside the page do. */
+export async function expectNoPageScroll(page: Page) {
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollHeight - document.documentElement.clientHeight,
+  );
+  expect(overflow, "app viewport must not scroll vertically (use ScrollRegion)").toBeLessThanOrEqual(1);
 }

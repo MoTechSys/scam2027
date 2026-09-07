@@ -4,7 +4,7 @@
   "repo": "https://github.com/MoTechSys/scam2027",
   "entryPoint": "AGENTS.md",
   "updatedAt": "2026-09-06",
-  "updatedInPr": 18,
+  "updatedInPr": 19,
   "mainHead": "660dad6",
   "branches": {
     "main": "main",
@@ -108,8 +108,8 @@
     "command": "cd app && pnpm check",
     "definition": "typecheck + lint + test + build must all pass; then playwright e2e against `pnpm build && pnpm start -p 3000`",
     "lastRun": {
-      "date": "2026-09-06",
-      "commit": "ADR-0007 mobile app shell (PR #18)",
+      "date": "2026-09-07",
+      "commit": "ADR-0008 fixed viewport + ScrollRegion (PR #19)",
       "typecheck": "PASS (0 errors)",
       "lint": "PASS (0 errors)",
       "unitAndIntegration": {
@@ -120,7 +120,7 @@
       },
       "e2e": {
         "runner": "playwright",
-        "passed": 74,
+        "passed": 75,
         "skipped": 9,
         "failed": 0,
         "projects": [
@@ -130,9 +130,10 @@
         "skippedReason": "logout fixme (2) + Radix Select dialogs on mobile-safari (5, covered on desktop) + dashboard student assertions mobile-only (1) + files admin upload mobile (1)"
       },
       "build": "PASS",
-      "buildId": "0_EbbBPgWXyeM8JJCWXfQ"
+      "buildId": "mrAUD8JUXPh109xTzdbIl"
     },
     "knownDebt": [
+      "Viewport-locked shell (ADR-0008): every flex level between the page root and the list needs `min-h-0`, or the ScrollRegion grows instead of scrolling. Root = `flex h-full min-h-0 flex-col`; never `space-y-*` on a page root; verify with e2e `expectNoPageScroll`.",
       "Mobile: PageHeader hides the in-content h1 below lg, so the app bar renders the h1 (ownsHeading). Detail pages that keep a visible h1 use MobilePageTitle instead. Never add a manual <header> — e2e heading assertions and axe page-has-heading-one depend on exactly one h1.",
       "Unanchored .gitignore patterns bite: `storage` (P1-06) silently excluded app/src/lib/storage from every commit until PR #16. Anchor runtime dirs (`/storage/`) and run `git status --ignored` / a clean-clone `pnpm check` before merging a PR that adds a new top-level folder.",
       "prettier --check flags ~120 pre-existing files; not part of `pnpm check`. Format ONLY files you touch (running --write on a folder pollutes the PR) or do a dedicated `style:` PR.",
@@ -151,9 +152,9 @@
     "tsc": 0,
     "eslint": 0,
     "vitest": "167/167 (23 files)",
-    "playwright": "74 passed / 9 skipped (11 files x 2 projects)",
+    "playwright": "75 passed / 9 skipped (12 files x 2 projects; users.spec mobile login flaky under full-suite load — passes alone)",
     "build": "ok",
-    "buildId": "0_EbbBPgWXyeM8JJCWXfQ"
+    "buildId": "mrAUD8JUXPh109xTzdbIl"
   },
   "database": {
     "engine": "PostgreSQL 17",
@@ -389,8 +390,14 @@
       "date": "2026-09-06",
       "scope": "ADR-0007 mobile app shell: PageHeader context → app bar title, MiniStatCard 3×2 dashboard with real growth chart, app-style bottom bar, manifest.webmanifest, dense mobile spacing, e2e/dashboard.spec.ts",
       "pr": 18
+    },
+    {
+      "n": 19,
+      "date": "2026-09-06",
+      "scope": "ADR-0008 fixed viewport: ScrollRegion/PageShell, in-flow bottom bar (4 items, no more), ☰ in app bar, all list/detail pages + dashboard cards scroll internally, compact toolbars, prettyIp, expectNoPageScroll",
+      "pr": 19
     }
   ],
   "nextTask": "P1-08 trash",
-  "session": 18
+  "session": 19
 }

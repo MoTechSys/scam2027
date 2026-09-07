@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import { USERS, expectNoHorizontalScroll, login } from "./helpers";
+import { USERS, expectNoHorizontalScroll, expectNoPageScroll, login } from "./helpers";
 
 /**
  * ADR-0007 — mobile app shell. On mobile-safari the dashboard must look like the reference app: page title in the
@@ -37,7 +37,7 @@ test.describe("dashboard shell", () => {
       expect(box!.y + box!.height).toBeLessThan(844);
       await expect(quick.getByRole("link")).toHaveCount(4);
 
-      // Bottom bar: 5 items, dashboard active.
+      // Bottom bar (ADR-0008): 4 primary links, no "more" button, dashboard active.
       const nav = page.getByTestId("bottom-nav");
       await expect(nav).toBeVisible();
       await expect(nav.getByRole("link", { name: /لوحة التحكم|Dashboard/ })).toHaveAttribute(
@@ -45,18 +45,32 @@ test.describe("dashboard shell", () => {
         "page",
       );
       await expect(nav.getByRole("link")).toHaveCount(4);
-      await expect(nav.getByRole("button", { name: /المزيد|More/ })).toBeVisible();
+      await expect(nav.getByRole("button")).toHaveCount(0);
+
+      // The full menu opens from the app bar (☰) only.
+      await page.getByTestId("open-menu").click();
+      const drawer = page.getByRole("dialog");
+      await expect(drawer).toBeVisible();
+      await expect(drawer.getByRole("link", { name: /الأدوار|Roles/ })).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(drawer).toBeHidden();
+
+      // The app viewport itself never scrolls; only ScrollRegions do.
+      await expectNoPageScroll(page);
+      await expect(page.getByTestId("scroll-region").first()).toBeVisible();
 
       // Quick link navigates and the app bar title follows.
       await quick.getByRole("link", { name: /المقررات|Courses/ }).click();
       await expect(page).toHaveURL(/\/courses/);
       await expect(page.getByTestId("mobile-page-title")).toContainText(/المقررات|Courses/);
       await expectNoHorizontalScroll(page);
+      await expectNoPageScroll(page);
     } else {
       await expect(page.getByTestId("page-header")).toBeVisible();
       await expect(page.getByTestId("mobile-overview")).toBeHidden();
       await expect(page.getByTestId("bottom-nav")).toBeHidden();
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(/لوحة التحكم|Dashboard/);
+      await expectNoPageScroll(page);
     }
 
     const results = await new AxeBuilder({ page })
@@ -76,5 +90,10 @@ test.describe("dashboard shell", () => {
     const links = await page.getByTestId("quick-links").getByRole("link").allTextContents();
     expect(links.join(" ")).not.toMatch(/المستخدمون|Users/);
     await expectNoHorizontalScroll(page);
+    await expectNoPageScroll(page);
+    // Lists pages keep the toolbar fixed and scroll only the list.
+    await page.goto("/files");
+    await expectNoPageScroll(page);
+    await expect(page.getByTestId("scroll-region").first()).toBeVisible();
   });
 });

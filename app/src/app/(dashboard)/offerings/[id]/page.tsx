@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
+import { ScrollRegion } from "@/components/ui/scroll-region";
 import { MobilePageTitle } from "@/components/layout/page-header";
 import { getFormatter, getTranslations } from "next-intl/server";
 import Link from "next/link";
@@ -116,7 +117,7 @@ export default async function OfferingDetailPage({ params, searchParams }: Props
   ];
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6">
+    <ScrollRegion className="mx-auto w-full max-w-6xl space-y-4 lg:space-y-6">
       <Button asChild variant="ghost" size="sm" className="-ms-2 gap-1 text-muted-foreground">
         <Link href="/offerings">
           <ArrowRight className="size-4 ltr:rotate-180 rtl:rotate-0" aria-hidden /> {t("title")}
@@ -191,6 +192,6 @@ export default async function OfferingDetailPage({ params, searchParams }: Props
       </div>
 
       {roster}
-    </div>
+    </ScrollRegion>
   );
 }

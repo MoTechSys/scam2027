@@ -1,6 +1,5 @@
 "use client";
 
-import { Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -9,24 +8,25 @@ import { NAV_ICONS } from "./nav-icons";
 import { isActivePath } from "./Sidebar";
 import type { NavLink } from "./types";
 
-type Props = { items: NavLink[]; onMore: () => void };
+type Props = { items: NavLink[] };
 
 /**
- * Mobile bottom bar (< lg) — app-style (ADR-0007 §4): 64px + safe-area, up to 4 primary destinations from
- * `NAV_ITEMS.bottom` + "more" (drawer). The active item gets a rounded `bg-primary/10` pill and neon text.
+ * Mobile bottom bar (< lg) — app-style (ADR-0007 §4, ADR-0008 §5): 64px + safe-area, exactly the permitted
+ * `NAV_ITEMS.bottom` destinations (≤ 4). No "more" item — the full menu opens from ☰ in the app bar.
+ * The active item gets a rounded `bg-primary/10` pill and neon text.
  */
-export function BottomNavigation({ items, onMore }: Props) {
+export function BottomNavigation({ items }: Props) {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const primary = items.filter((i) => i.bottom).slice(0, 4);
-  const hasMore = items.length > primary.length;
+  if (primary.length === 0) return null;
 
   const itemClass =
     "flex h-16 w-full flex-col items-center justify-center gap-0.5 px-1 text-[10px] font-medium text-muted-foreground transition-colors active:bg-accent/40";
 
   return (
     <nav
-      className="safe-area-bottom fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur-md lg:hidden"
+      className="safe-area-bottom shrink-0 border-t border-border bg-card/95 backdrop-blur-md lg:hidden"
       aria-label={t("menu")}
       data-testid="bottom-nav"
     >
@@ -49,16 +49,6 @@ export function BottomNavigation({ items, onMore }: Props) {
             </li>
           );
         })}
-        {hasMore && (
-          <li className="min-w-0 flex-1">
-            <button type="button" onClick={onMore} className={itemClass} aria-haspopup="dialog">
-              <span className="rounded-xl p-1.5">
-                <Menu className="size-5" aria-hidden="true" />
-              </span>
-              <span>{t("more")}</span>
-            </button>
-          </li>
-        )}
       </ul>
     </nav>
   );

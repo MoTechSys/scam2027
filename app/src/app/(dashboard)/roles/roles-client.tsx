@@ -11,6 +11,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { ScrollRegion } from "@/components/ui/scroll-region";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, type Column } from "@/components/ui/data-table";
@@ -140,7 +141,7 @@ export function RolesClient({ roles, query, counts, grantable, can }: Props) {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="flex h-full min-h-0 flex-col gap-3 lg:gap-4" data-testid="page-shell">
       <PageTabs tabs={TABS.map((id) => ({ id, label: t(`tabs.${id}`), badge: counts[id] ?? 0 }))} activeTab={query.tab} onTabChange={(id) => setParams({ tab: id })} />
 
       <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-3">
@@ -153,20 +154,21 @@ export function RolesClient({ roles, query, counts, grantable, can }: Props) {
           }}
         >
           <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-          <Input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("searchPlaceholder")} aria-label={tc("search")} className="min-h-11 ps-10" />
+          <Input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("searchPlaceholder")} aria-label={tc("search")} className="min-h-10 ps-10 lg:min-h-11" />
         </form>
         {can.create && (
-          <Button onClick={() => setFormRole(null)} className="col-span-2 min-h-11 gap-2 sm:col-span-1">
+          <Button onClick={() => setFormRole(null)} className="min-h-10 gap-2 lg:min-h-11">
             <Plus className="size-4" aria-hidden /> {t("actions.create")}
           </Button>
         )}
       </div>
 
-      <p className="text-sm text-muted-foreground" aria-live="polite">
+      <p className="text-xs text-muted-foreground lg:text-sm" aria-live="polite">
         {t("total", { count: roles.length })}
         {query.tab !== "DELETED" && <span className="ms-2 hidden sm:inline">· {t("systemHint")}</span>}
       </p>
 
+      <ScrollRegion label={t("title")} className="-mx-1 px-1">
       <div className="hidden md:block">
         <DataTable columns={columns} data={roles} keyExtractor={(r) => r.id} emptyMessage={t("empty")} maxHeight="none" />
       </div>
@@ -193,6 +195,7 @@ export function RolesClient({ roles, query, counts, grantable, can }: Props) {
           ]}
         />
       </div>
+      </ScrollRegion>
 
       <RoleFormDialog open={formRole !== undefined} onOpenChange={(o) => !o && setFormRole(undefined)} role={formRole ?? null} grantable={grantableSet} />
       <CloneRoleDialog open={!!cloneSource} onOpenChange={(o) => !o && setCloneSource(null)} source={cloneSource} />

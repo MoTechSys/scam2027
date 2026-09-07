@@ -10,6 +10,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ScrollRegion } from "@/components/ui/scroll-region";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import {
   DropdownMenu,
@@ -177,7 +178,7 @@ export function UsersClient({ page, query, counts, roles, selfId, can }: Props) 
   const confirmTitle = confirm ? t(`actions.${confirm.kind === "revokeSessions" ? "revokeSessions" : confirm.kind}`) : "";
 
   return (
-    <div className="space-y-4">
+    <div className="flex h-full min-h-0 flex-col gap-3 lg:gap-4" data-testid="page-shell">
       <PageTabs
         tabs={TABS.map((id) => ({ id, label: t(`tabs.${id}`), badge: counts[id] ?? 0 }))}
         activeTab={query.status}
@@ -200,11 +201,11 @@ export function UsersClient({ page, query, counts, roles, selfId, can }: Props) 
             onChange={(e) => setQ(e.target.value)}
             placeholder={t("searchPlaceholder")}
             aria-label={tc("search")}
-            className="min-h-11 ps-10"
+            className="min-h-10 ps-10 lg:min-h-11"
           />
         </form>
         <Select value={query.roleId ?? "ALL"} onValueChange={(v) => setParams({ roleId: v })}>
-          <SelectTrigger className="min-h-11 sm:w-56" aria-label={t("roleFilter")}>
+          <SelectTrigger className="min-h-10 sm:w-56 lg:min-h-11" aria-label={t("roleFilter")}>
             <SelectValue placeholder={t("allRoles")} />
           </SelectTrigger>
           <SelectContent>
@@ -217,16 +218,17 @@ export function UsersClient({ page, query, counts, roles, selfId, can }: Props) 
           </SelectContent>
         </Select>
         {can.create && (
-          <Button onClick={() => setFormUser(null)} className="col-span-2 min-h-11 gap-2 sm:col-span-1">
+          <Button onClick={() => setFormUser(null)} className="min-h-10 gap-2 lg:min-h-11">
             <Plus className="size-4" aria-hidden /> {t("actions.create")}
           </Button>
         )}
       </div>
 
-      <p className="text-sm text-muted-foreground" aria-live="polite">
+      <p className="text-xs text-muted-foreground lg:text-sm" aria-live="polite">
         {t("total", { count: page.total })}
       </p>
 
+      <ScrollRegion label={t("title")} className="-mx-1 px-1">
       <div className="hidden md:block">
         <DataTable columns={columns} data={page.items} keyExtractor={(u) => u.id} emptyMessage={t("empty")} pagination={pagination} maxHeight="none" />
       </div>
@@ -253,6 +255,7 @@ export function UsersClient({ page, query, counts, roles, selfId, can }: Props) 
           pagination={pagination}
         />
       </div>
+      </ScrollRegion>
 
       <UserFormDialog open={formUser !== undefined} onOpenChange={(o) => !o && setFormUser(undefined)} roles={roles} user={formUser ?? null} />
       <AssignRolesDialog open={!!rolesUser} onOpenChange={(o) => !o && setRolesUser(null)} user={rolesUser} roles={roles} />

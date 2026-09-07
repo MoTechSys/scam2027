@@ -170,7 +170,7 @@ export function NotificationsClient({
               {t("filters.type")}
             </Label>
             <Select value={query.type ?? "ALL"} onValueChange={(v) => setParams({ type: v })}>
-              <SelectTrigger id="notif-type" className="min-h-11 w-full">
+              <SelectTrigger id="notif-type" className="min-h-10 w-full lg:min-h-11">
                 <SelectValue placeholder={t("filters.allTypes")} />
               </SelectTrigger>
               <SelectContent>

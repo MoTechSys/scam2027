@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout/page-header";
+import { ScrollRegion } from "@/components/ui/scroll-region";
 import { getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 import {
@@ -65,10 +66,10 @@ export default async function AcademicTabPage({ params, searchParams }: Props) {
 
   if (setup && canWizard && flat.manual !== "1") {
     return (
-      <div className="mx-auto w-full max-w-7xl space-y-6">
+      <ScrollRegion className="mx-auto w-full max-w-7xl space-y-6">
         {header}
         <SetupWizard />
-      </div>
+      </ScrollRegion>
     );
   }
 
@@ -94,7 +95,7 @@ export default async function AcademicTabPage({ params, searchParams }: Props) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6">
+    <div className="mx-auto flex h-full min-h-0 w-full max-w-7xl flex-col gap-3 lg:gap-4">
       {header}
       <AcademicClient data={data} options={options} query={query} counts={counts} period={period} can={can} />
     </div>

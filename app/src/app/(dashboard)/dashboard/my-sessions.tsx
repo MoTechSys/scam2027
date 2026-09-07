@@ -20,13 +20,37 @@ export type SessionItem = {
 function describeAgent(ua: string | null): { label: string; mobile: boolean } {
   if (!ua) return { label: "—", mobile: false };
   const mobile = /Mobile|Android|iPhone|iPad/i.test(ua);
-  const browser =
-    /Edg\//.test(ua) ? "Edge" : /Chrome\//.test(ua) ? "Chrome" : /Firefox\//.test(ua) ? "Firefox" : /Safari\//.test(ua) ? "Safari" : "Browser";
-  const os = /Windows/.test(ua) ? "Windows" : /Mac OS/.test(ua) ? "macOS" : /Android/.test(ua) ? "Android" : /iPhone|iPad/.test(ua) ? "iOS" : /Linux/.test(ua) ? "Linux" : "";
+  const browser = /Edg\//.test(ua)
+    ? "Edge"
+    : /Chrome\//.test(ua)
+      ? "Chrome"
+      : /Firefox\//.test(ua)
+        ? "Firefox"
+        : /Safari\//.test(ua)
+          ? "Safari"
+          : "Browser";
+  const os = /Windows/.test(ua)
+    ? "Windows"
+    : /Mac OS/.test(ua)
+      ? "macOS"
+      : /Android/.test(ua)
+        ? "Android"
+        : /iPhone|iPad/.test(ua)
+          ? "iOS"
+          : /Linux/.test(ua)
+            ? "Linux"
+            : "";
   return { label: [browser, os].filter(Boolean).join(" · "), mobile };
 }
 
-export function MySessions({ sessions }: { sessions: SessionItem[] }) {
+/** `::ffff:10.0.0.1` → `10.0.0.1`, `::1` → `localhost`; anything else unchanged. */
+export function prettyIp(ip: string | null): string {
+  if (!ip) return "—";
+  if (ip === "::1" || ip === "127.0.0.1") return "localhost";
+  return ip.replace(/^::ffff:/i, "");
+}
+
+export function MySessions({ sessions, compact = false }: { sessions: SessionItem[]; compact?: boolean }) {
   const t = useTranslations("dashboard");
   const f = useFormatter();
   const [pending, start] = useTransition();
@@ -43,12 +67,24 @@ export function MySessions({ sessions }: { sessions: SessionItem[] }) {
         const agent = describeAgent(s.userAgent);
         const Icon = agent.mobile ? Smartphone : Monitor;
         return (
-          <li key={s.id} className="flex items-center gap-3 py-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-              <Icon className="size-5 text-primary" aria-hidden="true" />
+          <li
+            key={s.id}
+            className={compact ? "flex items-center gap-2 py-1.5" : "flex items-center gap-3 py-3"}
+          >
+            <div
+              className={
+                compact
+                  ? "flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10"
+                  : "flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10"
+              }
+            >
+              <Icon
+                className={compact ? "size-3.5 text-primary" : "size-5 text-primary"}
+                aria-hidden="true"
+              />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">
+              <p className={compact ? "truncate text-xs font-medium" : "truncate text-sm font-medium"}>
                 {agent.label}
                 {s.current && (
                   <Badge className="ms-2 align-middle" variant="secondary">
@@ -56,8 +92,15 @@ export function MySessions({ sessions }: { sessions: SessionItem[] }) {
                   </Badge>
                 )}
               </p>
-              <p dir="ltr" className="truncate text-xs text-muted-foreground text-start">
-                {s.ip ?? "—"} · {f.relativeTime(new Date(s.lastSeenAt))}
+              <p
+                dir="ltr"
+                className={
+                  compact
+                    ? "truncate text-start text-[10px] text-muted-foreground"
+                    : "truncate text-start text-xs text-muted-foreground"
+                }
+              >
+                {prettyIp(s.ip)} · {f.relativeTime(new Date(s.lastSeenAt))}
               </p>
             </div>
             {!s.current && (

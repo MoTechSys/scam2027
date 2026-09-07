@@ -1,5 +1,6 @@
 import { ArrowRight, KeyRound, Mail, Phone, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
+import { ScrollRegion } from "@/components/ui/scroll-region";
 import { MobilePageTitle } from "@/components/layout/page-header";
 import { getFormatter, getTranslations } from "next-intl/server";
 import Link from "next/link";
@@ -55,7 +56,7 @@ export default async function UserDetailPage({ params }: Props) {
   ];
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6">
+    <ScrollRegion className="mx-auto w-full max-w-5xl space-y-4 lg:space-y-6">
       <Button asChild variant="ghost" size="sm" className="-ms-2 gap-1 text-muted-foreground">
         <Link href="/users">
           <ArrowRight className="size-4 rtl:rotate-0 ltr:rotate-180" aria-hidden /> {t("title")}
@@ -150,6 +151,6 @@ export default async function UserDetailPage({ params }: Props) {
           )}
         </CardContent>
       </Card>
-    </div>
+    </ScrollRegion>
   );
 }

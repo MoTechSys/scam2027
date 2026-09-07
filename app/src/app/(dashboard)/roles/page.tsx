@@ -23,7 +23,7 @@ export default async function RolesPage({ searchParams }: Props) {
   const [roles, counts, t] = await Promise.all([listRoles(ctx, query), roleTabCounts(ctx), getTranslations("roles")]);
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6">
+    <div className="mx-auto flex h-full min-h-0 w-full max-w-7xl flex-col gap-3 lg:gap-4">
       <PageHeader title={t("title")} subtitle={t("subtitle")} />
       <RolesClient
         roles={roles}
