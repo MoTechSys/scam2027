@@ -66,6 +66,13 @@ describe("visibleNavItems", () => {
     expect(keys).toContain("files");
     expect(visibleNavItems(new Set(["course.view"])).map((i) => i.key)).not.toContain("files");
   });
+  it("shows trash when trash.view is granted (P1-08); never in the bottom bar", () => {
+    const items = visibleNavItems(new Set(["trash.view"]));
+    const tr = items.find((i) => i.key === "trash");
+    expect(tr?.href).toBe("/trash");
+    expect(tr?.bottom).toBeUndefined();
+    expect(visibleNavItems(new Set(["file.view"])).map((i) => i.key)).not.toContain("trash");
+  });
   it("no permissions → only permission-free items", () => {
     expect(visibleNavItems(new Set()).map((i) => i.key)).toEqual(["developer"]);
   });

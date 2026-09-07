@@ -82,7 +82,7 @@ test.describe("users module (P1-02)", () => {
     await expect(page.getByRole("link", { name })).toHaveCount(0, { timeout: 15_000 });
 
     // Trash tab shows it
-    await page.getByRole("button", { name: /سلة المحذوفات|Trash/ }).click();
+    await page.getByRole("tab", { name: /سلة المحذوفات|Trash/ }).click();
     await expect(page).toHaveURL(/status=DELETED/);
     await expect(page.getByRole("link", { name }).first()).toBeVisible({ timeout: 15_000 });
     await expectNoHorizontalScroll(page);

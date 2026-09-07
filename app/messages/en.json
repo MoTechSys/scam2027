@@ -27,7 +27,8 @@
     "optional": "Optional",
     "filters": "Filters",
     "all": "All",
-    "reset": "Reset"
+    "reset": "Reset",
+    "typeToConfirm": "Type {keyword} to confirm"
   },
   "auth": {
     "loginTitle": "Sign in",
@@ -83,7 +84,8 @@
     "collapse": "Collapse menu",
     "expand": "Expand menu",
     "offerings": "Sections",
-    "files": "Files"
+    "files": "Files",
+    "trash": "Trash"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1257,5 +1259,60 @@
     "from": "From {name}",
     "to": "To: {target}",
     "count": "{count} items"
+  },
+  "trash": {
+    "title": "Trash",
+    "subtitle": "Everything soft-deleted in one place — restore it or delete it permanently before retention ends",
+    "tabs": {
+      "USER": "Users",
+      "ROLE": "Roles",
+      "COURSE": "Courses",
+      "OFFERING": "Sections",
+      "FILE": "Files",
+      "NOTIFICATION": "Notifications"
+    },
+    "searchPlaceholder": "Search this tab…",
+    "total": "{count, plural, =0 {No items} =1 {1 item} other {# items}}",
+    "retention": "Automatically purged {days} days after deletion",
+    "selected": "{count} selected",
+    "select": "Select",
+    "selectAll": "Select page",
+    "empty": "Nothing in this tab",
+    "purgeIn": "{days, plural, =0 {today} =1 {tomorrow} other {in # days}}",
+    "columns": {
+      "item": "Item",
+      "deletedAt": "Deleted",
+      "purgeAfter": "Permanent delete",
+      "meta": {
+        "USER": "Academic ID",
+        "ROLE": "Permissions",
+        "COURSE": "Credits",
+        "OFFERING": "Status",
+        "FILE": "Size",
+        "NOTIFICATION": "Recipients"
+      }
+    },
+    "meta": {
+      "OFFERING": "{value}",
+      "NOTIFICATION": "{value} recipients"
+    },
+    "actions": {
+      "restore": "Restore",
+      "purge": "Delete permanently",
+      "emptyTab": "Empty: {tab}",
+      "runJob": "Run cleanup job"
+    },
+    "confirm": {
+      "purge": "Permanently deletes from the database (and storage for files). This cannot be undone.",
+      "purgeManyTitle": "Permanently delete {count} items",
+      "emptyTab": "Everything in this tab will be permanently deleted ({count} items). Items still referenced by other records are skipped. This cannot be undone.",
+      "runJob": "Every item deleted more than {days} days ago, in every tab, will be permanently removed."
+    },
+    "toast": {
+      "restored": "Restored {count} item(s)",
+      "purged": "Permanently deleted ({count})",
+      "blocked": "Skipped {count} item(s) still referenced by other records",
+      "jobScheduled": "Cleanup job started — counts refresh when it finishes"
+    }
   }
 }
