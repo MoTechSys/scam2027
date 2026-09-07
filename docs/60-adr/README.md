@@ -8,5 +8,6 @@
 | [0004](0004-server-actions-over-rest.md) | Server Actions أساساً | مقبول |
 | [0005](0005-docs-with-every-change.md) | الوثائق جزء من DoD | مقبول |
 | [0006](0006-referential-actions-and-json-contracts.md) | قواعد FK/الإسناد + عقود Json + قيود SQL يدوية | مقبول |
+| [0007](0007-mobile-app-shell.md) | قشرة تطبيق للجوال: PageHeader في Header، MiniStatCard 3×2، شريط سفلي بنمط تطبيق، manifest | مقبول |
 
 قالب ADR جديد: `NNNN-title.md` بأقسام: الحالة، السياق، القرار، البدائل، العواقب.

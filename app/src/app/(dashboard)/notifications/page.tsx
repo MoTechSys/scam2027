@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/layout/page-header";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import {
@@ -45,10 +46,7 @@ export default async function NotificationsPage({ searchParams }: Props) {
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-bold sm:text-3xl">{t("title")}</h1>
-        <p className="text-muted-foreground">{t("subtitle")}</p>
-      </header>
+      <PageHeader title={t("title")} subtitle={t("subtitle")} />
       <NotificationsClient
         tab={prefsTab ? "PREFS" : query.tab}
         query={query}

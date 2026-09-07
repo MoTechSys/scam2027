@@ -375,10 +375,10 @@ export function FilesClient({ page, query, counts, usage, lookups, maxUploadByte
         onTabChange={(id) => setParams({ tab: id })}
       />
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+      <div className="grid grid-cols-2 gap-2 lg:flex lg:items-center lg:gap-3">
         <form
           role="search"
-          className="relative flex-1"
+          className="relative col-span-2 flex-1 lg:col-span-1"
           onSubmit={(e) => {
             e.preventDefault();
             setParams({ q });
@@ -452,7 +452,7 @@ export function FilesClient({ page, query, counts, usage, lookups, maxUploadByte
           </div>
         )}
         {can.upload && !trash && (
-          <Button onClick={() => setUpload(true)} className="min-h-11 gap-2" data-testid="upload-file">
+          <Button onClick={() => setUpload(true)} className="col-span-2 min-h-11 gap-2 lg:col-span-1" data-testid="upload-file">
             <Upload className="size-4" aria-hidden /> {t("actions.upload")}
           </Button>
         )}
@@ -460,7 +460,7 @@ export function FilesClient({ page, query, counts, usage, lookups, maxUploadByte
           <Button
             variant="destructive"
             onClick={() => setEmptyTrash(true)}
-            className="min-h-11 gap-2"
+            className="col-span-2 min-h-11 gap-2 lg:col-span-1"
             data-testid="empty-trash"
           >
             <Trash2 className="size-4" aria-hidden /> {t("actions.emptyTrash")}

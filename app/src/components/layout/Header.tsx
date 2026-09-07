@@ -1,6 +1,13 @@
 "use client";
 
-import { Languages, LogOut, Menu, Moon, Sun, User as UserIcon } from "lucide-react";
+/**
+ * Sticky app header (ADR-0007).
+ *  - `< lg`: 56px app bar — brand mark + current page title/subtitle (from PageHeader context), bell, avatar menu
+ *    (language + theme live inside the menu to keep the bar calm).
+ *  - `lg+`: 64px — tenant name, bell, language, theme, avatar menu (unchanged behaviour).
+ * No hamburger: on mobile the drawer opens from the bottom bar "more" item.
+ */
+import { Languages, LogOut, Moon, Sun, User as UserIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
@@ -16,10 +23,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { logoutAction, setLocaleAction } from "@/lib/session/actions";
+import { BrandMark } from "./BrandMark";
 import { NotificationBell } from "./NotificationBell";
+import { useCurrentPageHeader } from "./page-header";
 import type { LayoutTenant, LayoutUser } from "./types";
 
-type Props = { user: LayoutUser; tenant: LayoutTenant; onOpenMenu: () => void };
+type Props = { user: LayoutUser; tenant: LayoutTenant };
 
 const THEME_KEY = "scam.theme";
 
@@ -44,14 +53,14 @@ function applyTheme(theme: "dark" | "light") {
   }
 }
 
-export function Header({ user, tenant, onOpenMenu }: Props) {
+export function Header({ user, tenant }: Props) {
   const t = useTranslations();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const page = useCurrentPageHeader();
 
   useEffect(() => {
-    // Restore the persisted theme once on mount (default is dark, set on <html> by the server).
     let stored: string | null = null;
     try {
       stored = localStorage.getItem(THEME_KEY);
@@ -70,6 +79,7 @@ export function Header({ user, tenant, onOpenMenu }: Props) {
     setTheme(next);
   };
 
+  const otherLocaleLabel = user.locale === "ar" ? t("common.english") : t("common.arabic");
   const toggleLocale = () => {
     const next = user.locale === "ar" ? "en" : "ar";
     startTransition(async () => {
@@ -84,30 +94,43 @@ export function Header({ user, tenant, onOpenMenu }: Props) {
     .slice(0, 2)
     .map((p) => p.charAt(0))
     .join("");
+  const ThemeIcon = theme === "dark" ? Sun : Moon;
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-6">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="size-11 lg:hidden"
-        onClick={onOpenMenu}
-        aria-label={t("common.openMenu")}
-      >
-        <Menu className="size-6" aria-hidden="true" />
-      </Button>
-
-      <p className="min-w-0 flex-1 truncate text-base font-semibold sm:text-lg">{tenant.name}</p>
+    <header
+      className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-card/95 px-3 backdrop-blur supports-[backdrop-filter]:bg-card/80 lg:h-16 lg:gap-3 lg:bg-background/95 lg:px-6 lg:supports-[backdrop-filter]:bg-background/80"
+      data-testid="app-header"
+    >
+      {/* Mobile: brand + page title. Desktop: tenant name. */}
+      <div className="flex min-w-0 flex-1 items-center gap-2.5">
+        <div className="lg:hidden">
+          <BrandMark tenant={tenant} size={32} />
+        </div>
+        <div className="min-w-0 lg:hidden" data-testid="mobile-page-title">
+          {/* PageHeader hides its in-content <h1> below lg → the app bar carries the page's single h1. */}
+          {page?.ownsHeading ? (
+            <h1 className="truncate text-sm leading-tight font-semibold">{page.title}</h1>
+          ) : (
+            <p className="truncate text-sm leading-tight font-semibold">{page?.title ?? tenant.name}</p>
+          )}
+          {(page?.subtitle ?? (page ? null : user.name)) && (
+            <p className="truncate text-[10px] leading-tight text-muted-foreground">
+              {page?.subtitle ?? user.name}
+            </p>
+          )}
+        </div>
+        <p className="hidden min-w-0 flex-1 truncate text-lg font-semibold lg:block">{tenant.name}</p>
+      </div>
 
       <NotificationBell initialCount={user.unreadNotifications} />
 
       <Button
         variant="ghost"
         size="icon"
-        className="size-11"
+        className="hidden size-11 lg:inline-flex"
         onClick={toggleLocale}
         disabled={pending}
-        aria-label={`${t("common.language")}: ${user.locale === "ar" ? t("common.english") : t("common.arabic")}`}
+        aria-label={`${t("common.language")}: ${otherLocaleLabel}`}
       >
         <Languages className="size-5" aria-hidden="true" />
       </Button>
@@ -115,27 +138,28 @@ export function Header({ user, tenant, onOpenMenu }: Props) {
       <Button
         variant="ghost"
         size="icon"
-        className="size-11"
+        className="hidden size-11 lg:inline-flex"
         onClick={toggleTheme}
         aria-label={t("common.toggleTheme")}
         aria-pressed={theme === "light"}
       >
-        {theme === "dark" ? (
-          <Sun className="size-5" aria-hidden="true" />
-        ) : (
-          <Moon className="size-5" aria-hidden="true" />
-        )}
+        <ThemeIcon className="size-5" aria-hidden="true" />
       </Button>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-11 gap-2 px-2" aria-label={user.name}>
+          <Button
+            variant="ghost"
+            className="h-11 gap-2 px-1.5 lg:px-2"
+            aria-label={user.name}
+            data-testid="user-menu"
+          >
             <Avatar className="size-8">
               <AvatarFallback className="bg-primary/15 text-xs font-bold text-primary">
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <span className="hidden max-w-40 truncate text-sm font-medium md:inline">{user.name}</span>
+            <span className="hidden max-w-40 truncate text-sm font-medium xl:inline">{user.name}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64">
@@ -151,6 +175,16 @@ export function Header({ user, tenant, onOpenMenu }: Props) {
             <UserIcon className="size-4" aria-hidden="true" />
             {t("nav.profile")}
             <span className="ms-auto text-xs text-muted-foreground">P1</span>
+          </DropdownMenuItem>
+          {/* Mobile-only utilities (desktop shows them as header buttons) */}
+          <DropdownMenuItem className="min-h-11 gap-2 lg:hidden" onSelect={toggleLocale} disabled={pending}>
+            <Languages className="size-4" aria-hidden="true" />
+            {t("common.language")}
+            <span className="ms-auto text-xs text-muted-foreground">{otherLocaleLabel}</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem className="min-h-11 gap-2 lg:hidden" onSelect={toggleTheme}>
+            <ThemeIcon className="size-4" aria-hidden="true" />
+            {t("common.toggleTheme")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <form action={logoutAction}>

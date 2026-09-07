@@ -1,5 +1,6 @@
 import { ArrowRight, Users } from "lucide-react";
 import type { Metadata } from "next";
+import { MobilePageTitle } from "@/components/layout/page-header";
 import { getFormatter, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -49,10 +50,11 @@ export default async function RoleDetailPage({ params }: Props) {
         </Link>
       </Button>
 
+      <MobilePageTitle title={role.name} subtitle={t("title")} />
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-bold sm:text-3xl">{role.name}</h1>
+            <h1 className="text-xl font-bold sm:text-2xl lg:text-3xl">{role.name}</h1>
             <RoleTypeBadge role={role} />
           </div>
           <p dir="ltr" className="font-mono text-sm text-muted-foreground">

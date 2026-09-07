@@ -251,10 +251,10 @@ export function CoursesClient({ page, query, counts, lookups, can }: Props) {
     <div className="space-y-4">
       <PageTabs tabs={tabs} activeTab={query.status} onTabChange={(id) => setParams({ status: id })} />
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+      <div className="grid grid-cols-2 gap-2 lg:flex lg:items-center lg:gap-3">
         <form
           role="search"
-          className="relative flex-1"
+          className="relative col-span-2 flex-1 lg:col-span-1"
           onSubmit={(e) => {
             e.preventDefault();
             setParams({ q });
@@ -302,7 +302,7 @@ export function CoursesClient({ page, query, counts, lookups, can }: Props) {
           </Select>
         </div>
         {can.create && (
-          <Button onClick={() => setForm(null)} className="min-h-11 gap-2" data-testid="create-course">
+          <Button onClick={() => setForm(null)} className="col-span-2 min-h-11 gap-2 lg:col-span-1" data-testid="create-course">
             <Plus className="size-4" aria-hidden /> {t("actions.create")}
           </Button>
         )}

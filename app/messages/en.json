@@ -109,7 +109,27 @@
     "mySessionsTitle": "My active sessions",
     "current": "Current",
     "revoke": "Revoke",
-    "comingSoon": "Academic modules are enabled in phase P1"
+    "comingSoon": "Remaining modules are enabled progressively per the roadmap",
+    "subtitle": "System overview",
+    "stats_extra": {
+      "courses": "Courses",
+      "files": "Files",
+      "openOfferings": "Open sections",
+      "unread": "Notifications",
+      "active": "Active"
+    },
+    "growth": {
+      "title": "System growth",
+      "series": "New users",
+      "empty": "Not enough data yet"
+    },
+    "quick": {
+      "title": "Quick links"
+    },
+    "recent": {
+      "title": "Recent activity",
+      "all": "All"
+    }
   },
   "errors": {
     "notFoundTitle": "Page not found",

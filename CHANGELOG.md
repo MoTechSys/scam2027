@@ -11,6 +11,15 @@
 
 ## [Unreleased]
 
+### Changed — قشرة تطبيق للجوال (ADR-0007, PR #18)
+- **App bar الجوال** (`Header.tsx`): 56px، `BrandMark` + عنوان الصفحة ووصفها من سياق `PageHeader` (بدل اسم الجامعة)، الجرس وقائمة المستخدم فقط؛ اللغة والسمة انتقلتا إلى قائمة المستخدم على الجوال؛ أُزيل زر hamburger (Drawer يُفتح من «المزيد»). سطح المكتب بلا تغيير.
+- **`PageHeader` / `MobilePageTitle`** (`components/layout/page-header.tsx`): كل الصفحات الـ11 تُعلن عنوانها مرة واحدة — يُرسَم في المحتوى على `lg+` ويُرفَع إلى App bar تحته (لا تكرار). `h1` تفاصيل الكيانات `text-xl` على الجوال.
+- **لوحة التحكم على الجوال** تطابق المرجع الأصلي (`S-ACM-Project` Dashboard «Mobile App-Like»): شبكة **3×2** `MiniStatCard` (مستخدمون + اتجاه شهري، نشطون، مقررات، ملفات، إشعارات غير مقروءة، شُعب مفتوحة — كلها أرقام حقيقية بنطاق الدور عبر `courseScopeWhere`/`fileScopeWhere`/`offeringScopeWhere`)، بطاقة «نمو النظام» = مستخدمون جدد شهريًا لآخر 6 أشهر (`loadUserGrowth`، استعلام مجمَّع واحد)، 4 روابط سريعة مرشَّحة بالصلاحيات، «آخر الأنشطة» مضغوطة، الجلسات. سطح المكتب: أُضيف رسم النمو بجانب الجلسات.
+- **الشريط السفلي** بنمط تطبيق: 64px + safe-area، `bg-card/95` + blur، العنصر النشط بحبّة `bg-primary/10` + `neon-text`، نص 10px.
+- **الكثافة**: `main` بـ`p-3` على الجوال (كان `px-4 py-6`)، `PageTabs` لاصقة عند `top-14`، شريط المرشّحات شبكة عمودَين على الجوال (البحث والزر الأساسي `col-span-2`) في users/roles/courses/offerings/files.
+- **PWA-ready**: `GET /manifest.webmanifest` (اسم/لون/أيقونة المستأجر، `standalone`, `rtl`) + `metadata.manifest` و`appleWebApp`؛ SW/offline في P4-05.
+- اختبار جديد `e2e/dashboard.spec.ts` (mobile: عنوان في App bar، شبكة 3 أعمدة، 6 بطاقات بأرقام، الروابط فوق الطية، شريط سفلي نشط، تنقّل يغيّر العنوان، axe؛ desktop: رأس كلاسيكي؛ الطالب: إحصائيات/روابط مرشَّحة). وثّق: ADR-0007، `05-UI-DESIGN-SYSTEM.md §3-4`.
+
 ### Fixed — طبقة التخزين المفقودة من المستودع (PR #16)
 - **`app/src/lib/storage/` لم تكن في Git إطلاقًا**: قاعدة `storage` غير المُثبَّتة في `app/.gitignore` (أُضيفت في P1-06 لتجاهل مجلد الكائنات المحلي) طابقت أيضًا مسار الكود `src/lib/storage/`، فلم يُلتزم أيٌّ من `types/local/s3/validate/signed-url/index` في PR #13 ولا بعده. أي استنساخ نظيف كان يفشل في `tsc` (13 خطأ) و`seed` و`build`. أُعيد بناء الطبقة وفق عقدها الموثّق (CHANGELOG #13 + `files-storage.test.ts` + كل مواقع الاستدعاء): `StorageAdapter{put,get,exists,delete}`، `LocalStorage` (مفتاح آمن، `wx` + 0600، عدّاد + SHA-256، حذف الجزئي عند التجاوز)، `S3Storage` (lib-storage Upload + نفس العدّاد)، `validateUpload`/`buildStorageKey`/`sanitizeDisplayName`/`formatBytes`/`ACCEPT_ATTRIBUTE`، `signDownload`/`verifyDownload` (HMAC + `timingSafeEqual`)، و`storage()` مفرد يختار المحرّك من `env`. القاعدة صارت مثبَّتة `/storage/` و`/storage-test/`.
 - التحقّق: `tsc` 0 · `eslint` 0 · Vitest 167/167 · build ✓ · Playwright 72 ✓ / 8 skip (بما فيها `files.spec.ts`: رفع حقيقي → تنزيل موقّع → تعديل → سلة → استرجاع).

@@ -143,10 +143,10 @@ export function RolesClient({ roles, query, counts, grantable, can }: Props) {
     <div className="space-y-4">
       <PageTabs tabs={TABS.map((id) => ({ id, label: t(`tabs.${id}`), badge: counts[id] ?? 0 }))} activeTab={query.tab} onTabChange={(id) => setParams({ tab: id })} />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-3">
         <form
           role="search"
-          className="relative flex-1"
+          className="relative col-span-2 flex-1 lg:col-span-1"
           onSubmit={(e) => {
             e.preventDefault();
             setParams({ q });
@@ -156,7 +156,7 @@ export function RolesClient({ roles, query, counts, grantable, can }: Props) {
           <Input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("searchPlaceholder")} aria-label={tc("search")} className="min-h-11 ps-10" />
         </form>
         {can.create && (
-          <Button onClick={() => setFormRole(null)} className="min-h-11 gap-2">
+          <Button onClick={() => setFormRole(null)} className="col-span-2 min-h-11 gap-2 sm:col-span-1">
             <Plus className="size-4" aria-hidden /> {t("actions.create")}
           </Button>
         )}

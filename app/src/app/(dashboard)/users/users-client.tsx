@@ -184,10 +184,10 @@ export function UsersClient({ page, query, counts, roles, selfId, can }: Props) 
         onTabChange={(id) => setParams({ status: id })}
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-3">
         <form
           role="search"
-          className="relative flex-1"
+          className="relative col-span-2 flex-1 lg:col-span-1"
           onSubmit={(e) => {
             e.preventDefault();
             setParams({ q });
@@ -217,7 +217,7 @@ export function UsersClient({ page, query, counts, roles, selfId, can }: Props) 
           </SelectContent>
         </Select>
         {can.create && (
-          <Button onClick={() => setFormUser(null)} className="min-h-11 gap-2">
+          <Button onClick={() => setFormUser(null)} className="col-span-2 min-h-11 gap-2 sm:col-span-1">
             <Plus className="size-4" aria-hidden /> {t("actions.create")}
           </Button>
         )}

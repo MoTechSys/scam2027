@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
+import { MobilePageTitle } from "@/components/layout/page-header";
 import { getFormatter, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -122,9 +123,10 @@ export default async function OfferingDetailPage({ params, searchParams }: Props
         </Link>
       </Button>
 
+      <MobilePageTitle title={`${o.courseCode} · ${t("sectionLabel", { section: o.section })}`} subtitle={o.courseName} />
       <header className="space-y-2">
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-bold sm:text-3xl">
+          <h1 className="text-xl font-bold sm:text-2xl lg:text-3xl">
             <span dir="ltr" className="font-mono">
               {o.courseCode}
             </span>{" "}

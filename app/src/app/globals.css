@@ -142,7 +142,7 @@
     text-size-adjust: 100%;
   }
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background font-sans text-foreground antialiased;
     min-height: 100dvh;
   }
   button:not(:disabled),
@@ -188,6 +188,12 @@
     padding-inline: 2rem;
     max-width: 1280px;
   }
+}
+
+/* Content padding under the fixed mobile bottom bar (4rem) + safe-area + 1rem breathing room. Declared as a
+   utility (not a component) so it participates in Tailwind's utility layer and wins over `py-*`. */
+@utility pb-bottom-nav {
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0));
 }
 
 @layer components {
@@ -275,9 +281,6 @@
   }
   .h-safe-area-bottom {
     height: env(safe-area-inset-bottom, 0);
-  }
-  .pb-bottom-nav {
-    padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0));
   }
 
   /* Scrollbars */
