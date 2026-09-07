@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/layout/page-header";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import {
@@ -45,10 +46,7 @@ export default async function FilesPage({ searchParams }: Props) {
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-bold sm:text-3xl">{admin ? t("title") : t("myTitle")}</h1>
-        <p className="text-muted-foreground">{t("subtitle")}</p>
-      </header>
+      <PageHeader title={admin ? t("title") : t("myTitle")} subtitle={t("subtitle")} />
       <FilesClient
         page={page}
         query={query}

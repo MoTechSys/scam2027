@@ -4,11 +4,11 @@
 >
 > **للوكيل الجديد:** لا تبدأ من هنا. ابدأ من [`/AGENTS.md`](../../AGENTS.md) (الدليل الكامل) و[`STATUS.json`](STATUS.json) (الحالة الآلية). هذا الملف هو **سجل الجلسات ودروسها** — أقدم الأقسام في الأعلى محفوظة للتاريخ وموسومة بجلستها.
 
-## 0. ملخص الحالة (محدّث — الجلسة 16؛ المصدر الآلي: `STATUS.json`)
+## 0. ملخص الحالة (محدّث — الجلسة 18؛ المصدر الآلي: `STATUS.json`)
 
 | البند | الحالة |
 |---|---|
-| المستودع | `MoTechSys/scam2027` (عام) — `main` = `660dad6` بعد PR #16 |
+| المستودع | `MoTechSys/scam2027` (عام) — `main` = بعد PR #18 (قشرة الجوال) |
 | الفرع الرئيسي | `main` |
 | فرع العمل | `genspark_ai_developer` → PR → `main` (squash-merge مباشر مصرّح به من المالك) → مزامنة الفرع بـ`git reset --hard origin/main && git push -f` |
 | التقدّم | **23 / 65 مهمة (35%)** — P0 16/16 ☑ · P1 7/15 (P1-01..P1-07) · P2–P5 لم تبدأ |
@@ -17,6 +17,7 @@
 | قاعدة البيانات | آخر هجرة في `app/prisma/migrations/` (لا هجرات جديدة منذ P1-01؛ P1-06/P1-07 استخدما الجداول الموجودة) — **قاعدتان** (`scam2027`, `scam2027_test`) يجب هجرتهما معًا؛ seed كامل: مستأجر demo + أدوار + مستخدمون + بنية أكاديمية + مقررات/شُعب + 30 طالبًا + ملفّان + 3 إشعارات |
 | بيئة التطوير | `/home/user/webapp` (sandbox)؛ المراجع التراثية في `.refs/` (غير ملتزمة، تُستنسخ بالحلقة في §3) |
 | الوحدات المبنية | users, roles, academic, courses, offerings, enrollment, files, notifications — كلها بنمط `features/<x>/{schemas,scope,queries,core,actions}` + صفحة `(dashboard)/<x>` + seed + unit/integration/e2e |
+| قشرة الواجهة | **ADR-0007** قشرة تطبيق للجوال: App bar بعنوان الصفحة (`PageHeader`/`MobilePageTitle`)، لوحة تحكم 3×2 `MiniStatCard` + نمو حقيقي، شريط سفلي بنمط تطبيق، `manifest.webmanifest`. **قاعدة لكل صفحة جديدة:** `<PageHeader>` لا `<header>` يدوي |
 | قواعد لا تُخالَف | `AGENTS.md` §6 (دورة العمل) و§7 (المعايير)؛ `STATUS.json.qualityGate.knownDebt` (نقاط التعثّر المتراكمة — اقرأها قبل أول سطر كود) |
 
 ## 1. ما تم في الجلسة 1 (تاريخي — 2026-09-04)
@@ -239,3 +240,13 @@ pnpm test && pnpm lint && pnpm typecheck
 7. Nav: أضف `{ key: "trash", href: "/trash", icon: Trash2, permission: "trash.view" }` إلى `NAV_ITEMS` + `NavKey` + `messages/{ar,en}.json → nav.trash` + نطاق i18n `trash`؛ حدّث `login-helpers.test.ts`.
 8. اختبارات: unit (schemas, `purgeCandidates` cutoff, registry labels) · integration `trash-queries.test.ts` (مستأجر مستقل: لكل kind soft-delete → يظهر → restore → يختفي؛ purge يحذف الصف + الكائن؛ عزل A/B؛ `purgeExpired` يحذف > 30 يومًا فقط) · e2e `trash.spec.ts` (مدير: حذف مقرر E2E → /trash → استرجاع؛ حذف نهائي ملف؛ الطالب يُحوَّل إلى /unauthorized؛ جوال بلا تمرير أفقي).
 9. Docs في نفس الالتزام: ROADMAP P1-08 ☑، REQUIREMENTS FR-SYS-001 ☑، CHANGELOG، HANDOFF الجلسة 17، STATUS.json (doneTasks 24, nextTask P1-09)، AGENTS §0/§4.1/§5، README.
+
+## الجلسة 18 — قشرة تطبيق للجوال (ADR-0007, PR #18) — ☑
+
+**السبب:** المالك أرسل لقطة الواجهة الأصلية على الهاتف (`S-ACM-Project/client/src/pages/Dashboard.tsx` — «Mobile App-Like Experience») وطلب أن يبدو النظام **كتطبيق لا كموقع**. تحليل الفجوة بلقطات فعلية (Playwright iPhone 12): عنوان مكرَّر تحت Header اسم الجامعة، 10 بطاقات بعمود واحد (~1100px قبل أي محتوى)، Header بأربعة أزرار، شريط سفلي بلا مؤشر.
+
+**ما تم (كود):** `components/layout/page-header.tsx` (Provider + `PageHeader` + `MobilePageTitle` + `ownsHeading` لضمان h1 واحد)، `Header.tsx` (App bar 56px: BrandMark + عنوان/وصف + جرس + قائمة مستخدم تحوي اللغة/السمة على الجوال؛ حُذف hamburger)، `BottomNavigation.tsx` (64px، حبّة نشطة، `neon-text`)، `ui/mini-stat-card.tsx`، `dashboard/page.tsx` (فرع جوال مطابق للمرجع بأرقام حقيقية + فرع سطح مكتب مع رسم النمو)، `dashboard/growth-chart.tsx` (Recharts Area)، `lib/dashboard/queries.ts` (`loadOverview` بنطاق الدور عبر `courseScopeWhere`/`fileScopeWhere`/`offeringScopeWhere` + `loadUserGrowth` استعلام `date_trunc` واحد)، `manifest.webmanifest/route.ts`، `layout.tsx` (manifest + appleWebApp)، `PageTabs` `top-14`، `.pb-bottom-nav` 5rem، 11 صفحة تستخدم `PageHeader`/`MobilePageTitle`، شرائط المرشّحات شبكة عمودَين على الجوال (5 وحدات)، i18n `dashboard.*` ar/en، `e2e/dashboard.spec.ts`.
+
+**دروس:** (1) عند إخفاء `h1` المحتوى على الجوال يجب أن يحمل App bar `h1` — وإلا تفشل كل اختبارات `getByRole("heading",{level:1})` وaxe (`page-has-heading-one`). (2) الشريط السفلي الثابت يغطي آخر زر إذا كان `padding-bottom` = ارتفاعه بالضبط — أضف 1rem. (3) التقط لقطات **قبل/بعد** بسكربت Playwright من داخل `app/` (يحتاج `node_modules`) قبل الحكم على أي «تحسين» بصري. (4) `useFormatter().dateTime(month:"short")` يعطي أسماء الأشهر بالعربية مجانًا — لا تُترجم يدويًا.
+
+**التالي:** P1-08 سلة المحذوفات — الخطة التسعية في الجلسة 16 كما هي؛ صفحة `/trash` تستخدم `<PageHeader>`.

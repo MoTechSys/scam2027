@@ -532,6 +532,8 @@ async function seedCourses(tenantId: string) {
         passwordHash: hash,
         status: "ACTIVE",
         emailVerifiedAt: new Date(),
+        // Spread enrolment dates over the last 5 months so the dashboard growth chart has a real shape.
+        createdAt: new Date(Date.now() - ((30 - n) % 5) * 30 * 86_400_000 - n * 3_600_000),
         profile: { create: {} },
       },
     });

@@ -27,7 +27,7 @@ interface PageTabsProps {
 
 export function PageTabs({ tabs, activeTab, onTabChange }: PageTabsProps) {
   return (
-    <div className="sticky top-[64px] z-30 bg-background/95 backdrop-blur-sm border-b border-border -mx-4 lg:-mx-6 px-4 lg:px-6 py-2 mb-6">
+    <div className="sticky top-14 z-30 -mx-3 mb-3 border-b border-border bg-background/95 px-3 py-1.5 backdrop-blur-sm sm:-mx-4 sm:px-4 lg:top-16 lg:-mx-6 lg:mb-6 lg:px-6 lg:py-2">
       <nav className="flex gap-1 overflow-x-auto pb-px -mb-px scrollbar-hide">
         {tabs.map((tab) => {
           const Icon = tab.icon;

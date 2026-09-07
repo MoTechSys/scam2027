@@ -23,6 +23,8 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: name, template: `%s · ${name}` },
     description: t("tagline"),
     applicationName: name,
+    manifest: "/manifest.webmanifest",
+    appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: name },
     icons: tenant?.branding?.logoUrl
       ? [{ url: tenant.branding.logoUrl }]
       : [{ url: "/icon.svg", type: "image/svg+xml" }],
