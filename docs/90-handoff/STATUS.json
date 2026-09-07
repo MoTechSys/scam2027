@@ -14,7 +14,7 @@
   "progress": {
     "totalTasks": 65,
     "doneTasks": 24,
-    "percent": 35,
+    "percent": 37,
     "phases": {
       "P0": {
         "name": "Foundation",
@@ -29,7 +29,7 @@
       "P1": {
         "name": "Core LMS",
         "total": 15,
-        "done": 7,
+        "done": 8,
         "status": "IN_PROGRESS",
         "prs": [
           4,
@@ -39,7 +39,12 @@
           9,
           10,
           13,
-          14
+          14,
+          16,
+          17,
+          18,
+          19,
+          20
         ]
       },
       "P2": {
@@ -97,10 +102,10 @@
       "id": "P1-09",
       "name": "سجل التدقيق",
       "status": "TODO",
-      "scope": "صفحة /audit-logs (trash.view-like gate: audit.view): فلاتر فاعل/كيان/إجراء/تاريخ، تفاصيل diff قبل/بعد، تصدير CSV. البيانات موجودة في AuditLog منذ P0 (actorId nullable = system).",
+      "scope": "صفحة /audit (المسار موجود مسبقًا في lib/nav/items.ts بـ phase P1 — أزل phase عند الشحن؛ gate: audit.view): فلاتر فاعل/كيان/إجراء/تاريخ، تفاصيل diff قبل/بعد، تصدير CSV (audit.export). البيانات موجودة في AuditLog منذ P0 (actorId nullable = system).",
       "deliverables": [
         "features/audit/{schemas,queries,actions}: list مرقّم بفلاتر + export CSV (stream)",
-        "/audit-logs UI على نمط PageShell/ScrollRegion + Sheet لتفاصيل diff",
+        "/audit UI على نمط PageShell/ScrollRegion + Sheet لتفاصيل diff",
         "nav item audit (phase P1 → متاح) + i18n audit.*",
         "اختبارات unit/integration/e2e + توثيق"
       ]
@@ -132,7 +137,8 @@
         "skippedReason": "logout fixme (2) + Radix Select dialogs on mobile-safari (5, covered on desktop) + dashboard student assertions mobile-only (1) + files admin upload mobile (1) + trash bulk-select desktop-only (1)"
       },
       "build": "PASS",
-      "buildId": "2Wmwy5NXVNDO_25vfpcED"
+      "buildId": "2Wmwy5NXVNDO_25vfpcED",
+      "verifiedOnCleanClone": "2026-09-07 — fresh `git clone` of main@6813315 + `pnpm install --frozen-lockfile` + `pnpm check` → exit 0 (tsc 0, eslint 0, vitest 181/181, build ok)"
     },
     "knownDebt": [
       "Trash (P1-08): registry handlers must import permission predicates from has-permission.ts (vitest-loadable). Purge is FK-aware: parents referenced by live children (course←offerings/files, offering←files, user←uploadedFiles) come back as `blocked`, never as a thrown FK error — purge leaves first (PURGE_ORDER). e2e/trash.spec seeds rows directly via Prisma with `E2E`-prefixed codes and uses a per-run stamp in the search term (desktop+mobile runs share the DB).",

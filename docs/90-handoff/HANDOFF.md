@@ -12,8 +12,8 @@
 | الفرع الرئيسي | `main` |
 | فرع العمل | `genspark_ai_developer` → PR → `main` (squash-merge مباشر مصرّح به من المالك) → مزامنة الفرع بـ`git reset --hard origin/main && git push -f` |
 | التقدّم | **24 / 65 مهمة (37%)** — P0 16/16 ☑ · P1 8/15 (P1-01..P1-08) · P2–P5 لم تبدأ |
-| المهمة التالية | **P1-09** سجل التدقيق (`/audit-logs`) — المخرجات في `STATUS.json` → `progress.nextTask`، الصف في `AGENTS.md` §5 |
-| بوابة الجودة | tsc 0 · eslint 0 · Vitest 167/167 (23 ملفًا) · build `2Wmwy5NXVNDO_25vfpcED` · Playwright 80 ✅ / 10 skip (desktop + mobile) · Vitest 181/181 — الجلسة 20 |
+| المهمة التالية | **P1-09** سجل التدقيق (`/audit`) — المخرجات في `STATUS.json` → `progress.nextTask`، الصف في `AGENTS.md` §5 |
+| بوابة الجودة | tsc 0 · eslint 0 · Vitest 181/181 (25 ملفًا) · build `2Wmwy5NXVNDO_25vfpcED` · Playwright 80 ✅ / 10 skip (desktop + mobile) — الجلسة 20 (PR #20) |
 | قاعدة البيانات | آخر هجرة في `app/prisma/migrations/` (لا هجرات جديدة منذ P1-01؛ P1-06/P1-07 استخدما الجداول الموجودة) — **قاعدتان** (`scam2027`, `scam2027_test`) يجب هجرتهما معًا؛ seed كامل: مستأجر demo + أدوار + مستخدمون + بنية أكاديمية + مقررات/شُعب + 30 طالبًا + ملفّان + 3 إشعارات |
 | بيئة التطوير | `/home/user/webapp` (sandbox)؛ المراجع التراثية في `.refs/` (غير ملتزمة، تُستنسخ بالحلقة في §3) |
 | الوحدات المبنية | users, roles, academic, courses, offerings, enrollment, files, notifications — كلها بنمط `features/<x>/{schemas,scope,queries,core,actions}` + صفحة `(dashboard)/<x>` + seed + unit/integration/e2e |
@@ -155,7 +155,7 @@ pnpm test && pnpm lint && pnpm typecheck
 **ما تم:**
 1. **تدقيق واقعي** قبل الكتابة: ملفات، اختبارات، سكربتات، سجل git، نطاقات رمز GitHub، الوثائق القديمة. النتائج الصريحة: README كان يقول «لم يُكتب كود بعد» (قديم)، لا `STATUS.json`، لا crawl spec، قالب CI غير مفعّل، seed بلا بنية أكاديمية — كلها مُوثَّقة الآن بدل إخفائها.
 2. **`AGENTS.md`** (جذر المستودع — نقطة الدخول): §0 ملخص تنفيذي · §1 سلالة 9 مستودعات تراثية + حلقة استنساخ `.refs/` + لماذا لا نُكمل القديم · §2 إقلاع (10 أوامر) · §3 خريطة 28 وثيقة → أي سؤال يجيبه أي ملف · §4 الحالة الفعلية المتحقَّق منها + 9 نقاط تعثّر · §5 خطة ما تبقّى P1-04..P1-15 بمخرجات ملموسة + P2–P5 · §6 دورة العمل الإلزامية السباعية + أوامر GitHub API · §7 المعايير غير القابلة للتفاوض · §8 إجراءات المالك · §9 قائمة تحقق للوكيل الجديد.
-3. **`docs/90-handoff/STATUS.json`** حالة آلية (عدّادات لكل مرحلة، `doneTaskIds`، `nextTask` بمخرجاته، بوابة الجودة الأخيرة، الهجرات، الحسابات التجريبية، إجراءات المالك، الجلسات) — مُتحقَّق منه برمجياً أن 16+15+12+12+7+3 = 65 و 19 منجزة.
+3. **`docs/90-handoff/STATUS.json`** حالة آلية (عدّادات لكل مرحلة، `doneTaskIds`، `nextTask` بمخرجاته، بوابة الجودة الأخيرة، الهجرات، الحسابات التجريبية، إجراءات المالك، الجلسات) — مُتحقَّق منه برمجياً أن 16+15+12+12+7+3 = 65 و 24 منجزة.
 4. **`CLAUDE.md`** مؤشّر من سطر واحد إلى `AGENTS.md` (وكلاء بعض المنصات يقرؤونه أولاً).
 5. تحديث `README.md` (فقرة الحالة، خريطة التوثيق، قسم البدء بأوامر فعلية) و`HANDOFF.md` (الرأس، §0، §2، §5، §6، §7).
 
@@ -268,5 +268,7 @@ pnpm test && pnpm lint && pnpm typecheck
 **الملفات:** `features/trash/{schemas,registry,queries,core,actions}.ts`، `app/(dashboard)/trash/{page,trash-client}.tsx`، `components/typed-confirm-dialog.tsx`، `components/ui/page-tabs.tsx` (ARIA)، `lib/nav/items.ts`، `messages/{ar,en}.json`، `tests/unit/trash-schemas.test.ts`، `tests/integration/trash-queries.test.ts`، `e2e/trash.spec.ts`، `e2e/users.spec.ts` (`getByRole("tab")`).
 
 **دروس:** (1) `RolePermission.permissionCode` له FK على كتالوج `Permission` غير المبذور في قاعدة الاختبار — upsert الرمز قبل إنشاء دور بصلاحيات (نمط `roles-queries.test`). (2) في e2e، desktop وmobile يتشاركان القاعدة: أي بذر مباشر يجب أن يحمل ختمًا فريدًا **في مصطلح البحث نفسه**، وإلا يظهر متبقّي المشروع الآخر. (3) `Checkbox` «تحديد الكل» يبدّل الحالة — لا تنقره مرتين في الاختبار. (4) `revalidatePath` غير مسموح داخل `after()`؛ `/trash` ديناميكية فتُعاد قراءتها عند التنقّل.
+
+**تحقّق الاستلام (نهاية الجلسة):** استنساخ نظيف لـ`main@6813315` → `pnpm install --frozen-lockfile` → `pnpm check` exit 0 (181/181). أُصلحت أرقام متأخّرة في README/AGENTS §0/§2 وSTATUS `phases.P1`/`percent`، ووُحّد اسم مسار التدقيق إلى `/audit` (المسار الموجود في `lib/nav/items.ts`).
 
 **التالي:** P1-09 سجل التدقيق — انسخ هيكل `/trash` (PageShell + ScrollRegion + تبويبات) وافلتر `AuditLog` (فاعل/كيان/إجراء/تاريخ) + Sheet لعرض `before/after` + تصدير CSV بتدفّق. صلاحيتا `audit.view`/`audit.export` موجودتان؛ عنصر التنقّل `audit` موجود بـ`phase: "P1"` — أزل `phase` عند الشحن.

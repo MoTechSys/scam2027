@@ -12,8 +12,8 @@
 |---|---|
 | المنتج | **scam2027** — نظام إدارة تعلّم (LMS) جامعي **متعدد المستأجرين** (عدة جامعات على منصة واحدة) بواجهة **Omnitrix الخضراء** RTL، عربي/إنجليزي، جوال أولًا |
 | المستودع | `https://github.com/MoTechSys/scam2027` (عام) — `main` محمي بالمنطق التالي: فرع `genspark_ai_developer` → PR → **squash-merge** مصرّح به للوكيل |
-| التقدّم | **24 / 65 مهمة (37%)** — P0 كامل (16/16) · P1 7/15 · P2–P5 لم تبدأ. انظر §4 |
-| التالي مباشرة | **P1-09 سجل التدقيق** (`/audit-logs`: فلاتر، diff قبل/بعد، CSV — البيانات موجودة في `AuditLog` منذ P0) — §5 |
+| التقدّم | **24 / 65 مهمة (37%)** — P0 كامل (16/16) · P1 8/15 (P1-01..P1-08) · P2–P5 لم تبدأ. انظر §4 |
+| التالي مباشرة | **P1-09 سجل التدقيق** (`/audit`: فلاتر، diff قبل/بعد، CSV — البيانات موجودة في `AuditLog` منذ P0) — §5 |
 | كيف تبدأ | §2 (Bootstrap 10 أوامر) → §6 (دورة العمل الإلزامية لكل مهمة) |
 | المرجع الكامل | `docs/` (28 وثيقة) — خريطتها في §3 |
 
@@ -64,6 +64,8 @@ sudo -u postgres psql -c "CREATE DATABASE scam2027;" -c "CREATE DATABASE scam202
 # 3) التطبيق
 cd app && cp .env.example .env
 # ولّد: AUTH_SECRET=$(openssl rand -base64 32) و APP_ENCRYPTION_KEY="base64:$(openssl rand -base64 32)"
+# .env.test (غير ملتزم — تحتاجه vitest التكاملية): نسخة من .env مع قاعدة scam2027_test و STORAGE_LOCAL_ROOT=./storage-test
+sed -e 's#/scam2027?#/scam2027_test?#g' -e 's#STORAGE_LOCAL_ROOT=./storage$#STORAGE_LOCAL_ROOT=./storage-test#' .env > .env.test
 pnpm install                                 # postinstall يشغّل prisma generate
 pnpm exec prisma migrate deploy              # قاعدة التطوير (DIRECT_DATABASE_URL)
 DIRECT_DATABASE_URL="postgresql://postgres:postgres@localhost:5432/scam2027_test?schema=public" pnpm exec prisma migrate deploy   # قاعدة الاختبار — إلزامي
@@ -73,7 +75,7 @@ pnpm tsx prisma/seed.ts                      # مستأجر demo + 4 أدوار 
 pnpm check                                   # typecheck · lint · vitest · build
 pnpm exec playwright install chromium
 scripts/restart-server.sh                    # خادم إنتاج على :3000
-pnpm exec playwright test                    # 39 ✓ + 2 fixme (سطح المكتب + جوال)
+pnpm exec playwright test                    # 80 ✓ / 10 skip (سطح المكتب + جوال) — الأرقام الحالية في STATUS.json
 ```
 
 **حسابات demo** (مستأجر `demo`، `localhost` يُحلّ إليه عبر `DEFAULT_TENANT_SLUG`):
@@ -129,7 +131,7 @@ pnpm exec playwright test                    # 39 ✓ + 2 fixme (سطح المك
 | **قشرة التطبيق (ADR-0007/0008)** | viewport ثابت `h-dvh` + `ScrollRegion`/`PageShell` (القائمة وحدها تتحرك)، App bar بعنوان الصفحة + ☰، `MiniStatCard` 3×2، رسم نمو حقيقي، شريط سفلي 4 عناصر بلا «المزيد»، `manifest.webmanifest`؛ كل صفحة: `<PageHeader>` + جذر `flex h-full min-h-0 flex-col` + `ScrollRegion` | `app/src/components/layout/{page-header,page-shell,Header,BottomNavigation,DashboardLayout}.tsx`, `app/src/components/ui/{scroll-region,mini-stat-card}.tsx`, `app/src/app/(dashboard)/dashboard/*`, `app/src/app/manifest.webmanifest/route.ts` |
 | **P1-01 المخطط** | 18 موديلًا (أكاديمي/مقررات/محتوى/تواصل/نظام) + قيود SQL يدوية + RLS على 30 جدولًا + عقود Zod لأعمدة Json | `app/prisma/schema.prisma`, `app/prisma/migrations/20260905*`, `app/src/lib/contracts/json-columns.ts`, ADR-0006 |
 
-**مقاييس الجودة الحالية:** `tsc` 0 · `eslint` 0 · Vitest **167/167** (23 ملفًا: 16 وحدة + 7 تكامل بقاعدة اختبار مستقلة) · Playwright **74 ✓ / 9 skip** (11 ملفًا × 2 مشروع) — مُتحقَّق منها على **استنساخ نظيف** (PR #16) (10 ملفات × 2 مشروع؛ skips = logout fixme + حوارات Radix Select/compose على mobile-safari المغطّاة على سطح المكتب؛ فشل `toHaveURL` في login تحت الحمل الكامل عابر — أعد الملف وحده) · `pnpm build` ✓ · 0 تمرير أفقي على 390px · 0 انتهاكات axe serious/critical على الصفحات المبنية.
+**مقاييس الجودة الحالية (PR #20، 2026-09-07):** `tsc` 0 · `eslint` 0 · Vitest **181/181** (25 ملفًا: 17 وحدة + 8 تكامل بقاعدة اختبار مستقلة) · Playwright **80 ✓ / 10 skip** (13 ملفًا × 2 مشروع؛ skips = logout fixme + حوارات Radix Select/compose على mobile-safari المغطّاة على سطح المكتب + تحديد جماعي في السلة desktop-only؛ فشل `toHaveURL` في login تحت الحمل الكامل عابر — أعد الملف وحده) · مُتحقَّق منها على **استنساخ نظيف** لـ`main@6813315` (الجلسة 20: `pnpm check` exit 0) · `pnpm build` ✓ · 0 تمرير أفقي على 390px · 0 انتهاكات axe serious/critical على الصفحات المبنية.
 
 ### 4.2 ما هو **غير** مبني (بصراحة)
 - لا اختبارات (quizzes) ولا درجات ولا حضور ولا سلة محذوفات موحّدة **في الواجهة** — الجداول موجودة (P1-01) لكن بلا صفحات أو Server Actions. المبني: مستخدمون/أدوار/بنية أكاديمية/مقررات/شُعب/تسجيل/ملفات/إشعارات. الطالب يرى لوحة التحكم + المقررات + شُعبه + ملفاته + إشعاراته؛ المدرّس يرى شُعبه وقوائم طلابه ويرفع ملفات ويرسل إشعارات لشُعبه.
@@ -167,7 +169,7 @@ pnpm exec playwright test                    # 39 ✓ + 2 fixme (سطح المك
 | ~~**P1-06**~~ ☑ PR #13 | الملفات | storage adapter (local/S3 عبر واجهة واحدة)، رفع stream متعدد بتقدّم، فحص magic bytes + قائمة سماح + حد حجم حسب الاشتراك، اسم مُعاد التوليد `tenant/course/uuid`، تصنيف، روابط تنزيل موقّعة قصيرة العمر (`/api/files/[id]/download`)، `/files` بتبويبات | `lib/storage/`؛ حذف ناعم؛ `file.manage_all` |
 | ~~**P1-07**~~ ☑ PR #14 | الإشعارات | إرسال بهدف مرن (`notificationTargetSchema`: الكل/دور/كلية/قسم/تخصص/مستوى/شعبة/أفراد) → fan-out إلى `NotificationRecipient`، inbox، مقروء/غير مقروء، أرشفة، عدّاد Header، «المُرسَلة» مع إحصاء القراءة، تفضيلات in-app | fan-out عبر `Job` إن تجاوز المستلمون 500 |
 | **P1-08** ☑ | سلة المحذوفات الموحّدة | `features/trash/{schemas,registry,queries,core,actions}` + `/trash` (6 تبويبات) + job `trash.purge` — PR #20 | استخدم `TRASH_REGISTRY` لأي كيان جديد ذي `deletedAt` |
-| **P1-09** | سجل التدقيق | `/audit-logs`: فلاتر (فاعل/كيان/إجراء/تاريخ)، تفاصيل diff قبل/بعد، تصدير CSV | البيانات موجودة منذ P0 |
+| **P1-09** | سجل التدقيق | `/audit`: فلاتر (فاعل/كيان/إجراء/تاريخ)، تفاصيل diff قبل/بعد، تصدير CSV | البيانات موجودة منذ P0 |
 | **P1-10** | الإعدادات | `/settings`: عام/أمان/علامة تجارية (شعار، ألوان، اسم) + حقن العلامة في `/login` والتخطيط؛ `TenantSetting` مشفّر للأسرار | |
 | **P1-11** | المصادقة المكتملة | تفعيل الحساب (`/activate`)، استعادة كلمة المرور OTP/رابط 10 دقائق (`PasswordResetToken`)، «تذكرني»، إجبار تغيير كلمة المرور عند أول دخول (`mustChangePassword`) | |
 | **P1-12** | Worker + بريد | `worker/` يلتقط `Job` بقفل (`lockedAt/lockedBy`)، إعادة محاولة، SMTP أساسي للمنصة (تفعيل/استعادة)، `mail.send` | يتصل بدور المالك ويضبط GUC لكل مهمة |
