@@ -24,6 +24,7 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MiniStatCard } from "@/components/ui/mini-stat-card";
+import { ScrollRegion } from "@/components/ui/scroll-region";
 import { StatCard } from "@/components/ui/stat-card";
 import type { PermissionCode } from "@/lib/auth/permissions";
 import { hasPermission, requireUser } from "@/lib/auth/rbac";
@@ -89,7 +90,7 @@ function MobileOverview({
     });
 
   return (
-    <div className="flex flex-col gap-2 lg:hidden" data-testid="mobile-overview">
+    <div className="flex min-h-0 flex-1 flex-col gap-2 lg:hidden" data-testid="mobile-overview">
       <div className="grid grid-cols-3 gap-1.5" data-testid="mobile-stats">
         {stats.slice(0, 6).map((st) => (
           <MiniStatCard
@@ -136,59 +137,62 @@ function MobileOverview({
         </nav>
       )}
 
-      {data.audit !== null && (
-        <Card className="gap-0 rounded-xl py-0">
-          <CardHeader className="flex flex-row items-center justify-between px-2 pt-2 pb-1">
-            <CardTitle className="flex items-center gap-1 text-xs">
-              <Clock className="size-3 text-primary" aria-hidden="true" />
-              {t("recent.title")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-2 pb-2">
-            {data.audit.length === 0 ? (
-              <p className="py-3 text-center text-[11px] text-muted-foreground">{t("noAudit")}</p>
-            ) : (
-              <ol className="space-y-0.5">
-                {data.audit.slice(0, 5).map((a) => (
-                  <li
-                    key={a.id}
-                    className="flex items-center gap-1.5 border-b border-border/30 py-1 last:border-0"
-                  >
-                    <span className="size-1 shrink-0 rounded-full bg-primary" aria-hidden="true" />
-                    <p className="min-w-0 flex-1 truncate text-[10px]">
-                      <span dir="ltr" className="font-mono">
-                        {a.action}
-                      </span>
-                      <span className="text-muted-foreground"> · {a.actorName ?? "system"}</span>
-                    </p>
-                    <time
-                      dateTime={a.createdAt.toISOString()}
-                      className="shrink-0 text-[9px] text-muted-foreground"
+      {/* Remaining height: two fixed cards whose bodies scroll internally (ADR-0008 §4). */}
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-2">
+        {data.audit !== null && (
+          <Card className="flex min-h-0 flex-col gap-0 rounded-xl py-0">
+            <CardHeader className="shrink-0 px-2 pt-2 pb-1">
+              <CardTitle className="flex items-center gap-1 text-xs">
+                <Clock className="size-3 text-primary" aria-hidden="true" />
+                {t("recent.title")}
+              </CardTitle>
+            </CardHeader>
+            <ScrollRegion label={t("recent.title")} className="px-2 pb-2">
+              {data.audit.length === 0 ? (
+                <p className="py-3 text-center text-[11px] text-muted-foreground">{t("noAudit")}</p>
+              ) : (
+                <ol className="space-y-0.5">
+                  {data.audit.map((a) => (
+                    <li
+                      key={a.id}
+                      className="flex items-center gap-1.5 border-b border-border/30 py-1 last:border-0"
                     >
-                      {f.relativeTime(a.createdAt)}
-                    </time>
-                  </li>
-                ))}
-              </ol>
-            )}
-          </CardContent>
+                      <span className="size-1 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+                      <p className="min-w-0 flex-1 truncate text-[10px]">
+                        <span dir="ltr" className="font-mono">
+                          {a.action}
+                        </span>
+                        <span className="text-muted-foreground"> · {a.actorName ?? "system"}</span>
+                      </p>
+                      <time
+                        dateTime={a.createdAt.toISOString()}
+                        className="shrink-0 text-[9px] text-muted-foreground"
+                      >
+                        {f.relativeTime(a.createdAt)}
+                      </time>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </ScrollRegion>
+          </Card>
+        )}
+        <Card className="flex min-h-0 flex-col gap-0 rounded-xl py-0">
+          <CardHeader className="shrink-0 px-2 pt-2 pb-1">
+            <CardTitle className="text-xs">{t("mySessionsTitle")}</CardTitle>
+          </CardHeader>
+          <ScrollRegion label={t("mySessionsTitle")} className="px-2 pb-2">
+            <MySessions
+              compact
+              sessions={data.mySessions.map((x) => ({
+                ...x,
+                createdAt: x.createdAt.toISOString(),
+                lastSeenAt: x.lastSeenAt.toISOString(),
+              }))}
+            />
+          </ScrollRegion>
         </Card>
-      )}
-
-      <Card className="gap-0 rounded-xl py-0">
-        <CardHeader className="px-2 pt-2 pb-1">
-          <CardTitle className="text-xs">{t("mySessionsTitle")}</CardTitle>
-        </CardHeader>
-        <CardContent className="px-2 pb-2">
-          <MySessions
-            sessions={data.mySessions.map((x) => ({
-              ...x,
-              createdAt: x.createdAt.toISOString(),
-              lastSeenAt: x.lastSeenAt.toISOString(),
-            }))}
-          />
-        </CardContent>
-      </Card>
+      </div>
     </div>
   );
 }
@@ -254,13 +258,13 @@ export default async function DashboardPage() {
     data.overview.growth?.map((g) => ({ month: g.month.toISOString(), users: g.users })) ?? null;
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-2 lg:space-y-6">
+    <div className="mx-auto flex h-full min-h-0 w-full max-w-7xl flex-col gap-2 lg:gap-6">
       <PageHeader title={t("title")} subtitle={t("subtitle")} />
 
       <MobileOverview data={data} quick={quick} permissions={ctx.user.permissions.size} t={t} f={f} />
 
       {/* Desktop (lg+) */}
-      <div className="hidden space-y-6 lg:block">
+      <div className="hidden min-h-0 flex-1 flex-col gap-6 lg:flex">
         <p className="text-muted-foreground">
           {t("welcome", { name: ctx.user.name })}
           <span className="mx-2 text-border" aria-hidden="true">
@@ -343,7 +347,7 @@ export default async function DashboardPage() {
           </section>
         )}
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid min-h-0 flex-1 grid-cols-2 gap-6">
           {growthDesktop && (
             <Card>
               <CardHeader>
@@ -360,11 +364,11 @@ export default async function DashboardPage() {
             </Card>
           )}
 
-          <Card>
-            <CardHeader>
+          <Card className="flex min-h-0 flex-col">
+            <CardHeader className="shrink-0">
               <CardTitle className="text-base">{t("mySessionsTitle")}</CardTitle>
             </CardHeader>
-            <CardContent>
+            <ScrollRegion label={t("mySessionsTitle")} className="px-6 pb-6">
               <MySessions
                 sessions={data.mySessions.map((s) => ({
                   ...s,
@@ -372,15 +376,15 @@ export default async function DashboardPage() {
                   lastSeenAt: s.lastSeenAt.toISOString(),
                 }))}
               />
-            </CardContent>
+            </ScrollRegion>
           </Card>
 
           {data.audit !== null ? (
-            <Card className={growthDesktop ? "col-span-2" : undefined}>
-              <CardHeader>
+            <Card className={`flex min-h-0 flex-col ${growthDesktop ? "col-span-2" : ""}`}>
+              <CardHeader className="shrink-0">
                 <CardTitle className="text-base">{t("recentAudit")}</CardTitle>
               </CardHeader>
-              <CardContent>
+              <ScrollRegion label={t("recentAudit")} className="px-6 pb-6">
                 {data.audit.length === 0 ? (
                   <p className="py-6 text-center text-sm text-muted-foreground">{t("noAudit")}</p>
                 ) : (
@@ -406,7 +410,7 @@ export default async function DashboardPage() {
                     ))}
                   </ol>
                 )}
-              </CardContent>
+              </ScrollRegion>
             </Card>
           ) : (
             <Card className="border-dashed">

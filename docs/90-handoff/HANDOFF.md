@@ -4,20 +4,20 @@
 >
 > **للوكيل الجديد:** لا تبدأ من هنا. ابدأ من [`/AGENTS.md`](../../AGENTS.md) (الدليل الكامل) و[`STATUS.json`](STATUS.json) (الحالة الآلية). هذا الملف هو **سجل الجلسات ودروسها** — أقدم الأقسام في الأعلى محفوظة للتاريخ وموسومة بجلستها.
 
-## 0. ملخص الحالة (محدّث — الجلسة 18؛ المصدر الآلي: `STATUS.json`)
+## 0. ملخص الحالة (محدّث — الجلسة 19؛ المصدر الآلي: `STATUS.json`)
 
 | البند | الحالة |
 |---|---|
-| المستودع | `MoTechSys/scam2027` (عام) — `main` = بعد PR #18 (قشرة الجوال) |
+| المستودع | `MoTechSys/scam2027` (عام) — `main` = بعد PR #19 (viewport ثابت) |
 | الفرع الرئيسي | `main` |
 | فرع العمل | `genspark_ai_developer` → PR → `main` (squash-merge مباشر مصرّح به من المالك) → مزامنة الفرع بـ`git reset --hard origin/main && git push -f` |
 | التقدّم | **23 / 65 مهمة (35%)** — P0 16/16 ☑ · P1 7/15 (P1-01..P1-07) · P2–P5 لم تبدأ |
 | المهمة التالية | **P1-08** سلة المحذوفات الموحّدة — النطاق في §6، المخرجات في `STATUS.json` → `progress.nextTask`، الصف في `AGENTS.md` §5 |
-| بوابة الجودة | tsc 0 · eslint 0 · Vitest 167/167 (23 ملفًا) · build `Enuu5iZdN-cBSrnuoaTY-` · Playwright 72 ✅ / 8 skip (desktop + mobile) — **مُتحقَّق منها على استنساخ نظيف** (الجلسة 16) |
+| بوابة الجودة | tsc 0 · eslint 0 · Vitest 167/167 (23 ملفًا) · build `mrAUD8JUXPh109xTzdbIl` · Playwright 75 ✅ / 9 skip (desktop + mobile) — الجلسة 19 |
 | قاعدة البيانات | آخر هجرة في `app/prisma/migrations/` (لا هجرات جديدة منذ P1-01؛ P1-06/P1-07 استخدما الجداول الموجودة) — **قاعدتان** (`scam2027`, `scam2027_test`) يجب هجرتهما معًا؛ seed كامل: مستأجر demo + أدوار + مستخدمون + بنية أكاديمية + مقررات/شُعب + 30 طالبًا + ملفّان + 3 إشعارات |
 | بيئة التطوير | `/home/user/webapp` (sandbox)؛ المراجع التراثية في `.refs/` (غير ملتزمة، تُستنسخ بالحلقة في §3) |
 | الوحدات المبنية | users, roles, academic, courses, offerings, enrollment, files, notifications — كلها بنمط `features/<x>/{schemas,scope,queries,core,actions}` + صفحة `(dashboard)/<x>` + seed + unit/integration/e2e |
-| قشرة الواجهة | **ADR-0007** قشرة تطبيق للجوال: App bar بعنوان الصفحة (`PageHeader`/`MobilePageTitle`)، لوحة تحكم 3×2 `MiniStatCard` + نمو حقيقي، شريط سفلي بنمط تطبيق، `manifest.webmanifest`. **قاعدة لكل صفحة جديدة:** `<PageHeader>` لا `<header>` يدوي |
+| قشرة الواجهة | **ADR-0007 + ADR-0008**: App bar بعنوان الصفحة + ☰ (`PageHeader`/`MobilePageTitle`)، **الشاشة viewport ثابت والقوائم داخل `ScrollRegion`** (`PageShell`)، لوحة تحكم 3×2 + نمو حقيقي + بطاقات تُمرَّر داخليًا، شريط سفلي 4 عناصر بلا «المزيد»، `manifest.webmanifest`. **قواعد لكل صفحة جديدة:** `<PageHeader>` + جذر `flex h-full min-h-0 flex-col` + القائمة داخل `ScrollRegion` + `expectNoPageScroll` في e2e |
 | قواعد لا تُخالَف | `AGENTS.md` §6 (دورة العمل) و§7 (المعايير)؛ `STATUS.json.qualityGate.knownDebt` (نقاط التعثّر المتراكمة — اقرأها قبل أول سطر كود) |
 
 ## 1. ما تم في الجلسة 1 (تاريخي — 2026-09-04)
@@ -250,3 +250,13 @@ pnpm test && pnpm lint && pnpm typecheck
 **دروس:** (1) عند إخفاء `h1` المحتوى على الجوال يجب أن يحمل App bar `h1` — وإلا تفشل كل اختبارات `getByRole("heading",{level:1})` وaxe (`page-has-heading-one`). (2) الشريط السفلي الثابت يغطي آخر زر إذا كان `padding-bottom` = ارتفاعه بالضبط — أضف 1rem. (3) التقط لقطات **قبل/بعد** بسكربت Playwright من داخل `app/` (يحتاج `node_modules`) قبل الحكم على أي «تحسين» بصري. (4) `useFormatter().dateTime(month:"short")` يعطي أسماء الأشهر بالعربية مجانًا — لا تُترجم يدويًا.
 
 **التالي:** P1-08 سلة المحذوفات — الخطة التسعية في الجلسة 16 كما هي؛ صفحة `/trash` تستخدم `<PageHeader>`.
+
+## الجلسة 19 — الشاشة ثابتة والقوائم تُمرَّر داخل مناطقها (ADR-0008, PR #19) — ☑
+
+**السبب (معياران من المالك):** «لما يدخل 1000 شخص هل ينزل ينزل؟ … أنظمة، كل شيء في لستات ثابتة» + «لا داعي لزر المزيد؛ القائمة من فوق».
+
+**ما تم:** `ScrollRegion` + `PageShell`؛ `DashboardLayout` → `h-dvh overflow-hidden` وشريط سفلي في التدفق؛ ☰ في App bar يفتح `MobileDrawer`؛ «المزيد» أُزيل؛ 8 عملاء قوائم (بما فيها `years-client` للسنوات/الفصول) + 5 صفحات تفاصيل + wizard + لوحة التحكم (بطاقتا الأنشطة/الجلسات تُمرَّران داخليًا، `MySessions compact`, `prettyIp`)؛ `PageTabs` غير لاصقة؛ `DataTable maxHeight="none"` = يعتمد على المنطقة الأم؛ أدوات الجوال 40px؛ `expectNoPageScroll` في helpers + dashboard.spec. **تحقّق فعلي:** `scrollHeight - clientHeight = 0` على /dashboard و/users و/files (iPhone 12).
+
+**دروس:** (1) في نمط viewport ثابت، كل مستوى بين الجذر والقائمة يجب أن يحمل `min-h-0` (وإلا يتمدّد flex ويكسر التمرير الداخلي) — لذلك `PageShell` يملك الهندسة. (2) الشريط السفلي في التدفق (لا `fixed`) يُلغي مشكلة «العنصر الأخير مغطّى» نهائيًا بلا حسابات padding. (3) axe يشترط أن تكون منطقة التمرير قابلة للتركيز بلوحة المفاتيح (`scrollable-region-focusable` — serious)، فـ`ScrollRegion` تضع `tabIndex={0}` عند وجود `label` مع تعليق `eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex` مبرَّر — لا تحذفه. (4) قِس بـ`document.documentElement.scrollHeight - clientHeight` لا بالعين. (5) أي قائمة تُترك خارج `ScrollRegion` تتمدّد تحت الشريط السفلي فتعترض النقرات (`<a href="/notifications"> … intercepts pointer events`) — هكذا اكتُشف تبويب السنوات.
+
+**التالي:** P1-08 سلة المحذوفات (الخطة التسعية، الجلسة 16) — صفحة `/trash` تُبنى مباشرة على `PageShell`.

@@ -11,6 +11,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { ScrollRegion } from "@/components/ui/scroll-region";
 import { Button } from "@/components/ui/button";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import {
@@ -259,7 +260,7 @@ export function OfferingsClient({ page, query, counts, lookups, can, openCreate,
   };
 
   return (
-    <div className="space-y-4">
+    <div className="flex h-full min-h-0 flex-col gap-3 lg:gap-4" data-testid="page-shell">
       <PageTabs
         tabs={OFFERING_TABS.map((id) => ({ id, label: t(`tabs.${id}`), badge: counts[id] ?? 0 }))}
         activeTab={query.status}
@@ -285,11 +286,11 @@ export function OfferingsClient({ page, query, counts, lookups, can, openCreate,
             onChange={(e) => setQ(e.target.value)}
             placeholder={t("searchPlaceholder")}
             aria-label={tc("search")}
-            className="min-h-11 ps-10"
+            className="min-h-10 ps-10 lg:min-h-11"
           />
         </form>
         <Select value={query.semesterId ?? "ALL"} onValueChange={(v) => setParams({ semesterId: v })}>
-          <SelectTrigger className="min-h-11 sm:w-56" aria-label={t("filters.semester")}>
+          <SelectTrigger className="min-h-10 sm:w-56 lg:min-h-11" aria-label={t("filters.semester")}>
             <SelectValue placeholder={t("filters.allSemesters")} />
           </SelectTrigger>
           <SelectContent>
@@ -312,16 +313,17 @@ export function OfferingsClient({ page, query, counts, lookups, can, openCreate,
           </div>
         )}
         {can.create && (
-          <Button onClick={() => setForm(null)} className="col-span-2 min-h-11 gap-2 lg:col-span-1" data-testid="create-offering">
+          <Button onClick={() => setForm(null)} className="col-span-2 min-h-10 gap-2 lg:col-span-1 lg:min-h-11" data-testid="create-offering">
             <Plus className="size-4" aria-hidden /> {t("actions.create")}
           </Button>
         )}
       </div>
 
-      <p className="text-sm text-muted-foreground" aria-live="polite">
+      <p className="text-xs text-muted-foreground lg:text-sm" aria-live="polite">
         {t("total", { count: page.total })}
       </p>
 
+      <ScrollRegion label={t("title")} className="-mx-1 px-1">
       <div className="hidden md:block">
         <DataTable
           columns={columns}
@@ -377,6 +379,7 @@ export function OfferingsClient({ page, query, counts, lookups, can, openCreate,
           pagination={pagination}
         />
       </div>
+      </ScrollRegion>
 
       <OfferingFormDialog
         key={form === undefined ? "closed" : (form?.id ?? "new")}

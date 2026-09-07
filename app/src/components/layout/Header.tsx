@@ -5,9 +5,9 @@
  *  - `< lg`: 56px app bar — brand mark + current page title/subtitle (from PageHeader context), bell, avatar menu
  *    (language + theme live inside the menu to keep the bar calm).
  *  - `lg+`: 64px — tenant name, bell, language, theme, avatar menu (unchanged behaviour).
- * No hamburger: on mobile the drawer opens from the bottom bar "more" item.
+ * ☰ (mobile only) opens the navigation drawer — there is no "more" item in the bottom bar (ADR-0008 §5).
  */
-import { Languages, LogOut, Moon, Sun, User as UserIcon } from "lucide-react";
+import { Languages, LogOut, Menu, Moon, Sun, User as UserIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
@@ -23,12 +23,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { logoutAction, setLocaleAction } from "@/lib/session/actions";
-import { BrandMark } from "./BrandMark";
 import { NotificationBell } from "./NotificationBell";
 import { useCurrentPageHeader } from "./page-header";
 import type { LayoutTenant, LayoutUser } from "./types";
 
-type Props = { user: LayoutUser; tenant: LayoutTenant };
+type Props = { user: LayoutUser; tenant: LayoutTenant; onOpenMenu: () => void };
 
 const THEME_KEY = "scam.theme";
 
@@ -53,7 +52,7 @@ function applyTheme(theme: "dark" | "light") {
   }
 }
 
-export function Header({ user, tenant }: Props) {
+export function Header({ user, tenant, onOpenMenu }: Props) {
   const t = useTranslations();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -103,9 +102,16 @@ export function Header({ user, tenant }: Props) {
     >
       {/* Mobile: brand + page title. Desktop: tenant name. */}
       <div className="flex min-w-0 flex-1 items-center gap-2.5">
-        <div className="lg:hidden">
-          <BrandMark tenant={tenant} size={32} />
-        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="-ms-1 size-11 shrink-0 lg:hidden"
+          onClick={onOpenMenu}
+          aria-label={t("common.openMenu")}
+          data-testid="open-menu"
+        >
+          <Menu className="size-5" aria-hidden="true" />
+        </Button>
         <div className="min-w-0 lg:hidden" data-testid="mobile-page-title">
           {/* PageHeader hides its in-content <h1> below lg → the app bar carries the page's single h1. */}
           {page?.ownsHeading ? (

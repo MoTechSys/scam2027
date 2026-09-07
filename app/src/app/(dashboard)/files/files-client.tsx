@@ -24,6 +24,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { ScrollRegion } from "@/components/ui/scroll-region";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, type Column } from "@/components/ui/data-table";
@@ -368,7 +369,7 @@ export function FilesClient({ page, query, counts, usage, lookups, maxUploadByte
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="flex h-full min-h-0 flex-col gap-3 lg:gap-4" data-testid="page-shell">
       <PageTabs
         tabs={FILE_TABS.map((id) => ({ id, label: t(`tabs.${id}`), badge: counts[id] ?? 0 }))}
         activeTab={query.tab}
@@ -394,11 +395,11 @@ export function FilesClient({ page, query, counts, usage, lookups, maxUploadByte
             onChange={(e) => setQ(e.target.value)}
             placeholder={t("searchPlaceholder")}
             aria-label={tc("search")}
-            className="min-h-11 ps-10"
+            className="min-h-10 ps-10 lg:min-h-11"
           />
         </form>
         <Select value={query.category ?? "ALL"} onValueChange={(v) => setParams({ category: v })}>
-          <SelectTrigger className="min-h-11 sm:w-44" aria-label={t("filters.category")}>
+          <SelectTrigger className="min-h-10 sm:w-44 lg:min-h-11" aria-label={t("filters.category")}>
             <SelectValue placeholder={t("filters.allCategories")} />
           </SelectTrigger>
           <SelectContent>
@@ -411,7 +412,7 @@ export function FilesClient({ page, query, counts, usage, lookups, maxUploadByte
           </SelectContent>
         </Select>
         <Select value={query.classification ?? "ALL"} onValueChange={(v) => setParams({ classification: v })}>
-          <SelectTrigger className="min-h-11 sm:w-44" aria-label={t("filters.classification")}>
+          <SelectTrigger className="min-h-10 sm:w-44 lg:min-h-11" aria-label={t("filters.classification")}>
             <SelectValue placeholder={t("filters.allClassifications")} />
           </SelectTrigger>
           <SelectContent>
@@ -428,7 +429,7 @@ export function FilesClient({ page, query, counts, usage, lookups, maxUploadByte
             value={query.courseId ?? "ALL"}
             onValueChange={(v) => setParams({ courseId: v, offeringId: undefined })}
           >
-            <SelectTrigger className="min-h-11 sm:w-56" aria-label={t("filters.course")}>
+            <SelectTrigger className="min-h-10 sm:w-56 lg:min-h-11" aria-label={t("filters.course")}>
               <SelectValue placeholder={t("filters.allCourses")} />
             </SelectTrigger>
             <SelectContent>
@@ -452,7 +453,7 @@ export function FilesClient({ page, query, counts, usage, lookups, maxUploadByte
           </div>
         )}
         {can.upload && !trash && (
-          <Button onClick={() => setUpload(true)} className="col-span-2 min-h-11 gap-2 lg:col-span-1" data-testid="upload-file">
+          <Button onClick={() => setUpload(true)} className="col-span-2 min-h-10 gap-2 lg:col-span-1 lg:min-h-11" data-testid="upload-file">
             <Upload className="size-4" aria-hidden /> {t("actions.upload")}
           </Button>
         )}
@@ -460,7 +461,7 @@ export function FilesClient({ page, query, counts, usage, lookups, maxUploadByte
           <Button
             variant="destructive"
             onClick={() => setEmptyTrash(true)}
-            className="col-span-2 min-h-11 gap-2 lg:col-span-1"
+            className="col-span-2 min-h-10 gap-2 lg:col-span-1 lg:min-h-11"
             data-testid="empty-trash"
           >
             <Trash2 className="size-4" aria-hidden /> {t("actions.emptyTrash")}
@@ -469,7 +470,7 @@ export function FilesClient({ page, query, counts, usage, lookups, maxUploadByte
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-muted-foreground" aria-live="polite">
+        <p className="text-xs text-muted-foreground lg:text-sm" aria-live="polite">
           {t("total", { count: page.total })}
         </p>
         {can.admin && (
@@ -490,6 +491,7 @@ export function FilesClient({ page, query, counts, usage, lookups, maxUploadByte
         )}
       </div>
 
+      <ScrollRegion label={t("title")} className="-mx-1 px-1">
       <div className="hidden md:block">
         <DataTable
           columns={columns}
@@ -527,6 +529,7 @@ export function FilesClient({ page, query, counts, usage, lookups, maxUploadByte
           pagination={pagination}
         />
       </div>
+      </ScrollRegion>
 
       {can.upload && (
         <UploadDialog

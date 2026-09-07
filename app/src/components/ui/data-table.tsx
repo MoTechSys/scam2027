@@ -32,6 +32,7 @@ interface DataTableProps<T> {
   keyExtractor: (item: T) => string | number;
   emptyMessage: string;
   caption?: string;
+  /** Inner scroll height. Use `"none"` when the table lives inside a ScrollRegion (ADR-0008). */
   maxHeight?: string;
   pagination?: Pagination;
 }
@@ -42,17 +43,32 @@ export function cellValue<T>(item: T, column: Column<T>): React.ReactNode {
   return typeof v === "string" || typeof v === "number" ? v : v == null ? "" : String(v);
 }
 
-export function DataTable<T>({ columns, data, keyExtractor, emptyMessage, caption, maxHeight = "500px", pagination }: DataTableProps<T>) {
+export function DataTable<T>({
+  columns,
+  data,
+  keyExtractor,
+  emptyMessage,
+  caption,
+  maxHeight = "500px",
+  pagination,
+}: DataTableProps<T>) {
   return (
     <div className="space-y-4">
       <div className="overflow-hidden rounded-lg border border-border">
-        <div className="overflow-auto" style={{ maxHeight }}>
+        <div
+          className={maxHeight === "none" ? "overflow-x-auto" : "overflow-auto"}
+          style={maxHeight === "none" ? undefined : { maxHeight }}
+        >
           <Table className="table-sticky-header">
             {caption && <caption className="sr-only">{caption}</caption>}
             <TableHeader>
               <TableRow className="bg-muted/30 hover:bg-muted/30">
                 {columns.map((column) => (
-                  <TableHead key={column.key} scope="col" className={cn("text-start font-semibold", column.className)}>
+                  <TableHead
+                    key={column.key}
+                    scope="col"
+                    className={cn("text-start font-semibold", column.className)}
+                  >
                     {column.header}
                   </TableHead>
                 ))}
@@ -91,15 +107,27 @@ export function TablePagination({ currentPage, totalPages, onPageChange, labels 
     <nav aria-label="pagination" className="flex items-center justify-between">
       <p className="text-sm text-muted-foreground">{l.page(currentPage, totalPages)}</p>
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" className="min-h-11" onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1}>
-          <ChevronRight className="size-4 rtl:block ltr:hidden" aria-hidden />
-          <ChevronLeft className="size-4 rtl:hidden ltr:block" aria-hidden />
+        <Button
+          variant="outline"
+          size="sm"
+          className="min-h-11"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          <ChevronRight className="size-4 ltr:hidden rtl:block" aria-hidden />
+          <ChevronLeft className="size-4 ltr:block rtl:hidden" aria-hidden />
           {l.prev}
         </Button>
-        <Button variant="outline" size="sm" className="min-h-11" onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="min-h-11"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
           {l.next}
-          <ChevronLeft className="size-4 rtl:block ltr:hidden" aria-hidden />
-          <ChevronRight className="size-4 rtl:hidden ltr:block" aria-hidden />
+          <ChevronLeft className="size-4 ltr:hidden rtl:block" aria-hidden />
+          <ChevronRight className="size-4 ltr:block rtl:hidden" aria-hidden />
         </Button>
       </div>
     </nav>

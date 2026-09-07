@@ -190,10 +190,10 @@
   }
 }
 
-/* Content padding under the fixed mobile bottom bar (4rem) + safe-area + 1rem breathing room. Declared as a
-   utility (not a component) so it participates in Tailwind's utility layer and wins over `py-*`. */
-@utility pb-bottom-nav {
-  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0));
+/* Thin, theme-aware scrollbar for ScrollRegion (ADR-0008). */
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--border) 80%, transparent) transparent;
 }
 
 @layer components {

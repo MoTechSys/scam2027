@@ -1,5 +1,6 @@
 import { ArrowRight, Users } from "lucide-react";
 import type { Metadata } from "next";
+import { ScrollRegion } from "@/components/ui/scroll-region";
 import { MobilePageTitle } from "@/components/layout/page-header";
 import { getFormatter, getTranslations } from "next-intl/server";
 import Link from "next/link";
@@ -43,7 +44,7 @@ export default async function RoleDetailPage({ params }: Props) {
   const grantable = [...ctx.user.permissions];
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6">
+    <ScrollRegion className="mx-auto w-full max-w-6xl space-y-4 lg:space-y-6">
       <Button asChild variant="ghost" size="sm" className="-ms-2 gap-1 text-muted-foreground">
         <Link href="/roles">
           <ArrowRight className="size-4 rtl:rotate-0 ltr:rotate-180" aria-hidden /> {t("detail.back")}
@@ -146,6 +147,6 @@ export default async function RoleDetailPage({ params }: Props) {
           </Card>
         </aside>
       </div>
-    </div>
+    </ScrollRegion>
   );
 }

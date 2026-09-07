@@ -106,7 +106,7 @@ pnpm exec playwright test                    # 39 ✓ + 2 fixme (سطح المك
 | **تعريف المنجز** (قائمة تحقق إلزامية لكل مهمة) | `docs/50-quality/00-DEFINITION-OF-DONE.md` |
 | استراتيجية الاختبار | `docs/50-quality/01-TESTING-STRATEGY.md` |
 | سياسة التوثيق (ما يُحدَّث مع كل PR) | `docs/50-quality/02-DOCUMENTATION-POLICY.md` |
-| القرارات المعمارية (7 ADR) | `docs/60-adr/` |
+| القرارات المعمارية (8 ADR) | `docs/60-adr/` |
 | الأمان (ASVS 5.0 L2)، PDPL/NCA، معايير LTI/QTI/OneRoster/WCAG | `docs/10-research/02..04` |
 | سجل الجلسات والدروس المستفادة | `docs/90-handoff/HANDOFF.md` |
 | سجل التغييرات | `CHANGELOG.md` |
@@ -126,7 +126,7 @@ pnpm exec playwright test                    # 39 ✓ + 2 fixme (سطح المك
 | **P1-05 المقررات والشُعب والتسجيل** | `/courses` + `/courses/[id]` (CRUD، ربط M:N تخصص↔مستوى، بحث، حذف ناعم)، `/offerings` + `/offerings/[id]` (شعبة لكل فصل بحالات مسودة/مفتوحة/مغلقة/مؤرشفة، مدرّسون بأدوار، سعة، جدول أسبوعي، قائمة الطلاب)، تسجيل فردي ببحث حيّ + جماعي بمعرّفات مع نتيجة لكل سطر، انسحاب/إعادة/إكمال؛ **نطاق الرؤية**: `course.manage_all` = كل المستأجر، وإلا المدرّس شُعبه والطالب تسجيلاته؛ seed 6 مقررات/4 شُعب/30 طالبًا | `app/src/features/{courses,offerings,enrollment}/*`, `app/src/app/(dashboard)/{courses,offerings}/**`, `app/src/components/forms/*`, `app/src/lib/auth/has-permission.ts` |
 | **P1-07 الإشعارات** | `features/notifications/{schemas,scope,core,queries,actions}` (هدف مرن، fan-out ≤500 أو Job، تفضيلات، rate-limit)، `/notifications` (inbox/المُرسَلة/تفضيلات/حوار إرسال)، `NotificationBell` + `GET /api/notifications/unread-count`، seed 3 إشعارات | `app/src/features/notifications/*`, `app/src/app/(dashboard)/notifications/**`, `app/src/app/api/notifications/**`, `app/src/components/layout/NotificationBell.tsx` |
 | **P1-06 الملفات** | `lib/storage` (local/S3، عدّاد + SHA-256، حارس مسار)، `POST /api/files/upload` (busboy stream + magic bytes + قائمة سماح + حد حجم حسب الاشتراك + مفتاح `tenant/course/uuid`)، `GET /api/files/[id]/download` (HMAC 5 دقائق مرتبط بالمستخدم + سجل تنزيل)، `/files` (تبويبات/بحث/مرشّحات/سلة/استرجاع/حذف نهائي، رفع متعدد بتقدّم)، نطاق `fileScopeWhere`، seed ملفَّين | `app/src/lib/storage/*`, `app/src/features/files/*`, `app/src/app/(dashboard)/files/**`, `app/src/app/api/files/**` |
-| **قشرة الجوال (ADR-0007)** | App bar بعنوان الصفحة (`PageHeader` context)، `MiniStatCard` 3×2، رسم نمو حقيقي، شريط سفلي بنمط تطبيق، `manifest.webmanifest`؛ كل صفحة تستخدم `<PageHeader>`/`<MobilePageTitle>` | `app/src/components/layout/{page-header,Header,BottomNavigation}.tsx`, `app/src/components/ui/mini-stat-card.tsx`, `app/src/app/(dashboard)/dashboard/*`, `app/src/app/manifest.webmanifest/route.ts` |
+| **قشرة التطبيق (ADR-0007/0008)** | viewport ثابت `h-dvh` + `ScrollRegion`/`PageShell` (القائمة وحدها تتحرك)، App bar بعنوان الصفحة + ☰، `MiniStatCard` 3×2، رسم نمو حقيقي، شريط سفلي 4 عناصر بلا «المزيد»، `manifest.webmanifest`؛ كل صفحة: `<PageHeader>` + جذر `flex h-full min-h-0 flex-col` + `ScrollRegion` | `app/src/components/layout/{page-header,page-shell,Header,BottomNavigation,DashboardLayout}.tsx`, `app/src/components/ui/{scroll-region,mini-stat-card}.tsx`, `app/src/app/(dashboard)/dashboard/*`, `app/src/app/manifest.webmanifest/route.ts` |
 | **P1-01 المخطط** | 18 موديلًا (أكاديمي/مقررات/محتوى/تواصل/نظام) + قيود SQL يدوية + RLS على 30 جدولًا + عقود Zod لأعمدة Json | `app/prisma/schema.prisma`, `app/prisma/migrations/20260905*`, `app/src/lib/contracts/json-columns.ts`, ADR-0006 |
 
 **مقاييس الجودة الحالية:** `tsc` 0 · `eslint` 0 · Vitest **167/167** (23 ملفًا: 16 وحدة + 7 تكامل بقاعدة اختبار مستقلة) · Playwright **74 ✓ / 9 skip** (11 ملفًا × 2 مشروع) — مُتحقَّق منها على **استنساخ نظيف** (PR #16) (10 ملفات × 2 مشروع؛ skips = logout fixme + حوارات Radix Select/compose على mobile-safari المغطّاة على سطح المكتب؛ فشل `toHaveURL` في login تحت الحمل الكامل عابر — أعد الملف وحده) · `pnpm build` ✓ · 0 تمرير أفقي على 390px · 0 انتهاكات axe serious/critical على الصفحات المبنية.
@@ -196,7 +196,8 @@ Schema P2 (Quiz…AIUsageLog، SisImport، Consent، DSAR، EmailLog) → الا
               safeAction → requireUserOrThrow → assertPermission/نطاق → Zod .strict()
               → tx(tenantId) → audit(before/after) → revalidatePath → Result<T>
             بلا mock، بلا placeholder، بلا TODO بلا ticket، CSS منطقي فقط (ps/pe/ms/me/start/end)
-            كل صفحة: <PageHeader title subtitle /> (ADR-0007) — لا <header> يدوي؛ الجوال يُختبر بلقطة فعلية 390px
+            كل صفحة: <PageHeader title subtitle /> (ADR-0007) + جذر flex h-full min-h-0 flex-col + القائمة داخل <ScrollRegion> (ADR-0008)
+            — لا <header> يدوي، لا space-y-* في الجذر، الشاشة لا تُمرَّر (expectNoPageScroll)؛ الجوال يُختبر بلقطة فعلية 390px
 4. اختبر   → وحدة (schemas + منطق) · تكامل (queries بمستأجر مستقل) · E2E desktop+mobile لكل دور معني
             · 0 تمرير أفقي 390px · axe 0 serious · كل رابط nav = 200
 5. وثّق    → REQUIREMENTS (☑) · ROADMAP (☑) · CHANGELOG [Unreleased] · HANDOFF (جلسة جديدة + دروس)

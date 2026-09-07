@@ -11,6 +11,15 @@
 
 ## [Unreleased]
 
+### Changed — الشاشة ثابتة والقوائم تُمرَّر داخل مناطقها (ADR-0008, PR #19)
+- **viewport واحد**: `DashboardLayout` صار `h-dvh overflow-hidden`؛ `<main>` عمود flex لا يُمرَّر؛ الشريط السفلي في التدفق (لا `fixed`) فلا شيء يُغطَّى تحته (أُزيلت `pb-bottom-nav`).
+- **`ScrollRegion`** (`components/ui/scroll-region.tsx`) + **`PageShell`** (`components/layout/page-shell.tsx`): المنطقة الوحيدة التي تتحرك؛ `overscroll-contain` + `scrollbar-thin`. طُبِّقت على 8 عملاء قوائم (users/roles/courses/offerings/files/roster/academic catalogue + years) — التبويبات والمرشّحات والعدّاد ثابتة والقائمة تُمرَّر داخليًا مع ترقيمها — وعلى 5 صفحات تفاصيل/إشعارات (الجسم كله منطقة واحدة) وعلى Wizard الإعداد.
+- **لوحة التحكم**: الإحصائيات/الرسم/الروابط ثابتة؛ «آخر الأنشطة» و«جلساتي» بطاقتان بارتفاع متبقٍ تُمرَّران داخليًا (جوال وسطح مكتب). `MySessions compact` + `prettyIp` (`::ffff:10.0.0.1` → `10.0.0.1`، `::1` → `localhost`).
+- **لا زر «المزيد»**: الشريط السفلي 4 عناصر فقط؛ **☰ في App bar** يفتح الدرج (`data-testid="open-menu"`). `PageTabs` لم تعد لاصقة (لا حاجة — الشاشة ثابتة).
+- شرائط الأدوات على الجوال: عناصر 40px (`min-h-10 lg:min-h-11`)، زر users/roles يشارك الصف مع المرشّح، سطر العدّاد `text-xs`.
+- `ScrollRegion` ذات `label` قابلة للتركيز (`tabIndex=0` + حلقة تركيز) — يشترطه axe `scrollable-region-focusable`. نطاقات التواريخ في الأكاديمية عبر `f.dateTimeRange` (بلا `dir="ltr"` يدوي كان يقلب الأرقام في RTL).
+- `e2e/helpers.ts` → `expectNoPageScroll`؛ `e2e/dashboard.spec.ts` يتحقق من صفر تمرير للصفحة على /dashboard و/courses و/files، ووجود `scroll-region`، و4 روابط بلا أزرار في الشريط، وفتح الدرج من ☰. وثّق: ADR-0008، `05-UI-DESIGN-SYSTEM.md §3-4`.
+
 ### Changed — قشرة تطبيق للجوال (ADR-0007, PR #18)
 - **App bar الجوال** (`Header.tsx`): 56px، `BrandMark` + عنوان الصفحة ووصفها من سياق `PageHeader` (بدل اسم الجامعة)، الجرس وقائمة المستخدم فقط؛ اللغة والسمة انتقلتا إلى قائمة المستخدم على الجوال؛ أُزيل زر hamburger (Drawer يُفتح من «المزيد»). سطح المكتب بلا تغيير.
 - **`PageHeader` / `MobilePageTitle`** (`components/layout/page-header.tsx`): كل الصفحات الـ11 تُعلن عنوانها مرة واحدة — يُرسَم في المحتوى على `lg+` ويُرفَع إلى App bar تحته (لا تكرار). `h1` تفاصيل الكيانات `text-xl` على الجوال.

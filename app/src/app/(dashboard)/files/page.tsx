@@ -45,7 +45,7 @@ export default async function FilesPage({ searchParams }: Props) {
   ]);
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6">
+    <div className="mx-auto flex h-full min-h-0 w-full max-w-7xl flex-col gap-3 lg:gap-4">
       <PageHeader title={admin ? t("title") : t("myTitle")} subtitle={t("subtitle")} />
       <FilesClient
         page={page}

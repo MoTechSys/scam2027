@@ -15,8 +15,10 @@ const COLLAPSE_KEY = "scam.sidebar.collapsed";
 type Props = { items: NavLink[]; user: LayoutUser; tenant: LayoutTenant; children: React.ReactNode };
 
 /**
- * App shell (ADR-0007): desktop sidebar (lg+) + sticky header; mobile app bar (page title) + bottom bar + "more" drawer.
- * Mobile content is dense (`p-3`), desktop keeps `p-6`. Layout uses logical properties only (RTL/LTR follow <html dir>).
+ * App shell (ADR-0007 + ADR-0008): one fixed viewport (`h-dvh`) — app bar → <main> (flex column, never scrolls) →
+ * bottom bar. Pages put their lists inside `ScrollRegion`s (via `PageShell`) so only the list moves.
+ * Desktop: sidebar (lg+) + 64px header. Mobile: 56px app bar with ☰ (drawer) + page title; 4-item bottom bar.
+ * Layout uses logical properties only (RTL/LTR follow <html dir>).
  */
 export function DashboardLayout({ items, user, tenant, children }: Props) {
   const [collapsed, setCollapsed] = useState(false);
@@ -45,7 +47,7 @@ export function DashboardLayout({ items, user, tenant, children }: Props) {
   return (
     <TooltipProvider delayDuration={200}>
       <PageHeaderProvider>
-        <div className="min-h-dvh bg-background">
+        <div className="h-dvh overflow-hidden bg-background">
           <Sidebar items={items} tenant={tenant} collapsed={collapsed} onToggle={toggle} />
           <MobileDrawer
             open={drawerOpen}
@@ -57,21 +59,21 @@ export function DashboardLayout({ items, user, tenant, children }: Props) {
 
           <div
             className={cn(
-              "flex min-h-dvh flex-col transition-[padding] duration-200",
+              "flex h-dvh flex-col transition-[padding] duration-200",
               collapsed ? "lg:ps-20" : "lg:ps-72",
             )}
           >
-            <Header user={user} tenant={tenant} />
+            <Header user={user} tenant={tenant} onOpenMenu={() => setDrawerOpen(true)} />
             <main
               id="main"
-              className="flex-1 px-3 pt-3 pb-bottom-nav sm:px-4 sm:pt-4 lg:px-6 lg:py-6 lg:pb-8"
+              className="flex min-h-0 flex-1 flex-col px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-6"
               tabIndex={-1}
             >
               {children}
             </main>
+            {/* In-flow (not fixed): the flex column reserves its height, so nothing is ever hidden under it. */}
+            <BottomNavigation items={items} />
           </div>
-
-          <BottomNavigation items={items} onMore={() => setDrawerOpen(true)} />
         </div>
       </PageHeaderProvider>
     </TooltipProvider>

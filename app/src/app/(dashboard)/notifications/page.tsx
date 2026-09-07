@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ScrollRegion } from "@/components/ui/scroll-region";
 import { PageHeader } from "@/components/layout/page-header";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
@@ -45,7 +46,7 @@ export default async function NotificationsPage({ searchParams }: Props) {
   ]);
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6">
+    <ScrollRegion className="mx-auto w-full max-w-5xl space-y-4 lg:space-y-6">
       <PageHeader title={t("title")} subtitle={t("subtitle")} />
       <NotificationsClient
         tab={prefsTab ? "PREFS" : query.tab}
@@ -59,6 +60,6 @@ export default async function NotificationsPage({ searchParams }: Props) {
         openCompose={canSend && flat.new === "1"}
         can={{ send: canSend, viewSent: sentAllowed, admin: isNotificationAdmin(ctx) }}
       />
-    </div>
+    </ScrollRegion>
   );
 }

@@ -27,14 +27,16 @@ Utilities: `.neon-glow`, `.neon-glow-sm`, `.neon-border`, `.neon-text`, `.card-h
 
 | نقطة الكسر | التخطيط |
 |---|---|
-| `< 1024px` (**قشرة تطبيق** — ADR-0007) | App bar ثابت 56px (`bg-card/95` + blur): `BrandMark` 32px + **عنوان الصفحة ووصفها** (من `PageHeader` context) + الجرس + قائمة المستخدم (تحوي اللغة/السمة). لا زر hamburger. المحتوى `p-3` بلا رأس مكرَّر. BottomNavigation 64px + safe-area: 4 عناصر `bottom` + «المزيد» (Drawer)؛ النشط = حبّة `bg-primary/10` + `neon-text`. `PageTabs` لاصقة عند `top-14`. |
+| **كل المقاسات** (ADR-0008) | **الشاشة viewport واحد ثابت** (`h-dvh overflow-hidden`): App bar → `<main>` (عمود flex، لا يُمرَّر) → شريط سفلي في التدفق (لا `fixed`). ما يُمرَّر هو `ScrollRegion` فقط (`min-h-0 flex-1 overflow-y-auto overscroll-contain`). |
+| `< 1024px` (**قشرة تطبيق** — ADR-0007) | App bar 56px (`bg-card/95` + blur): **☰ يفتح الدرج** + **عنوان الصفحة ووصفها** (من `PageHeader` context، وهو `h1` الصفحة) + الجرس + قائمة المستخدم (تحوي اللغة/السمة). المحتوى `p-3`. BottomNavigation 64px + safe-area: **4 عناصر فقط** (`NAV_ITEMS.bottom`) بلا «المزيد»؛ النشط = حبّة `bg-primary/10` + `neon-text`. أهداف لمس 40px في شرائط الأدوات، 44px في القوائم. |
 | `≥ 1024` | Sidebar كامل (`w-72`، قابل للطي إلى `w-20`) + Header 64px باسم الجامعة + اللغة/السمة/الجرس/المستخدم؛ رأس الصفحة داخل المحتوى (`text-3xl`)؛ `p-6`. |
 
 BottomNavigation تُبنى من `NAV_ITEMS.bottom` المسموحة بالصلاحية (المدير: الرئيسية، المستخدمون، المقررات، الإشعارات، المزيد). قاعدة: كل صفحة تستدعي `<PageHeader title subtitle />` (قوائم) أو `<MobilePageTitle />` (تفاصيل برأس مخصّص) — لا `<header>` يدوي.
 
 ## 4. أنماط الصفحات
 
-- **PageHeader** (`components/layout/page-header.tsx`): عنوان + وصف (+ شارة/إجراءات على سطح المكتب). على الجوال يُرفَع إلى App bar ويُخفى من المحتوى. شريط المرشّحات على الجوال شبكة عمودَين (البحث والزر الأساسي يمتدان `col-span-2`).
+- **PageHeader** (`components/layout/page-header.tsx`): عنوان + وصف (+ شارة/إجراءات على سطح المكتب). على الجوال يُرفَع إلى App bar ويُخفى من المحتوى. شريط المرشّحات على الجوال شبكة عمودَين (البحث `col-span-2`).
+- **بنية صفحة القائمة (ADR-0008 §3)**: جذر `flex h-full min-h-0 flex-col` → `PageTabs` (ثابتة، غير لاصقة) → شريط الأدوات (ثابت) → سطر العدّاد → **`ScrollRegion{DataTable | MobileDataTable + الترقيم}`**. لا `space-y-*` في الجذر ولا `maxHeight` داخل الجدول (`"none"`). صفحات التفاصيل: الجسم كله داخل `ScrollRegion` واحدة. لوحة التحكم: الإحصائيات/الرسم/الروابط ثابتة، ثم «آخر الأنشطة» و«جلساتي» بطاقتان `flex min-h-0 flex-col` بجسم `ScrollRegion`. **إتاحة:** مرّر `label` دائمًا لمناطق القوائم — تصبح `role="region"` + `aria-label` + `tabIndex=0` (يفرضه axe `scrollable-region-focusable`)؛ بلا `label` تبقى المنطقة حاوية صامتة (لصفحات التفاصيل ذات `h1` واحد).
 - **PageTabs** (`page-tabs`): مسار `/[page]/[tab]`؛ لاصقة؛ تمرير أفقي بلا شريط.
 - **DataTable / MobileDataTable**: جدول ≥ md، كروت < md؛ فرز/فلترة/ترقيم خادمي؛ أعمدة ثانوية تُخفى على الموبايل.
 - **StatCard** (سطح المكتب، `lg+`): رقم + عنوان + اتجاه؛ شبكة 2→4. **MiniStatCard** (الجوال): `p-2`، أيقونة 12px، تسمية 10px، رقم 16px، شارة اتجاه 9px؛ شبكة **3 أعمدة** `gap-1.5`. لوحة تحكم الجوال = 3×2 إحصائيات + «نمو النظام» (`AreaChart` 80px، مستخدمون جدد/شهر حقيقيون) + 4 روابط سريعة (`grid-cols-4`) + «آخر الأنشطة» (5 صفوف 10px) + الجلسات.
