@@ -4,7 +4,7 @@
   "repo": "https://github.com/MoTechSys/scam2027",
   "entryPoint": "AGENTS.md",
   "updatedAt": "2026-09-06",
-  "updatedInPr": 19,
+  "updatedInPr": 20,
   "mainHead": "660dad6",
   "branches": {
     "main": "main",
@@ -13,7 +13,7 @@
   },
   "progress": {
     "totalTasks": 65,
-    "doneTasks": 23,
+    "doneTasks": 24,
     "percent": 35,
     "phases": {
       "P0": {
@@ -90,17 +90,19 @@
       "P1-04",
       "P1-05",
       "P1-06",
-      "P1-07"
+      "P1-07",
+      "P1-08"
     ],
     "nextTask": {
-      "id": "P1-08",
-      "name": "سلة المحذوفات",
+      "id": "P1-09",
+      "name": "سجل التدقيق",
       "status": "TODO",
-      "scope": "استرجاع/حذف نهائي موحّد لكل الكيانات ذات deletedAt (مستخدمون، مقررات، شُعب، ملفات، إشعارات) مع صلاحية restore/purge وتدقيق",
+      "scope": "صفحة /audit-logs (trash.view-like gate: audit.view): فلاتر فاعل/كيان/إجراء/تاريخ، تفاصيل diff قبل/بعد، تصدير CSV. البيانات موجودة في AuditLog منذ P0 (actorId nullable = system).",
       "deliverables": [
-        "features/trash: queries موحّدة عبر الكيانات، actions restore/purge",
-        "/trash UI بتبويبات لكل كيان + بحث",
-        "اختبارات unit/integration/e2e"
+        "features/audit/{schemas,queries,actions}: list مرقّم بفلاتر + export CSV (stream)",
+        "/audit-logs UI على نمط PageShell/ScrollRegion + Sheet لتفاصيل diff",
+        "nav item audit (phase P1 → متاح) + i18n audit.*",
+        "اختبارات unit/integration/e2e + توثيق"
       ]
     }
   },
@@ -109,30 +111,32 @@
     "definition": "typecheck + lint + test + build must all pass; then playwright e2e against `pnpm build && pnpm start -p 3000`",
     "lastRun": {
       "date": "2026-09-07",
-      "commit": "ADR-0008 fixed viewport + ScrollRegion (PR #19)",
+      "commit": "P1-08 unified trash (PR #20)",
       "typecheck": "PASS (0 errors)",
       "lint": "PASS (0 errors)",
       "unitAndIntegration": {
         "runner": "vitest",
-        "passed": 167,
+        "passed": 181,
         "failed": 0,
-        "files": 23
+        "files": 25
       },
       "e2e": {
         "runner": "playwright",
-        "passed": 75,
-        "skipped": 9,
+        "passed": 80,
+        "skipped": 10,
         "failed": 0,
         "projects": [
           "desktop-chromium",
           "mobile-safari"
         ],
-        "skippedReason": "logout fixme (2) + Radix Select dialogs on mobile-safari (5, covered on desktop) + dashboard student assertions mobile-only (1) + files admin upload mobile (1)"
+        "skippedReason": "logout fixme (2) + Radix Select dialogs on mobile-safari (5, covered on desktop) + dashboard student assertions mobile-only (1) + files admin upload mobile (1) + trash bulk-select desktop-only (1)"
       },
       "build": "PASS",
-      "buildId": "mrAUD8JUXPh109xTzdbIl"
+      "buildId": "2Wmwy5NXVNDO_25vfpcED"
     },
     "knownDebt": [
+      "Trash (P1-08): registry handlers must import permission predicates from has-permission.ts (vitest-loadable). Purge is FK-aware: parents referenced by live children (course←offerings/files, offering←files, user←uploadedFiles) come back as `blocked`, never as a thrown FK error — purge leaves first (PURGE_ORDER). e2e/trash.spec seeds rows directly via Prisma with `E2E`-prefixed codes and uses a per-run stamp in the search term (desktop+mobile runs share the DB).",
+      "PageTabs now has real ARIA tab semantics (role=tablist/tab, aria-selected, arrow keys). In e2e use getByRole('tab', …), not getByRole('button', …).",
       "Viewport-locked shell (ADR-0008): every flex level between the page root and the list needs `min-h-0`, or the ScrollRegion grows instead of scrolling. Root = `flex h-full min-h-0 flex-col`; never `space-y-*` on a page root; verify with e2e `expectNoPageScroll`.",
       "Mobile: PageHeader hides the in-content h1 below lg, so the app bar renders the h1 (ownsHeading). Detail pages that keep a visible h1 use MobilePageTitle instead. Never add a manual <header> — e2e heading assertions and axe page-has-heading-one depend on exactly one h1.",
       "Unanchored .gitignore patterns bite: `storage` (P1-06) silently excluded app/src/lib/storage from every commit until PR #16. Anchor runtime dirs (`/storage/`) and run `git status --ignored` / a clean-clone `pnpm check` before merging a PR that adds a new top-level folder.",
@@ -151,10 +155,10 @@
     ],
     "tsc": 0,
     "eslint": 0,
-    "vitest": "167/167 (23 files)",
-    "playwright": "75 passed / 9 skipped (12 files x 2 projects; users.spec mobile login flaky under full-suite load — passes alone)",
+    "vitest": "181/181 (25 files)",
+    "playwright": "80 passed / 10 skipped (13 files x 2 projects)",
     "build": "ok",
-    "buildId": "mrAUD8JUXPh109xTzdbIl"
+    "buildId": "2Wmwy5NXVNDO_25vfpcED"
   },
   "database": {
     "engine": "PostgreSQL 17",
@@ -398,6 +402,6 @@
       "pr": 19
     }
   ],
-  "nextTask": "P1-08 trash",
+  "nextTask": "P1-09 audit log",
   "session": 19
 }

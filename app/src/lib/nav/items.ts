@@ -16,6 +16,7 @@ import {
   LayoutDashboard,
   Settings,
   Shield,
+  Trash2,
   User,
   Users,
 } from "lucide-react";
@@ -30,6 +31,7 @@ export type NavKey =
   | "offerings"
   | "files"
   | "notifications"
+  | "trash"
   | "reports"
   | "audit"
   | "settings"
@@ -43,7 +45,7 @@ export interface NavItem {
   permission?: PermissionCode;
   /** Roadmap phase in which the route becomes available. Undefined = available now. */
   phase?: "P1" | "P2" | "P3" | "P4";
-  /** Show in the mobile bottom bar (max 4 + "more"). */
+  /** Show in the mobile bottom bar (max 4; the full menu opens from the app-bar ☰ — ADR-0008). */
   bottom?: boolean;
 }
 
@@ -62,6 +64,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     permission: "notification.view",
     bottom: true,
   },
+  { key: "trash", href: "/trash", icon: Trash2, permission: "trash.view" },
   { key: "reports", href: "/reports", icon: BarChart3, permission: "report.view", phase: "P3" },
   { key: "audit", href: "/audit", icon: FileText, permission: "audit.view", phase: "P1" },
   { key: "settings", href: "/settings", icon: Settings, permission: "settings.view", phase: "P1" },

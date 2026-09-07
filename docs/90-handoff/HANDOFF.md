@@ -4,16 +4,16 @@
 >
 > **للوكيل الجديد:** لا تبدأ من هنا. ابدأ من [`/AGENTS.md`](../../AGENTS.md) (الدليل الكامل) و[`STATUS.json`](STATUS.json) (الحالة الآلية). هذا الملف هو **سجل الجلسات ودروسها** — أقدم الأقسام في الأعلى محفوظة للتاريخ وموسومة بجلستها.
 
-## 0. ملخص الحالة (محدّث — الجلسة 19؛ المصدر الآلي: `STATUS.json`)
+## 0. ملخص الحالة (محدّث — الجلسة 20؛ المصدر الآلي: `STATUS.json`)
 
 | البند | الحالة |
 |---|---|
 | المستودع | `MoTechSys/scam2027` (عام) — `main` = بعد PR #19 (viewport ثابت) |
 | الفرع الرئيسي | `main` |
 | فرع العمل | `genspark_ai_developer` → PR → `main` (squash-merge مباشر مصرّح به من المالك) → مزامنة الفرع بـ`git reset --hard origin/main && git push -f` |
-| التقدّم | **23 / 65 مهمة (35%)** — P0 16/16 ☑ · P1 7/15 (P1-01..P1-07) · P2–P5 لم تبدأ |
-| المهمة التالية | **P1-08** سلة المحذوفات الموحّدة — النطاق في §6، المخرجات في `STATUS.json` → `progress.nextTask`، الصف في `AGENTS.md` §5 |
-| بوابة الجودة | tsc 0 · eslint 0 · Vitest 167/167 (23 ملفًا) · build `mrAUD8JUXPh109xTzdbIl` · Playwright 75 ✅ / 9 skip (desktop + mobile) — الجلسة 19 |
+| التقدّم | **24 / 65 مهمة (37%)** — P0 16/16 ☑ · P1 8/15 (P1-01..P1-08) · P2–P5 لم تبدأ |
+| المهمة التالية | **P1-09** سجل التدقيق (`/audit-logs`) — المخرجات في `STATUS.json` → `progress.nextTask`، الصف في `AGENTS.md` §5 |
+| بوابة الجودة | tsc 0 · eslint 0 · Vitest 167/167 (23 ملفًا) · build `2Wmwy5NXVNDO_25vfpcED` · Playwright 80 ✅ / 10 skip (desktop + mobile) · Vitest 181/181 — الجلسة 20 |
 | قاعدة البيانات | آخر هجرة في `app/prisma/migrations/` (لا هجرات جديدة منذ P1-01؛ P1-06/P1-07 استخدما الجداول الموجودة) — **قاعدتان** (`scam2027`, `scam2027_test`) يجب هجرتهما معًا؛ seed كامل: مستأجر demo + أدوار + مستخدمون + بنية أكاديمية + مقررات/شُعب + 30 طالبًا + ملفّان + 3 إشعارات |
 | بيئة التطوير | `/home/user/webapp` (sandbox)؛ المراجع التراثية في `.refs/` (غير ملتزمة، تُستنسخ بالحلقة في §3) |
 | الوحدات المبنية | users, roles, academic, courses, offerings, enrollment, files, notifications — كلها بنمط `features/<x>/{schemas,scope,queries,core,actions}` + صفحة `(dashboard)/<x>` + seed + unit/integration/e2e |
@@ -260,3 +260,13 @@ pnpm test && pnpm lint && pnpm typecheck
 **دروس:** (1) في نمط viewport ثابت، كل مستوى بين الجذر والقائمة يجب أن يحمل `min-h-0` (وإلا يتمدّد flex ويكسر التمرير الداخلي) — لذلك `PageShell` يملك الهندسة. (2) الشريط السفلي في التدفق (لا `fixed`) يُلغي مشكلة «العنصر الأخير مغطّى» نهائيًا بلا حسابات padding. (3) axe يشترط أن تكون منطقة التمرير قابلة للتركيز بلوحة المفاتيح (`scrollable-region-focusable` — serious)، فـ`ScrollRegion` تضع `tabIndex={0}` عند وجود `label` مع تعليق `eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex` مبرَّر — لا تحذفه. (4) قِس بـ`document.documentElement.scrollHeight - clientHeight` لا بالعين. (5) أي قائمة تُترك خارج `ScrollRegion` تتمدّد تحت الشريط السفلي فتعترض النقرات (`<a href="/notifications"> … intercepts pointer events`) — هكذا اكتُشف تبويب السنوات.
 
 **التالي:** P1-08 سلة المحذوفات (الخطة التسعية، الجلسة 16) — صفحة `/trash` تُبنى مباشرة على `PageShell`.
+
+## الجلسة 20 — P1-08 سلة المحذوفات الموحّدة (PR #20) — ☑
+
+**نُفِّذت الخطة التسعية (الجلسة 16) كما هي** مع فارقَين مقصودَين: (1) الحذف النهائي **واعٍ بالـFK** بدل الفشل — `purge()` تعيد `{purged, blocked, storageKeys}` والأب المرتبط بأبناء أحياء (مقرر←شُعب/ملفات، شعبة←ملفات، مستخدم←ملفات مرفوعة) يُتخطّى ويُبلَّغ عنه؛ (2) `registry.ts` يستورد الحراس من `has-permission.ts` (لا `rbac.ts`) ليبقى قابلًا للتحميل في vitest — لذلك `assertCanRestoreUser` توأم داخل المعاملة لـ`rbac.assertCanManageUser`.
+
+**الملفات:** `features/trash/{schemas,registry,queries,core,actions}.ts`، `app/(dashboard)/trash/{page,trash-client}.tsx`، `components/typed-confirm-dialog.tsx`، `components/ui/page-tabs.tsx` (ARIA)، `lib/nav/items.ts`، `messages/{ar,en}.json`، `tests/unit/trash-schemas.test.ts`، `tests/integration/trash-queries.test.ts`، `e2e/trash.spec.ts`، `e2e/users.spec.ts` (`getByRole("tab")`).
+
+**دروس:** (1) `RolePermission.permissionCode` له FK على كتالوج `Permission` غير المبذور في قاعدة الاختبار — upsert الرمز قبل إنشاء دور بصلاحيات (نمط `roles-queries.test`). (2) في e2e، desktop وmobile يتشاركان القاعدة: أي بذر مباشر يجب أن يحمل ختمًا فريدًا **في مصطلح البحث نفسه**، وإلا يظهر متبقّي المشروع الآخر. (3) `Checkbox` «تحديد الكل» يبدّل الحالة — لا تنقره مرتين في الاختبار. (4) `revalidatePath` غير مسموح داخل `after()`؛ `/trash` ديناميكية فتُعاد قراءتها عند التنقّل.
+
+**التالي:** P1-09 سجل التدقيق — انسخ هيكل `/trash` (PageShell + ScrollRegion + تبويبات) وافلتر `AuditLog` (فاعل/كيان/إجراء/تاريخ) + Sheet لعرض `before/after` + تصدير CSV بتدفّق. صلاحيتا `audit.view`/`audit.export` موجودتان؛ عنصر التنقّل `audit` موجود بـ`phase: "P1"` — أزل `phase` عند الشحن.

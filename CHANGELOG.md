@@ -11,6 +11,12 @@
 
 ## [Unreleased]
 
+### Added — سلة المحذوفات الموحّدة (P1-08, FR-SYS-001, PR #20)
+- `features/trash/`: `schemas` (6 أنواع: USER/ROLE/COURSE/OFFERING/FILE/NOTIFICATION، احتفاظ 30 يومًا)، `registry` (لكل نوع: list/count/restore/purge/expired؛ حراس الاسترجاع تعكس الوحدات الأصلية — لا تصعيد صلاحيات عبر السلة؛ الحذف النهائي واعٍ بالـFK: الأب المرتبط بأبناء أحياء يُعاد `blocked`)، `queries` (`listTrash`, `trashCounts`)، `core` (`purgeExpired` = Job `trash.purge` بنمط `processFanoutJob`: قفل، تنفيذ leaves-first، `result {purged}`، تدقيق `trash.purge_auto` بـ`actorId=null`، حذف كائنات التخزين بعد commit)، `actions` (`restoreItemsAction` جزئي النجاح، `purgeItemsAction`, `emptyTrashAction`, `schedulePurgeJobAction` + `after()`).
+- `/trash` UI على هيكل ADR-0008: تبويبات بعدّادات، بحث، جدول بتحديد متعدد + قائمة جوال، استرجاع/حذف نهائي فرديًا وجماعيًا، «تفريغ التبويب» بتأكيد مكتوب `DELETE` (`components/typed-confirm-dialog.tsx`)، «تشغيل مهمة التنظيف»، عمود «الحذف النهائي بعد N يوم».
+- `PageTabs` صارت تبويبات ARIA حقيقية (`role=tablist/tab`, `aria-selected`, أسهم لوحة المفاتيح). عنصر تنقّل `trash` (`trash.view`) + i18n `trash.*` و`common.typeToConfirm`.
+- اختبارات: unit `trash-schemas` (5)، integration `trash-queries` (8: قوائم/بحث/عزل مستأجرين/حراس الاسترجاع/الحذف المحجوب/job الاحتفاظ)، e2e `trash.spec` (استرجاع + حذف نهائي على desktop وmobile، تأكيد مكتوب + تحديد جماعي، الطالب → /unauthorized). وثّق: ROADMAP P1-08 ☑، REQUIREMENTS FR-SYS-001 ☑، HANDOFF الجلسة 20، STATUS، AGENTS.
+
 ### Changed — الشاشة ثابتة والقوائم تُمرَّر داخل مناطقها (ADR-0008, PR #19)
 - **viewport واحد**: `DashboardLayout` صار `h-dvh overflow-hidden`؛ `<main>` عمود flex لا يُمرَّر؛ الشريط السفلي في التدفق (لا `fixed`) فلا شيء يُغطَّى تحته (أُزيلت `pb-bottom-nav`).
 - **`ScrollRegion`** (`components/ui/scroll-region.tsx`) + **`PageShell`** (`components/layout/page-shell.tsx`): المنطقة الوحيدة التي تتحرك؛ `overscroll-contain` + `scrollbar-thin`. طُبِّقت على 8 عملاء قوائم (users/roles/courses/offerings/files/roster/academic catalogue + years) — التبويبات والمرشّحات والعدّاد ثابتة والقائمة تُمرَّر داخليًا مع ترقيمها — وعلى 5 صفحات تفاصيل/إشعارات (الجسم كله منطقة واحدة) وعلى Wizard الإعداد.
