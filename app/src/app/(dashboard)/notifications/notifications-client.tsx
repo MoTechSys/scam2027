@@ -18,7 +18,7 @@ import {
   Send,
   Trash2,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState, useTransition } from "react";
@@ -258,10 +258,7 @@ function InboxList({
 }) {
   const t = useTranslations("notifications");
   const tc = useTranslations("common");
-  const dateFmt = useMemo(
-    () => new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }),
-    [],
-  );
+  const fmt = useFormatter(); // locale + tenant tz identical on server/client (no hydration mismatch)
   const [expanded, setExpanded] = useState<string | null>(null);
 
   if (page.items.length === 0)
@@ -328,7 +325,7 @@ function InboxList({
                   <p className="mt-1 text-xs text-muted-foreground">
                     {n.senderName ? t("from", { name: n.senderName }) : t("system")} ·{" "}
                     <time dateTime={new Date(n.deliveredAt).toISOString()} dir="ltr">
-                      {dateFmt.format(new Date(n.deliveredAt))}
+                      {fmt.dateTime(new Date(n.deliveredAt), { dateStyle: "medium", timeStyle: "short" })}
                     </time>
                   </p>
                 </button>
@@ -421,10 +418,7 @@ function SentTable({
 }) {
   const t = useTranslations("notifications");
   const tc = useTranslations("common");
-  const dateFmt = useMemo(
-    () => new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }),
-    [],
-  );
+  const fmt = useFormatter(); // locale + tenant tz identical on server/client (no hydration mismatch)
   const mayDelete = (r: SentRow) => can.admin || r.isOwner;
 
   const readCell = (r: SentRow) => {
@@ -465,7 +459,7 @@ function SentTable({
       header: t("columns.sentAt"),
       render: (r) => (
         <span className="text-xs tabular-nums" dir="ltr">
-          {dateFmt.format(new Date(r.sentAt ?? r.createdAt))}
+          {fmt.dateTime(new Date(r.sentAt ?? r.createdAt), { dateStyle: "medium", timeStyle: "short" })}
         </span>
       ),
     },

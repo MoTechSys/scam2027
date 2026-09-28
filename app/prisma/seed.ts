@@ -15,6 +15,9 @@
  *  Files (P1-06): two sample files on CS101 (section 1) uploaded by dr.ahmad, written to STORAGE_LOCAL_ROOT
  *    (local driver only — skipped when STORAGE_DRIVER=s3).
  */
+// Load .env explicitly: `tsx prisma/seed.ts` does not go through the Prisma CLI, which is the only thing that
+// auto-loads it. Without this a clean clone fails with "Environment variable not found: DATABASE_URL".
+import "dotenv/config";
 import { PrismaClient, type Prisma } from "@prisma/client";
 import { hash } from "@node-rs/argon2";
 import { createHash } from "node:crypto";

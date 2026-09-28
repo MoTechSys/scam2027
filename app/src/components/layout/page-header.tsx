@@ -8,6 +8,10 @@
  * The provider lives in `DashboardLayout`; `Header` reads the context.
  */
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useMediaQuery } from "@/hooks/use-media-query";
+
+/** `lg` breakpoint — the point where the in-content header replaces the app-bar title (ADR-0007). */
+export const DESKTOP_HEADER_QUERY = "(min-width: 1024px)";
 
 export type PageHeaderState = {
   title: string;
@@ -38,6 +42,9 @@ type Props = PageHeaderState & {
 export function PageHeader({ title, subtitle, badge, actions, className }: Props) {
   const ctx = useContext(PageHeaderContext);
   const set = ctx?.set;
+  // Exactly one <h1> in the DOM: below lg the app bar owns it, so the (CSS-hidden) in-content title becomes a <p>.
+  const desktop = useMediaQuery(DESKTOP_HEADER_QUERY);
+  const Heading = desktop ? "h1" : "p";
   useEffect(() => {
     if (!set) return;
     set({ title, subtitle, badge, ownsHeading: true });
@@ -51,7 +58,7 @@ export function PageHeader({ title, subtitle, badge, actions, className }: Props
     >
       <div className="space-y-1">
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-bold sm:text-3xl">{title}</h1>
+          <Heading className="text-2xl font-bold sm:text-3xl">{title}</Heading>
           {badge}
         </div>
         {subtitle && <p className="text-muted-foreground">{subtitle}</p>}

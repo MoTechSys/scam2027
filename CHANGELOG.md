@@ -11,6 +11,21 @@
 
 ## [Unreleased]
 
+### Fixed — تصليب بعد إقلاع نظيف وفحص عميق (الجلسة 21, PR #22)
+- **Bootstrap:** `prisma/seed.ts` يحمّل `.env` بنفسه (`dotenv/config`) — كان يفشل على أي استنساخ نظيف؛ `prisma.config.ts` يحل محل `package.json#prisma` المهمل؛ حُذف `NODE_ENV` من `.env.example` (تصديره يكسر `next build`)؛ `pnpm.overrides deepmerge-ts>=8` (GHSA-ggr8-5vv4-36mx) → `pnpm audit` نظيف؛ `turbopackIgnore` على جذر التخزين المحلي.
+- **Hydration (React #418):** `/files`, `/notifications` (كانت `Intl.DateTimeFormat(undefined)` في العميل → `useFormatter`)، `/academic/*` بالإنجليزية (`dateTimeRange` غير حتمي بين ICU Node وChromium → `lib/format-range.ts` + اختبار وحدة).
+- **h1 واحد فعليًا في DOM:** `PageHeader` يرسم `<p>` تحت `lg`؛ الـApp bar يرسم `<h1>` تحت `lg` فقط (`DESKTOP_HEADER_QUERY`).
+- **ADR-0008 على الصفحات المستقلة:** `/developer` لم تعد تُمرِّر المستند (حاوية `h-dvh overflow-y-auto`).
+- **CSP:** `upgrade-insecure-requests` يُرسَل فقط عند `x-forwarded-proto=https` — كان يحوّل prefetch `/login` إلى `https://localhost` ويفشل.
+- **Recharts:** `GrowthChart` يُركَّب في الفرع المرئي فقط (لا تحذير `width(0)`).
+- **API:** `/api/*` بلا جلسة أو بجلسة مستأجر آخر → `401 {ok:false,code:"UNAUTHORIZED"}` بدل 307 HTML (`proxy.ts`).
+
+### Added
+- `e2e/crawl.spec.ts`: لكل دور، كل رابط يعرضه الشِل (sidebar/درج/شريط سفلي) = 200 على مساره + h1 واحد + صفر تمرير + صفر أخطاء صفحة/كونسول؛ المسارات المخفية تُعاد توجيهها لا 500؛ مسابير 401 JSON وCSP. `tests/unit/format-range.test.ts`.
+
+### Docs
+- أُغلق إجراءا المالك 1–2 (Supabase القديم / CI على GitHub) بقرار المالك؛ البوابة الكاملة تُشغَّل محليًا قبل كل PR. تحديث AGENTS §0/§2/§4.3/§7/§8، README (PostgreSQL 17، `pnpm db:seed`)، HANDOFF الجلسة 21، STATUS.json (`knownDebt` +7 دروس).
+
 ### Added — سلة المحذوفات الموحّدة (P1-08, FR-SYS-001, PR #20)
 - `features/trash/`: `schemas` (6 أنواع: USER/ROLE/COURSE/OFFERING/FILE/NOTIFICATION، احتفاظ 30 يومًا)، `registry` (لكل نوع: list/count/restore/purge/expired؛ حراس الاسترجاع تعكس الوحدات الأصلية — لا تصعيد صلاحيات عبر السلة؛ الحذف النهائي واعٍ بالـFK: الأب المرتبط بأبناء أحياء يُعاد `blocked`)، `queries` (`listTrash`, `trashCounts`)، `core` (`purgeExpired` = Job `trash.purge` بنمط `processFanoutJob`: قفل، تنفيذ leaves-first، `result {purged}`، تدقيق `trash.purge_auto` بـ`actorId=null`، حذف كائنات التخزين بعد commit)، `actions` (`restoreItemsAction` جزئي النجاح، `purgeItemsAction`, `emptyTrashAction`, `schedulePurgeJobAction` + `after()`).
 - `/trash` UI على هيكل ADR-0008: تبويبات بعدّادات، بحث، جدول بتحديد متعدد + قائمة جوال، استرجاع/حذف نهائي فرديًا وجماعيًا، «تفريغ التبويب» بتأكيد مكتوب `DELETE` (`components/typed-confirm-dialog.tsx`)، «تشغيل مهمة التنظيف»، عمود «الحذف النهائي بعد N يوم».

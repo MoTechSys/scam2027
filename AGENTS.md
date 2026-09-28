@@ -1,6 +1,6 @@
 # AGENTS.md — دليل الوكيل الكامل لمشروع scam2027
 
-> **ابدأ هنا.** هذا الملف هو نقطة الدخول الوحيدة لأي وكيل (AI أو مطوّر) يُكلَّف بمتابعة المشروع. اقرأه كاملًا (10 دقائق) قبل أي أمر. كل ما فيه مُتحقَّق منه فعليًا بتاريخ **2026-09-06** على الالتزام `660dad6` (`main`).
+> **ابدأ هنا.** هذا الملف هو نقطة الدخول الوحيدة لأي وكيل (AI أو مطوّر) يُكلَّف بمتابعة المشروع. اقرأه كاملًا (10 دقائق) قبل أي أمر. كل ما فيه مُتحقَّق منه فعليًا بتاريخ **2026-09-28** على الالتزام `c761778` (`main`) + PR #22.
 >
 > تعليمات المالك الدائمة (نصًّا): *«كون ادمج انت وسوي كل شي»* · *«انجز وادمج وتحقق واختبر واكمل المشروع كله عليك بس بدقه»* · *«لا شغل عشوائي … كل شيء يكون مدروس بدقة»* · *«نظام لأي جامعة، متكامل، قابل للتطوير، ومرن»*.
 
@@ -13,6 +13,7 @@
 | المنتج | **scam2027** — نظام إدارة تعلّم (LMS) جامعي **متعدد المستأجرين** (عدة جامعات على منصة واحدة) بواجهة **Omnitrix الخضراء** RTL، عربي/إنجليزي، جوال أولًا |
 | المستودع | `https://github.com/MoTechSys/scam2027` (عام) — `main` محمي بالمنطق التالي: فرع `genspark_ai_developer` → PR → **squash-merge** مصرّح به للوكيل |
 | التقدّم | **24 / 65 مهمة (37%)** — P0 كامل (16/16) · P1 8/15 (P1-01..P1-08) · P2–P5 لم تبدأ. انظر §4 |
+| آخر تصليب | **PR #22 (الجلسة 21):** إقلاع من صفر + فحص عميق (200 زحف × دور × عرض، تدفقات، 26 مسبارًا أمنيًا) → 12 إصلاحًا + `e2e/crawl.spec.ts`. انظر HANDOFF الجلسة 21 |
 | التالي مباشرة | **P1-09 سجل التدقيق** (`/audit`: فلاتر، diff قبل/بعد، CSV — البيانات موجودة في `AuditLog` منذ P0) — §5 |
 | كيف تبدأ | §2 (Bootstrap 10 أوامر) → §6 (دورة العمل الإلزامية لكل مهمة) |
 | المرجع الكامل | `docs/` (28 وثيقة) — خريطتها في §3 |
@@ -69,13 +70,13 @@ sed -e 's#/scam2027?#/scam2027_test?#g' -e 's#STORAGE_LOCAL_ROOT=./storage$#STOR
 pnpm install                                 # postinstall يشغّل prisma generate
 pnpm exec prisma migrate deploy              # قاعدة التطوير (DIRECT_DATABASE_URL)
 DIRECT_DATABASE_URL="postgresql://postgres:postgres@localhost:5432/scam2027_test?schema=public" pnpm exec prisma migrate deploy   # قاعدة الاختبار — إلزامي
-pnpm tsx prisma/seed.ts                      # مستأجر demo + 4 أدوار نظام + 4 مستخدمين
+pnpm db:seed                                 # مستأجر demo + 4 أدوار نظام + 4 مستخدمين (seed يحمّل .env بنفسه)
 
 # 4) البوابة الكاملة (يجب أن تكون خضراء قبل أي عمل)
 pnpm check                                   # typecheck · lint · vitest · build
 pnpm exec playwright install chromium
 scripts/restart-server.sh                    # خادم إنتاج على :3000
-pnpm exec playwright test                    # 80 ✓ / 10 skip (سطح المكتب + جوال) — الأرقام الحالية في STATUS.json
+pnpm exec playwright test                    # الأرقام الحالية في STATUS.json (يشمل crawl.spec: كل مسار × كل دور)
 ```
 
 **حسابات demo** (مستأجر `demo`، `localhost` يُحلّ إليه عبر `DEFAULT_TENANT_SLUG`):
@@ -131,7 +132,7 @@ pnpm exec playwright test                    # 80 ✓ / 10 skip (سطح المك
 | **قشرة التطبيق (ADR-0007/0008)** | viewport ثابت `h-dvh` + `ScrollRegion`/`PageShell` (القائمة وحدها تتحرك)، App bar بعنوان الصفحة + ☰، `MiniStatCard` 3×2، رسم نمو حقيقي، شريط سفلي 4 عناصر بلا «المزيد»، `manifest.webmanifest`؛ كل صفحة: `<PageHeader>` + جذر `flex h-full min-h-0 flex-col` + `ScrollRegion` | `app/src/components/layout/{page-header,page-shell,Header,BottomNavigation,DashboardLayout}.tsx`, `app/src/components/ui/{scroll-region,mini-stat-card}.tsx`, `app/src/app/(dashboard)/dashboard/*`, `app/src/app/manifest.webmanifest/route.ts` |
 | **P1-01 المخطط** | 18 موديلًا (أكاديمي/مقررات/محتوى/تواصل/نظام) + قيود SQL يدوية + RLS على 30 جدولًا + عقود Zod لأعمدة Json | `app/prisma/schema.prisma`, `app/prisma/migrations/20260905*`, `app/src/lib/contracts/json-columns.ts`, ADR-0006 |
 
-**مقاييس الجودة الحالية (PR #20، 2026-09-07):** `tsc` 0 · `eslint` 0 · Vitest **181/181** (25 ملفًا: 17 وحدة + 8 تكامل بقاعدة اختبار مستقلة) · Playwright **80 ✓ / 10 skip** (13 ملفًا × 2 مشروع؛ skips = logout fixme + حوارات Radix Select/compose على mobile-safari المغطّاة على سطح المكتب + تحديد جماعي في السلة desktop-only؛ فشل `toHaveURL` في login تحت الحمل الكامل عابر — أعد الملف وحده) · مُتحقَّق منها على **استنساخ نظيف** لـ`main@6813315` (الجلسة 20: `pnpm check` exit 0) · `pnpm build` ✓ · 0 تمرير أفقي على 390px · 0 انتهاكات axe serious/critical على الصفحات المبنية.
+**مقاييس الجودة الحالية (PR #22، 2026-09-28):** `tsc` 0 · `eslint` 0 · `pnpm audit` 0 · Vitest **183/183** (26 ملفًا: 18 وحدة + 8 تكامل بقاعدة اختبار مستقلة) · Playwright **96 ✓ / 10 skip** (14 ملفًا × 2 مشروع بما فيها `crawl.spec`؛ skips = logout fixme + حوارات Radix Select/compose على mobile-safari المغطّاة على سطح المكتب + تحديد جماعي في السلة desktop-only؛ فشل `toHaveURL` في login تحت الحمل الكامل عابر — أعد الملف وحده) · مُتحقَّق منها على **sandbox خالٍ تمامًا** (الجلسة 21: تثبيت Postgres/pnpm من الصفر → `pnpm check` exit 0 → Playwright كاملة) · `pnpm build` ✓ · 0 تمرير أفقي على 390px · 0 انتهاكات axe serious/critical على الصفحات المبنية.
 
 ### 4.2 ما هو **غير** مبني (بصراحة)
 - لا اختبارات (quizzes) ولا درجات ولا حضور ولا سلة محذوفات موحّدة **في الواجهة** — الجداول موجودة (P1-01) لكن بلا صفحات أو Server Actions. المبني: مستخدمون/أدوار/بنية أكاديمية/مقررات/شُعب/تسجيل/ملفات/إشعارات. الطالب يرى لوحة التحكم + المقررات + شُعبه + ملفاته + إشعاراته؛ المدرّس يرى شُعبه وقوائم طلابه ويرفع ملفات ويرسل إشعارات لشُعبه.
@@ -140,7 +141,7 @@ pnpm exec playwright test                    # 80 ✓ / 10 skip (سطح المك
 - `seed.ts` يبذر المستأجر والأدوار والمستخدمين والبنية الأكاديمية والمقررات/الشُعب/30 طالبًا وملفَّين على CS101 (P1-06)، و3 إشعارات نموذجية (53 مستلمًا) (P1-07).
 - لا worker للمهام (`Job` جدول فقط) — P1-12. لا بريد. لا استعادة كلمة مرور/تفعيل — P1-11.
 - CI غير مفعَّل على GitHub (ملف القالب موجود، انظر §7).
-- `e2e/crawl.spec.ts` (زحف كل روابط Sidebar لكل دور) المذكور في استراتيجية الاختبار **لم يُكتب بعد** — يُكتب مع P1-15.
+- `e2e/crawl.spec.ts` مكتوب (PR #22): كل رابط شِل لكل دور = 200 + h1 واحد + صفر تمرير + صفر أخطاء صفحة/كونسول؛ المسارات المخفية تُعاد توجيهها لا 500؛ مسابير 401 JSON وCSP.
 - اختبار logout في Playwright معلَّم `fixme`.
 
 ### 4.3 نقاط قد تُربك وكيلًا جديدًا (اقرأها)
@@ -155,6 +156,7 @@ pnpm exec playwright test                    # 80 ✓ / 10 skip (سطح المك
 9. القائمة الجانبية قصيرة **بالتصميم**: `visibleNavItems` يفلتر بالصلاحية **و**يخفي ما له `phase` (لم يُبنَ). عند شحن وحدة: احذف `phase` وحدّث `tests/unit/login-helpers.test.ts`.
 10. `next start` يفرض `NODE_ENV=production` (روابط المعاينة أيضًا) — لا تربط سلوكًا بـ`NODE_ENV`؛ استخدم متغيّر بيئة صريحًا (PR #11).
 12. **`.gitignore` مثبَّت**: قاعدة `storage` القديمة أخفت `src/lib/storage` من Git حتى PR #16. أي مجلد تشغيل جديد يُتجاهل بمسار مثبَّت (`/x/`)، وقبل دمج PR يضيف مجلدًا: `git status --ignored`. ملف `.env.test` غير ملتزم — اشتقّه من `.env` (قاعدة `scam2027_test`, `STORAGE_LOCAL_ROOT=./storage-test`). خطة P1-08 التفصيلية (9 خطوات) في `HANDOFF.md` الجلسة 16.
+13. **لا `NODE_ENV` في `.env`** — أداة Next تضبطه؛ تصديره من الـshell يكسر `next build` (`useContext null` في `/_global-error`). **لا `Intl.*(undefined)` ولا `dateTimeRange` في مكوّنات العميل** — SSR (Node ICU) والمتصفح يختلفان → React #418؛ استخدم `useFormatter()` و`lib/format-range.ts`. **h1 واحد فقط** (PageHeader يرسم `<p>` تحت lg). **`/api/*` بلا جلسة = 401 JSON** لا 307. `e2e/crawl.spec.ts` يفشل على أي خطأ صفحة/كونسول أو h1≠1 أو تمرير.
 11. **لا تضبط `AUTH_URL` أبدًا** (متعدد المستأجرين): Auth.js يثبّت كل إعادة توجيه على ذلك الأصل → `localhost:3000` بعد الدخول. الأصل يُشتق من الطلب عبر `src/lib/auth/forwarded.ts` (تطبيع `x-forwarded-*` في الـproxy + إعادة بناء `request.url` في `api/auth/[...nextauth]/route.ts` لأن Next يبنيه من `hostname:port` الخادم). عند وكيل عكسي جديد افحص ترويساته فعليًا (PR #12).
 
 ---
@@ -236,7 +238,7 @@ curl -s -H "Authorization: token $TOKEN" -X PUT https://api.github.com/repos/MoT
 | المعايير التعليمية | LTI 1.3 Advantage (P5)، QTI 3.0 (P5)، OneRoster 1.2 (P5) — التصميم الحالي لا يمنعها (Enrollment/Offering/Grade متوافقة) | `docs/10-research/04-STANDARDS-AND-STACK.md` |
 | القابلية للتوسع | shared-schema + RLS (ADR-0002) يخدم آلاف المستأجرين؛ فهارس `(tenantId, …)` على كل استعلام؛ ترقيم خادمي؛ مهام ثقيلة عبر `Job`/worker؛ لا N+1 (فحص في P2-12) | `00-ARCHITECTURE.md §6` |
 
-**CI:** `.github/ci.yml.template` كامل (lint → typecheck → test → build → e2e → gitleaks → audit على Postgres 17). توكن الوكيل لا يملك صلاحية `workflows`؛ **إجراء للمالك أو لوكيل بتوكن كامل:** `git mv .github/ci.yml.template .github/workflows/ci.yml` ثم commit. حتى ذلك الحين البوابة تُنفَّذ محليًا قبل كل PR (وهذا ما جرى في PRs #2–#6).
+**CI:** قرار المالك (الجلسة 21): **لا CI على GitHub** — البوابة الكاملة (`pnpm check` + Playwright desktop+mobile بما فيه `crawl.spec`) **يشغّلها الوكيل بنفسه محليًا قبل كل PR** ويسجّل الأرقام في `STATUS.json`. `.github/ci.yml.template` يبقى مرجعًا لمن أراد تفعيله لاحقًا.
 
 ---
 
@@ -244,8 +246,7 @@ curl -s -H "Authorization: token $TOKEN" -X PUT https://api.github.com/repos/MoT
 
 | # | الإجراء | السبب | الحالة |
 |---|---|---|---|
-| 1 | تدوير كلمة مرور Supabase للمشروع القديم `hmqmtxgyuarccyrioics` وأرشفة `MoTechSys/SCAM` كخاص | سرّ مكشوف في `SCAM/HANDOVER.md` (SEC-01) | ☐ |
-| 2 | تفعيل CI: نقل `ci.yml.template` إلى `.github/workflows/ci.yml` | توكن الوكيل بلا `workflows` | ☐ |
+| 1–2 | ~~Supabase القديم~~ · ~~CI على GitHub~~ | أُغلقا بقرار المالك (الجلسة 21): خارج النطاق / البوابة محلية بيد الوكيل | ☑ |
 | 3 | تحديد النطاق الجذري للإنتاج (مثال `lms.example.sa`) | نطاقات فرعية للمستأجرين `<slug>.<ROOT_DOMAIN>` | ☐ (التطوير على `localhost` كافٍ) |
 | 4 | مفتاح AI للتطوير (OpenAI-compatible أو Gemini) | P2-05 | ☐ |
 | 5 | SMTP للاختبار | P1-12 | ☐ (يمكن استخدام Mailpit محليًا مؤقتًا) |

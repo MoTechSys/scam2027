@@ -6,11 +6,16 @@
  */
 import { useFormatter } from "next-intl";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 export type GrowthPoint = { month: string; users: number };
 
 export function GrowthChart({ data, compact = false }: { data: GrowthPoint[]; compact?: boolean }) {
   const f = useFormatter();
+  // The dashboard renders a mobile (`lg:hidden`) and a desktop (`hidden lg:flex`) branch; both are in the DOM.
+  // Recharts measures the hidden one as 0×0 and warns — mount the chart only in the branch that is visible.
+  const desktop = useMediaQuery("(min-width: 1024px)");
+  if (compact === desktop) return null;
   const rows = data.map((d) => ({
     ...d,
     label: f.dateTime(new Date(d.month), { month: compact ? "short" : "long" }),
