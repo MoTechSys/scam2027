@@ -37,7 +37,7 @@ type Page<T> = { items: T[]; total: number; page: number; pageSize: number };
 | `settingsApi.get/update(category)` | `settings/getSettings(category)`, `updateSettings(category, values)`, `testEmail()` | `settings.*` |
 | `dashboardApi.getStats` | `reports/getDashboard()` (حسب الدور) | `dashboard.view` |
 | `reportsApi.*` | `reports/getUsersReport`, `getCoursesReport`, `getFilesReport`, `getAiReport`, `getActivityReport`, `exportReport(kind, format)` | `report.*` |
-| `auditLogsApi.getAll` | `audit/listAuditLogs(filters)`, `exportAuditLogs` | `audit.*` |
+| `auditLogsApi.getAll` | RSC `audit/queries: listAuditLogs(ctx, query, tz)`, `getAuditEntry`, `auditFacets` (لا Server Actions — السجل للقراءة فقط)؛ **HTTP** `GET /api/audit/export?<filters>` CSV بتدفّق | `audit.view` / `audit.export` |
 | `academicApi.*` | `academic/{colleges,departments,majors,levels,years,semesters}.{list,create,update,delete}`, `semesters.setCurrent` | `*.manage` |
 | — (mock سابقاً) | `ai/summarizeFile(fileId)`, `generateQuestions(fileId, opts)`, `chat(conversationId?, message, fileIds)`, `listConversations`, `approveSummary`, `getUsage` | `ai.*` |
 | — | `quizzes/*`, `grades/*`, `assignments/*` (من V2 مع إعادة تسمية للمصفوفة) | `quiz.*`, `grade.*`, `assignment.*` |
@@ -52,6 +52,7 @@ type Page<T> = { items: T[]; total: number; page: number; pageSize: number };
 | `/api/health` | GET | `{ status, db, storage, redis, version }` | عامة (بلا تفاصيل حساسة) |
 | `/api/files` | POST | رفع multipart (stream → storage) | جلسة + `file.upload` |
 | `/api/files/[id]/download` | GET | تنزيل برابط موقّع (5 دقائق) | توقيع HMAC + جلسة |
+| `/api/audit/export` | GET | CSV بتدفّق (UTF-8 BOM، RFC 4180، حماية من حقن الصيغ، keyset batches ×1000، سقف 50k صف، `x-audit-rows`/`x-audit-total`)؛ المرشّحات = `auditExportSchema` **strict** (مجهول → 400)؛ التصدير نفسه يُدوَّن `audit.export` | جلسة + `audit.export` |
 | `/api/files/[id]/preview` | GET | تدفق للعارض (Range) | توقيع + جلسة |
 | `/api/docs` | GET | OpenAPI 3.1 (من zod-openapi) — P3 | جلسة admin |
 | `/api/v1/**` | * | واجهة تكامل عامة بـ API Key لكل مستأجر — P3 | `Authorization: Bearer <tenant api key>` |

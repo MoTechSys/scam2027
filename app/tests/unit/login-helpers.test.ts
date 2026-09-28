@@ -73,6 +73,13 @@ describe("visibleNavItems", () => {
     expect(tr?.bottom).toBeUndefined();
     expect(visibleNavItems(new Set(["file.view"])).map((i) => i.key)).not.toContain("trash");
   });
+  it("shows audit when audit.view is granted (P1-09); never in the bottom bar", () => {
+    const items = visibleNavItems(new Set(["audit.view"]));
+    const a = items.find((i) => i.key === "audit");
+    expect(a?.href).toBe("/audit");
+    expect(a?.bottom).toBeUndefined();
+    expect(visibleNavItems(new Set(["trash.view"])).map((i) => i.key)).not.toContain("audit");
+  });
   it("no permissions → only permission-free items", () => {
     expect(visibleNavItems(new Set()).map((i) => i.key)).toEqual(["developer"]);
   });

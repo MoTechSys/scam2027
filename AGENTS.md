@@ -12,9 +12,9 @@
 |---|---|
 | المنتج | **scam2027** — نظام إدارة تعلّم (LMS) جامعي **متعدد المستأجرين** (عدة جامعات على منصة واحدة) بواجهة **Omnitrix الخضراء** RTL، عربي/إنجليزي، جوال أولًا |
 | المستودع | `https://github.com/MoTechSys/scam2027` (عام) — `main` محمي بالمنطق التالي: فرع `genspark_ai_developer` → PR → **squash-merge** مصرّح به للوكيل |
-| التقدّم | **24 / 65 مهمة (37%)** — P0 كامل (16/16) · P1 8/15 (P1-01..P1-08) · P2–P5 لم تبدأ. انظر §4 |
+| التقدّم | **25 / 65 مهمة (38%)** — P0 كامل (16/16) · P1 9/15 (P1-01..P1-09) · P2–P5 لم تبدأ. انظر §4 |
 | آخر تصليب | **PR #22 (الجلسة 21):** إقلاع من صفر + فحص عميق (200 زحف × دور × عرض، تدفقات، 26 مسبارًا أمنيًا) → 12 إصلاحًا + `e2e/crawl.spec.ts`. انظر HANDOFF الجلسة 21 |
-| التالي مباشرة | **P1-09 سجل التدقيق** (`/audit`: فلاتر، diff قبل/بعد، CSV — البيانات موجودة في `AuditLog` منذ P0) — §5 |
+| التالي مباشرة | **P1-10 الإعدادات** (`/settings`: عام/أمان/علامة تجارية + تشفير الأسرار + حقن العلامة في `/login`) — §5 |
 | كيف تبدأ | §2 (Bootstrap 10 أوامر) → §6 (دورة العمل الإلزامية لكل مهمة) |
 | المرجع الكامل | `docs/` (28 وثيقة) — خريطتها في §3 |
 
@@ -130,14 +130,15 @@ pnpm exec playwright test                    # الأرقام الحالية ف�
 | **P1-07 الإشعارات** | `features/notifications/{schemas,scope,core,queries,actions}` (هدف مرن، fan-out ≤500 أو Job، تفضيلات، rate-limit)، `/notifications` (inbox/المُرسَلة/تفضيلات/حوار إرسال)، `NotificationBell` + `GET /api/notifications/unread-count`، seed 3 إشعارات | `app/src/features/notifications/*`, `app/src/app/(dashboard)/notifications/**`, `app/src/app/api/notifications/**`, `app/src/components/layout/NotificationBell.tsx` |
 | **P1-06 الملفات** | `lib/storage` (local/S3، عدّاد + SHA-256، حارس مسار)، `POST /api/files/upload` (busboy stream + magic bytes + قائمة سماح + حد حجم حسب الاشتراك + مفتاح `tenant/course/uuid`)، `GET /api/files/[id]/download` (HMAC 5 دقائق مرتبط بالمستخدم + سجل تنزيل)، `/files` (تبويبات/بحث/مرشّحات/سلة/استرجاع/حذف نهائي، رفع متعدد بتقدّم)، نطاق `fileScopeWhere`، seed ملفَّين | `app/src/lib/storage/*`, `app/src/features/files/*`, `app/src/app/(dashboard)/files/**`, `app/src/app/api/files/**` |
 | **قشرة التطبيق (ADR-0007/0008)** | viewport ثابت `h-dvh` + `ScrollRegion`/`PageShell` (القائمة وحدها تتحرك)، App bar بعنوان الصفحة + ☰، `MiniStatCard` 3×2، رسم نمو حقيقي، شريط سفلي 4 عناصر بلا «المزيد»، `manifest.webmanifest`؛ كل صفحة: `<PageHeader>` + جذر `flex h-full min-h-0 flex-col` + `ScrollRegion` | `app/src/components/layout/{page-header,page-shell,Header,BottomNavigation,DashboardLayout}.tsx`, `app/src/components/ui/{scroll-region,mini-stat-card}.tsx`, `app/src/app/(dashboard)/dashboard/*`, `app/src/app/manifest.webmanifest/route.ts` |
+| **P1-09 سجل التدقيق** | `features/audit/{schemas,queries}`: مرشّحات (نص/فاعل/نوع الفاعل/كيان/معرّف/إجراء دقيق أو بادئة `resource.`/من–إلى بحدود يوم المستأجر)، حلّ أسماء الفاعلين بلا FK (محذوف = «مستخدم محذوف»، null = «النظام»)، facets؛ `GET /api/audit/export` CSV بتدفّق keyset (BOM، حماية حقن الصيغ، سقف 50k، يُدوَّن `audit.export`)؛ `/audit` (بحث + لوحة مرشّحات + جدول/قائمة جوال + Sheet تفاصيل مع diff قبل/بعد «التغييرات فقط» + نسخ JSON) | `app/src/features/audit/*`, `app/src/app/(dashboard)/audit/**`, `app/src/app/api/audit/export/route.ts` |
 | **P1-01 المخطط** | 18 موديلًا (أكاديمي/مقررات/محتوى/تواصل/نظام) + قيود SQL يدوية + RLS على 30 جدولًا + عقود Zod لأعمدة Json | `app/prisma/schema.prisma`, `app/prisma/migrations/20260905*`, `app/src/lib/contracts/json-columns.ts`, ADR-0006 |
 
-**مقاييس الجودة الحالية (PR #22، 2026-09-28):** `tsc` 0 · `eslint` 0 · `pnpm audit` 0 · Vitest **183/183** (26 ملفًا: 18 وحدة + 8 تكامل بقاعدة اختبار مستقلة) · Playwright **96 ✓ / 10 skip** (14 ملفًا × 2 مشروع بما فيها `crawl.spec`؛ skips = logout fixme + حوارات Radix Select/compose على mobile-safari المغطّاة على سطح المكتب + تحديد جماعي في السلة desktop-only؛ فشل `toHaveURL` في login تحت الحمل الكامل عابر — أعد الملف وحده) · مُتحقَّق منها على **sandbox خالٍ تمامًا** (الجلسة 21: تثبيت Postgres/pnpm من الصفر → `pnpm check` exit 0 → Playwright كاملة) · `pnpm build` ✓ · 0 تمرير أفقي على 390px · 0 انتهاكات axe serious/critical على الصفحات المبنية.
+**مقاييس الجودة الحالية (PR #23، 2026-09-28):** `tsc` 0 · `eslint` 0 · `pnpm audit` 0 · Vitest **205/205** (28 ملفًا: 19 وحدة + 9 تكامل بقاعدة اختبار مستقلة) · Playwright **96 ✓ / 10 skip** (15 ملفًا × 2 مشروع بما فيها `crawl.spec` و`audit.spec`؛ skips = logout fixme + حوارات Radix Select/compose على mobile-safari المغطّاة على سطح المكتب + تحديد جماعي في السلة desktop-only؛ فشل `toHaveURL` في login تحت الحمل الكامل عابر — أعد الملف وحده) · مُتحقَّق منها على **sandbox خالٍ تمامًا** (الجلسة 21: تثبيت Postgres/pnpm من الصفر → `pnpm check` exit 0 → Playwright كاملة) · `pnpm build` ✓ · 0 تمرير أفقي على 390px · 0 انتهاكات axe serious/critical على الصفحات المبنية.
 
 ### 4.2 ما هو **غير** مبني (بصراحة)
-- لا اختبارات (quizzes) ولا درجات ولا حضور ولا سلة محذوفات موحّدة **في الواجهة** — الجداول موجودة (P1-01) لكن بلا صفحات أو Server Actions. المبني: مستخدمون/أدوار/بنية أكاديمية/مقررات/شُعب/تسجيل/ملفات/إشعارات. الطالب يرى لوحة التحكم + المقررات + شُعبه + ملفاته + إشعاراته؛ المدرّس يرى شُعبه وقوائم طلابه ويرفع ملفات ويرسل إشعارات لشُعبه.
+- لا اختبارات (quizzes) ولا درجات ولا حضور **في الواجهة** — الجداول موجودة (P1-01) لكن بلا صفحات أو Server Actions. المبني: مستخدمون/أدوار/بنية أكاديمية/مقررات/شُعب/تسجيل/ملفات/إشعارات. الطالب يرى لوحة التحكم + المقررات + شُعبه + ملفاته + إشعاراته؛ المدرّس يرى شُعبه وقوائم طلابه ويرفع ملفات ويرسل إشعارات لشُعبه.
 - الإشعارات in-app فقط: لا بريد (FR-NTF-006 → P1-12/P2) ولا مشغّلات آلية عند رفع ملف/نشر اختبار (FR-NTF-007 → P2)؛ `Job notification.fanout` يُنفَّذ inline عبر `after()` — لا عامل خلفي مستقل بعد (P1-12).
-- القائمة الجانبية تُظهر: لوحة التحكم، المستخدمون، الأدوار، البنية الأكاديمية، المقررات، الشُعب (+ ما يُضاف عند إزالة `phase` من `src/lib/nav/items.ts` لكل وحدة تُبنى).
+- القائمة الجانبية تُظهر: لوحة التحكم، المستخدمون، الأدوار، البنية الأكاديمية، المقررات، الشُعب، الملفات، الإشعارات، سلة المحذوفات، سجل التدقيق (+ ما يُضاف عند إزالة `phase` من `src/lib/nav/items.ts` لكل وحدة تُبنى).
 - `seed.ts` يبذر المستأجر والأدوار والمستخدمين والبنية الأكاديمية والمقررات/الشُعب/30 طالبًا وملفَّين على CS101 (P1-06)، و3 إشعارات نموذجية (53 مستلمًا) (P1-07).
 - لا worker للمهام (`Job` جدول فقط) — P1-12. لا بريد. لا استعادة كلمة مرور/تفعيل — P1-11.
 - CI غير مفعَّل على GitHub (ملف القالب موجود، انظر §7).
@@ -165,13 +166,13 @@ pnpm exec playwright test                    # الأرقام الحالية ف�
 
 > مصدر الحقيقة: `docs/40-plan/01-ROADMAP.md`. لا تُغيّر الترتيب دون ADR. كل مهمة = PR واحد مُدمَج.
 
-### P1 — النواة الإدارية (متبقٍ 10 مهام)
+### P1 — النواة الإدارية (متبقٍ 6 مهام)
 | # | المهمة | مخرجات محددة | ملاحظات تنفيذ |
 |---|---|---|---|
 | ~~**P1-06**~~ ☑ PR #13 | الملفات | storage adapter (local/S3 عبر واجهة واحدة)، رفع stream متعدد بتقدّم، فحص magic bytes + قائمة سماح + حد حجم حسب الاشتراك، اسم مُعاد التوليد `tenant/course/uuid`، تصنيف، روابط تنزيل موقّعة قصيرة العمر (`/api/files/[id]/download`)، `/files` بتبويبات | `lib/storage/`؛ حذف ناعم؛ `file.manage_all` |
 | ~~**P1-07**~~ ☑ PR #14 | الإشعارات | إرسال بهدف مرن (`notificationTargetSchema`: الكل/دور/كلية/قسم/تخصص/مستوى/شعبة/أفراد) → fan-out إلى `NotificationRecipient`، inbox، مقروء/غير مقروء، أرشفة، عدّاد Header، «المُرسَلة» مع إحصاء القراءة، تفضيلات in-app | fan-out عبر `Job` إن تجاوز المستلمون 500 |
 | **P1-08** ☑ | سلة المحذوفات الموحّدة | `features/trash/{schemas,registry,queries,core,actions}` + `/trash` (6 تبويبات) + job `trash.purge` — PR #20 | استخدم `TRASH_REGISTRY` لأي كيان جديد ذي `deletedAt` |
-| **P1-09** | سجل التدقيق | `/audit`: فلاتر (فاعل/كيان/إجراء/تاريخ)، تفاصيل diff قبل/بعد، تصدير CSV | البيانات موجودة منذ P0 |
+| **P1-09** ☑ | سجل التدقيق | `features/audit/{schemas,queries}` (قراءة فقط)، `GET /api/audit/export` CSV بتدفّق، `/audit` بلوحة مرشّحات + Sheet للـdiff عبر `?entry=` — PR #23 | كل action جديد يظهر تلقائيًا (facets من البيانات) |
 | **P1-10** | الإعدادات | `/settings`: عام/أمان/علامة تجارية (شعار، ألوان، اسم) + حقن العلامة في `/login` والتخطيط؛ `TenantSetting` مشفّر للأسرار | |
 | **P1-11** | المصادقة المكتملة | تفعيل الحساب (`/activate`)، استعادة كلمة المرور OTP/رابط 10 دقائق (`PasswordResetToken`)، «تذكرني»، إجبار تغيير كلمة المرور عند أول دخول (`mustChangePassword`) | |
 | **P1-12** | Worker + بريد | `worker/` يلتقط `Job` بقفل (`lockedAt/lockedBy`)، إعادة محاولة، SMTP أساسي للمنصة (تفعيل/استعادة)، `mail.send` | يتصل بدور المالك ويضبط GUC لكل مهمة |

@@ -11,6 +11,12 @@
 
 ## [Unreleased]
 
+### Added — سجل التدقيق (P1-09, FR-SET-004, PR #23)
+- `features/audit/`: `schemas` (مرشّحات URL، عقد تصدير strict، `csvEscape` RFC 4180 + حارس حقن الصيغ، `diffSnapshots`، `dayRangeInTimeZone`)، `queries` (`listAuditLogs` ببحث يشمل الفاعل، `getAuditEntry`, `auditFacets`, `iterateAuditLogs` keyset بدفعات 1000 وسقف 50k، `tenantTimeZone`).
+- `GET /api/audit/export`: CSV بتدفّق (BOM، `attachment`، `no-store`)، 401/403/400، ويدوّن `audit.export`.
+- `/audit`: بحث + لوحة مرشّحات (نوع الفاعل/الفاعل/الكيان/الإجراء بمجموعات/من–إلى) + عدّاد + تصدير؛ جدول/قائمة جوال؛ Sheet تفاصيل عبر `?entry=<id>` مع diff قبل/بعد («التغييرات فقط»، نسخ JSON). عنصر تنقّل `audit` + i18n `audit.*`.
+- اختبارات: `tests/unit/audit-schemas` (12)، `tests/integration/audit-queries` (9)، `e2e/audit.spec` (2 × desktop+mobile). وثّق: ROADMAP P1-09 ☑، REQUIREMENTS FR-SET-004 ☑، API-CONTRACT (`/api/audit/export`)، HANDOFF الجلسة 22، STATUS، AGENTS، README.
+
 ### Fixed — تصليب بعد إقلاع نظيف وفحص عميق (الجلسة 21, PR #22)
 - **Bootstrap:** `prisma/seed.ts` يحمّل `.env` بنفسه (`dotenv/config`) — كان يفشل على أي استنساخ نظيف؛ `prisma.config.ts` يحل محل `package.json#prisma` المهمل؛ حُذف `NODE_ENV` من `.env.example` (تصديره يكسر `next build`)؛ `pnpm.overrides deepmerge-ts>=8` (GHSA-ggr8-5vv4-36mx) → `pnpm audit` نظيف؛ `turbopackIgnore` على جذر التخزين المحلي.
 - **Hydration (React #418):** `/files`, `/notifications` (كانت `Intl.DateTimeFormat(undefined)` في العميل → `useFormatter`)، `/academic/*` بالإنجليزية (`dateTimeRange` غير حتمي بين ICU Node وChromium → `lib/format-range.ts` + اختبار وحدة).

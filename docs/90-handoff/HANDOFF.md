@@ -11,12 +11,12 @@
 | المستودع | `MoTechSys/scam2027` (عام) — `main` = بعد PR #19 (viewport ثابت) |
 | الفرع الرئيسي | `main` |
 | فرع العمل | `genspark_ai_developer` → PR → `main` (squash-merge مباشر مصرّح به من المالك) → مزامنة الفرع بـ`git reset --hard origin/main && git push -f` |
-| التقدّم | **24 / 65 مهمة (37%)** — P0 16/16 ☑ · P1 8/15 (P1-01..P1-08) · P2–P5 لم تبدأ · **+ تصليب الجلسة 21 (PR #22)** |
-| المهمة التالية | **P1-09** سجل التدقيق (`/audit`) — المخرجات في `STATUS.json` → `progress.nextTask`، الصف في `AGENTS.md` §5 |
-| بوابة الجودة | tsc 0 · eslint 0 · audit 0 · Vitest 183/183 (26 ملفًا) · build `sw1UU4rNjqF-F0UabomIS` · Playwright 96 ✅ / 10 skip (desktop + mobile + crawl) — الجلسة 21 (PR #22) |
+| التقدّم | **25 / 65 مهمة (38%)** — P0 16/16 ☑ · P1 9/15 (P1-01..P1-09) · P2–P5 لم تبدأ |
+| المهمة التالية | **P1-10** الإعدادات (`/settings`) — المخرجات في `STATUS.json` → `progress.nextTask`، الصف في `AGENTS.md` §5 |
+| بوابة الجودة | tsc 0 · eslint 0 · audit 0 · Vitest 183/183 (26 ملفًا) · build `r7A9h3uV33BOzm6UEPBKk` · Playwright 96 ✅ / 10 skip (desktop + mobile + crawl + audit) — الجلسة 22 (PR #23) |
 | قاعدة البيانات | آخر هجرة في `app/prisma/migrations/` (لا هجرات جديدة منذ P1-01؛ P1-06/P1-07 استخدما الجداول الموجودة) — **قاعدتان** (`scam2027`, `scam2027_test`) يجب هجرتهما معًا؛ seed كامل: مستأجر demo + أدوار + مستخدمون + بنية أكاديمية + مقررات/شُعب + 30 طالبًا + ملفّان + 3 إشعارات |
 | بيئة التطوير | `/home/user/webapp` (sandbox)؛ المراجع التراثية في `.refs/` (غير ملتزمة، تُستنسخ بالحلقة في §3) |
-| الوحدات المبنية | users, roles, academic, courses, offerings, enrollment, files, notifications — كلها بنمط `features/<x>/{schemas,scope,queries,core,actions}` + صفحة `(dashboard)/<x>` + seed + unit/integration/e2e |
+| الوحدات المبنية | users, roles, academic, courses, offerings, enrollment, files, notifications, trash, audit — كلها بنمط `features/<x>/{schemas,scope,queries,core,actions}` + صفحة `(dashboard)/<x>` + seed + unit/integration/e2e |
 | قشرة الواجهة | **ADR-0007 + ADR-0008**: App bar بعنوان الصفحة + ☰ (`PageHeader`/`MobilePageTitle`)، **الشاشة viewport ثابت والقوائم داخل `ScrollRegion`** (`PageShell`)، لوحة تحكم 3×2 + نمو حقيقي + بطاقات تُمرَّر داخليًا، شريط سفلي 4 عناصر بلا «المزيد»، `manifest.webmanifest`. **قواعد لكل صفحة جديدة:** `<PageHeader>` + جذر `flex h-full min-h-0 flex-col` + القائمة داخل `ScrollRegion` + `expectNoPageScroll` في e2e |
 | قواعد لا تُخالَف | `AGENTS.md` §6 (دورة العمل) و§7 (المعايير)؛ `STATUS.json.qualityGate.knownDebt` (نقاط التعثّر المتراكمة — اقرأها قبل أول سطر كود) |
 
@@ -299,3 +299,20 @@ pnpm test && pnpm lint && pnpm typecheck
 **دروس:** (1) الأرقام الخضراء لا تكشف hydration errors — Playwright لا يفشل على `pageerror` ما لم تُلتقط صراحة؛ لذلك crawl.spec تجمعها. (2) `Intl.*` ليس حتميًا بين Node والمتصفح (ICU مختلف) — نسّق دائمًا عبر next-intl بنفس locale/timeZone. (3) «h1 واحد» يجب أن يكون في DOM لا بصريًا فقط (axe يفحص DOM). (4) اختبر البوابة على sandbox **خالٍ** من أي أداة — ثلاثة أعطال إقلاع لم تظهر لأي جلسة سابقة لأن البيئة كانت مهيّأة مسبقًا.
 
 **التالي:** P1-09 سجل التدقيق (التصميم التفصيلي في تقرير الجلسة 21 — `features/audit/{schemas,queries}` + `GET /api/audit/export` CSV بتدفّق + `/audit` بـSheet للـdiff).
+
+## الجلسة 22 — P1-09 سجل التدقيق (PR #23) — ☑
+
+**النطاق المُنفَّذ (FR-SET-004, UC-SYS-002):** السجل **للقراءة فقط** من الواجهة — لا Server Actions تعدّله.
+- `features/audit/schemas.ts`: `auditQuerySchema` (q, actorId, actorKind ANY/USER/SYSTEM, entity, entityId, action دقيق أو بادئة `resource.`, from/to `YYYY-MM-DD`, page, pageSize ≤100)، `auditExportSchema` **strict**، `csvEscape` (RFC 4180 + حارس حقن الصيغ `= + - @ \t \r`)، `diffSnapshots` (added/removed/changed/same، مقارنة بنيوية للمتداخل)، `dayRangeInTimeZone` (حدود اليوم في منطقة المستأجر عبر Intl فقط — DST-safe).
+- `features/audit/queries.ts`: `listAuditLogs` (بحث نصي يشمل اسم/بريد الفاعل عبر استعلام مسبق محدود بـ50 معرّفًا — لا join على جدول بلا FK)، `getAuditEntry`، `auditFacets` (كيانات/إجراءات/فاعلون مميّزون)، `iterateAuditLogs` (**keyset** `(createdAt,id)` بدفعات 1000 في معاملات RLS قصيرة، سقف 50k)، `tenantTimeZone`.
+- `GET /api/audit/export`: تدفّق `ReadableStream` (BOM UTF-8 لـExcel العربي، `attachment`, `no-store`, `x-audit-rows/total`)؛ 401/403/400؛ **التصدير نفسه يُدوَّن** `audit.export {filters, rows, total}`.
+- `/audit`: بحث + زر مرشّحات (لوحة قابلة للطي: نوع الفاعل، الفاعل، الكيان، الإجراء بمجموعات `resource.*`، من/إلى) + عدّاد + «مسح» + تصدير؛ جدول سطح مكتب / قائمة جوال (النقر على الصف يفتح التفاصيل)؛ **Sheet** تفاصيل عبر `?entry=<id>` (قابل للربط من أي صفحة): بيانات وصفية + diff مع مفتاح «التغييرات فقط» ونسخ JSON؛ لون الإجراء حسب خطورته (حذف/إبطال = destructive).
+- عنصر التنقّل `audit` مفعّل (أُزيل `phase`)، i18n `audit.*` ar/en.
+- **اختبارات:** unit 12 (`audit-schemas`: افتراضيات، رفض، strict، CSV، حقن الصيغ، diff، حدود اليوم Riyadh + DST Berlin) · integration 9 (`audit-queries`: ترتيب/ترقيم/كل مرشّح/حدود اليوم بمنطقة المستأجر/بحث بالفاعل/فاعل محذوف/النظام/facets/تدفّق بلا فجوات/عزل مستأجرين) · e2e 2×2 (`audit.spec`: بحث → مرشّح النظام → Sheet بثلاثة أنواع diff + مفتاح «التغييرات فقط» → CSV: BOM + رأس + خلية حقن مُحيَّدة + strict 400 + أثر `audit.export`؛ الطالب → `/unauthorized` و403).
+- **البوابة:** tsc 0 · eslint 0 · vitest **205/205** (28) · build ✓ · Playwright **96 ✓ / 10 skip / 0 ✗** (تشغيل كامل). تصحيح: رقم PR #22 (96) كان جمعًا حسابيًا بلا إعادة تشغيل كاملة — الرقم الفعلي حينها 92؛ 96 هو المقاس بعد إضافة audit.spec.
+
+**قرارات:** (1) لا صلاحية جديدة — `audit.view`/`audit.export` من الكتالوج. (2) الفاعل يُحلّ بالاسم حتى لو كان محذوفًا حذفًا ناعمًا (الصف موجود)؛ المحذوف نهائيًا يظهر «مستخدم محذوف» بمعرّفه — لا نفقد الأثر (PDPL). (3) البحث النصي لا يفتّش داخل `before/after` (أداء + خصوصية)؛ استخدم مرشّح الكيان/المعرّف. (4) الفلترة بالتاريخ بحدود **يوم المستأجر** لا UTC.
+
+**دروس:** (1) `Intl.DateTimeFormat.formatToParts` بـ`hourCycle:"h23"` يعطي حدود اليوم لأي منطقة بلا مكتبة تواريخ. (2) مع الجداول بلا FK: استعلام أسماء منفصل بـ`IN` أرخص وأأمن من join وهمي. (3) في e2e الجوال: النقر على الصف (`onItemClick`) أثبت من فتح قائمة `⋮` داخل قائمة Radix.
+
+**التالي:** P1-10 الإعدادات — `lib/crypto` (AES-256-GCM بمفتاح `APP_ENCRYPTION_KEY` الموجود) + `features/settings` + `/settings/[tab]` + حقن `TenantBranding` في `/login` والتخطيط.
