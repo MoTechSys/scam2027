@@ -4,8 +4,8 @@
   "repo": "https://github.com/MoTechSys/scam2027",
   "entryPoint": "AGENTS.md",
   "updatedAt": "2026-09-28",
-  "updatedInPr": 22,
-  "mainHead": "c761778",
+  "updatedInPr": 23,
+  "mainHead": "a2043d2",
   "branches": {
     "main": "main",
     "work": "genspark_ai_developer",
@@ -13,8 +13,8 @@
   },
   "progress": {
     "totalTasks": 65,
-    "doneTasks": 24,
-    "percent": 37,
+    "doneTasks": 25,
+    "percent": 38,
     "phases": {
       "P0": {
         "name": "Foundation",
@@ -29,7 +29,7 @@
       "P1": {
         "name": "Core LMS",
         "total": 15,
-        "done": 8,
+        "done": 9,
         "status": "IN_PROGRESS",
         "prs": [
           4,
@@ -44,7 +44,9 @@
           17,
           18,
           19,
-          20
+          20,
+          22,
+          23
         ]
       },
       "P2": {
@@ -96,18 +98,19 @@
       "P1-05",
       "P1-06",
       "P1-07",
-      "P1-08"
+      "P1-08",
+      "P1-09"
     ],
     "nextTask": {
-      "id": "P1-09",
-      "name": "سجل التدقيق",
+      "id": "P1-10",
+      "name": "الإعدادات",
       "status": "TODO",
-      "scope": "صفحة /audit (المسار موجود مسبقًا في lib/nav/items.ts بـ phase P1 — أزل phase عند الشحن؛ gate: audit.view): فلاتر فاعل/كيان/إجراء/تاريخ، تفاصيل diff قبل/بعد، تصدير CSV (audit.export). البيانات موجودة في AuditLog منذ P0 (actorId nullable = system).",
+      "scope": "/settings/[tab] عام/أمان/علامة تجارية (gate settings.view؛ التعديل settings.edit_general/edit_security/edit_branding). TenantSetting (tenantId,category,key) مع تشفير AES-256-GCM للأسرار (APP_ENCRYPTION_KEY) — lib/crypto جديد. TenantBranding (logoUrl, primaryColor, accentColor, loginMessage): رفع الشعار عبر lib/storage + حقن العلامة في /login والتخطيط (CSS vars من RSC). عنصر التنقّل settings موجود بـ phase P1 — أزل phase عند الشحن.",
       "deliverables": [
-        "features/audit/{schemas,queries,actions}: list مرقّم بفلاتر + export CSV (stream)",
-        "/audit UI على نمط PageShell/ScrollRegion + Sheet لتفاصيل diff",
-        "nav item audit (phase P1 → متاح) + i18n audit.*",
-        "اختبارات unit/integration/e2e + توثيق"
+        "features/settings/{schemas,queries,actions} + lib/crypto (AES-256-GCM, versioned key)",
+        "/settings/[tab] على PageShell/ScrollRegion + نماذج react-hook-form",
+        "حقن TenantBranding في login/layout + مسار شعار عبر storage",
+        "اختبارات unit (crypto/schemas) + integration (settings queries, RLS) + e2e desktop+mobile + توثيق"
       ]
     }
   },
@@ -116,14 +119,14 @@
     "definition": "typecheck + lint + test + build must all pass; then playwright e2e against `pnpm build && pnpm start -p 3000`",
     "lastRun": {
       "date": "2026-09-28",
-      "commit": "session 21 hardening (PR #22)",
+      "commit": "P1-09 audit log (PR #23)",
       "typecheck": "PASS (0 errors)",
       "lint": "PASS (0 errors)",
       "unitAndIntegration": {
         "runner": "vitest",
-        "passed": 183,
+        "passed": 205,
         "failed": 0,
-        "files": 26
+        "files": 28
       },
       "e2e": {
         "runner": "playwright",
@@ -135,14 +138,15 @@
           "mobile-safari"
         ],
         "skippedReason": "logout fixme (2) + Radix Select dialogs on mobile-safari (5, covered on desktop) + dashboard student assertions mobile-only (1) + files admin upload mobile (1) + trash bulk-select desktop-only (1)",
-        "note": "14 files x 2 projects incl. new crawl.spec (4 roles x 2 + 2 API/CSP probes x 2)"
+        "note": "15 files x 2 projects incl. audit.spec (2x2) + crawl.spec. NB: PR #22 recorded 96 by arithmetic (84+12) without a full rerun — the true PR #22 figure was 92; 96 is the measured figure after P1-09."
       },
       "build": "PASS",
-      "buildId": "sw1UU4rNjqF-F0UabomIS",
+      "buildId": "r7A9h3uV33BOzm6UEPBKk",
       "verifiedOnCleanClone": "2026-09-28 — fresh sandbox: apt postgresql-17 + pnpm 10 + migrate both DBs + seed + pnpm check + playwright; found & fixed 3 bootstrap breakers (seed .env, NODE_ENV in .env, prisma config)",
       "deepProbe": "2026-09-28 — 200 route×role×viewport crawls + interaction flows (dialogs, uploads, i18n toggle, theme, logout) + 26 API/RBAC/redirect/header probes; all clean after fixes"
     },
     "knownDebt": [
+      "Audit (P1-09): AuditLog.actorId has no FK — resolve names with one IN(...) per page (features/audit/queries resolveActors); unknown id renders as 'deleted user'. Day filters are widened in the TENANT time zone (dayRangeInTimeZone) — never use Date-only comparisons. CSV cells pass csvEscape (formula-injection guard); export is keyset-paginated per short RLS tx, never one long transaction. The sheet is URL-addressable (?entry=<id>) so any page can deep-link an audit row.",
       "Hydration (React #418): never format dates/numbers in client components with `new Intl.*(undefined)` or `useFormatter().dateTimeRange` — server (Node ICU, thin spaces U+2009) and browser output differ. Use `useFormatter().dateTime/number` and `lib/format-range.ts` for ranges. e2e/crawl.spec fails on any pageerror.",
       "Exactly one <h1>: PageHeader renders <p> below lg and the app bar renders the <h1> (useMediaQuery on DESKTOP_HEADER_QUERY). Do not add another h1 anywhere; crawl.spec asserts count == 1 on every route.",
       "Both dashboard branches (mobile/desktop) are in the DOM; charts must mount only in the visible one (GrowthChart uses useMediaQuery) or Recharts logs width(0)/height(0).",
@@ -169,10 +173,10 @@
     ],
     "tsc": 0,
     "eslint": 0,
-    "vitest": "183/183 (26 files)",
-    "playwright": "96 passed / 10 skipped (14 files x 2 projects)",
+    "vitest": "205/205 (28 files)",
+    "playwright": "96 passed / 10 skipped (15 files x 2 projects)",
     "build": "ok",
-    "buildId": "sw1UU4rNjqF-F0UabomIS"
+    "buildId": "r7A9h3uV33BOzm6UEPBKk"
   },
   "database": {
     "engine": "PostgreSQL 17",
@@ -414,8 +418,14 @@
       "date": "2026-09-28",
       "scope": "Clean-sandbox bootstrap audit + deep probe (200 crawls, interaction flows, 26 security probes); fixed: seed env, NODE_ENV trap, prisma.config.ts, audit vuln, turbopack trace, React #418 x3 pages, duplicate h1, CSP https upgrade on http, /developer scroll, Recharts 0x0, API 401 JSON; added e2e/crawl.spec.ts + format-range; docs reconciled; owner actions 1-2 closed by owner",
       "pr": 22
+    },
+    {
+      "n": 22,
+      "date": "2026-09-28",
+      "scope": "P1-09 audit log: features/audit/{schemas,queries}, GET /api/audit/export (streamed CSV), /audit with filter panel + URL-addressable diff sheet, nav item, i18n ar/en, 12 unit + 9 integration + 2 e2e (desktop+mobile)",
+      "pr": 23
     }
   ],
-  "nextTask": "P1-09 audit log",
-  "session": 21
+  "nextTask": "P1-10 settings",
+  "session": 22
 }

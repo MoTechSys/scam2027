@@ -1314,5 +1314,70 @@
       "blocked": "Skipped {count} item(s) still referenced by other records",
       "jobScheduled": "Cleanup job started — counts refresh when it finishes"
     }
+  },
+  "audit": {
+    "title": "Audit log",
+    "subtitle": "Every sensitive operation: who did it, when, and what changed — an append-only record",
+    "searchPlaceholder": "Search by action, entity, id or actor name…",
+    "filters": {
+      "actor": "Actor",
+      "actorKind": {
+        "ANY": "All",
+        "USER": "Users",
+        "SYSTEM": "System"
+      },
+      "entity": "Entity",
+      "action": "Action",
+      "from": "From",
+      "to": "To",
+      "anyEntity": "All entities",
+      "anyAction": "All actions",
+      "anyActor": "All actors",
+      "apply": "Apply",
+      "clear": "Clear filters",
+      "active": "{count, plural, =0 {No filters} =1 {1 filter} other {# filters}}"
+    },
+    "columns": {
+      "when": "When",
+      "actor": "Actor",
+      "action": "Action",
+      "entity": "Entity",
+      "ip": "IP",
+      "details": "Details"
+    },
+    "actor": {
+      "system": "System",
+      "deleted": "Deleted user"
+    },
+    "total": "{count, plural, =0 {No entries} =1 {1 entry} other {# entries}}",
+    "empty": "No matching entries",
+    "export": {
+      "button": "Export CSV",
+      "hint": "Exports up to {max} rows with the current filters",
+      "started": "Download started",
+      "failed": "Export failed"
+    },
+    "sheet": {
+      "title": "Entry details",
+      "meta": "Metadata",
+      "diff": "Changes",
+      "before": "Before",
+      "after": "After",
+      "noDiff": "This entry has no before/after snapshot",
+      "requestId": "Request id",
+      "userAgent": "User agent",
+      "entityId": "Entity id",
+      "onlyChanges": "Changes only",
+      "kind": {
+        "added": "Added",
+        "removed": "Removed",
+        "changed": "Changed",
+        "same": "Unchanged"
+      },
+      "copy": "Copy JSON",
+      "copied": "Copied",
+      "notFound": "Entry not found"
+    },
+    "view": "View details"
   }
 }
