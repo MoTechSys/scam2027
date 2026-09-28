@@ -19,7 +19,7 @@ import {
   Upload,
   type LucideIcon,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -140,7 +140,9 @@ export function FilesClient({ page, query, counts, usage, lookups, maxUploadByte
   );
 
   const mayMutate = (f: FileRow) => can.admin || f.isOwner;
-  const dateFmt = useMemo(() => new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }), []);
+  // next-intl formatter: same locale + tenant time zone on server and client (a bare Intl.DateTimeFormat(undefined)
+  // uses the server locale during SSR and the browser locale after hydration → React #418 mismatch).
+  const fmt = useFormatter();
 
   const nameCell = (f: FileRow) => {
     const Icon = iconFor(f.mimeType);
@@ -183,7 +185,7 @@ export function FilesClient({ page, query, counts, usage, lookups, maxUploadByte
   );
   const dateCell = (f: FileRow) => (
     <span className="text-xs tabular-nums" dir="ltr">
-      {dateFmt.format(new Date(trash && f.deletedAt ? f.deletedAt : f.createdAt))}
+      {fmt.dateTime(new Date(trash && f.deletedAt ? f.deletedAt : f.createdAt), { dateStyle: "medium" })}
     </span>
   );
 
@@ -453,7 +455,11 @@ export function FilesClient({ page, query, counts, usage, lookups, maxUploadByte
           </div>
         )}
         {can.upload && !trash && (
-          <Button onClick={() => setUpload(true)} className="col-span-2 min-h-10 gap-2 lg:col-span-1 lg:min-h-11" data-testid="upload-file">
+          <Button
+            onClick={() => setUpload(true)}
+            className="col-span-2 min-h-10 gap-2 lg:col-span-1 lg:min-h-11"
+            data-testid="upload-file"
+          >
             <Upload className="size-4" aria-hidden /> {t("actions.upload")}
           </Button>
         )}
@@ -492,43 +498,43 @@ export function FilesClient({ page, query, counts, usage, lookups, maxUploadByte
       </div>
 
       <ScrollRegion label={t("title")} className="-mx-1 px-1">
-      <div className="hidden md:block">
-        <DataTable
-          columns={columns}
-          data={page.items}
-          keyExtractor={(f) => f.id}
-          emptyMessage={trash ? t("emptyTrash") : t("empty")}
-          pagination={pagination}
-          maxHeight="none"
-        />
-      </div>
-      <div className="md:hidden">
-        <MobileDataTable
-          columns={[
-            { key: "name", header: t("columns.name"), primary: true, render: nameCell },
-            { key: "courseCode", header: t("columns.course"), secondary: true, render: courseCell },
-            {
-              key: "classification",
-              header: t("columns.classification"),
-              badge: true,
-              render: (f) => <ClassificationBadge value={f.classification} />,
-            },
-            { key: "size", header: t("columns.size"), render: sizeCell },
-            { key: "downloads", header: t("columns.downloads"), render: (f) => String(f.downloads) },
-            {
-              key: "createdAt",
-              header: trash ? t("columns.deletedAt") : t("columns.date"),
-              render: dateCell,
-            },
-          ]}
-          data={page.items}
-          keyExtractor={(f) => f.id}
-          emptyMessage={trash ? t("emptyTrash") : t("empty")}
-          actionsLabel={tc("actions")}
-          actions={mobileActions}
-          pagination={pagination}
-        />
-      </div>
+        <div className="hidden md:block">
+          <DataTable
+            columns={columns}
+            data={page.items}
+            keyExtractor={(f) => f.id}
+            emptyMessage={trash ? t("emptyTrash") : t("empty")}
+            pagination={pagination}
+            maxHeight="none"
+          />
+        </div>
+        <div className="md:hidden">
+          <MobileDataTable
+            columns={[
+              { key: "name", header: t("columns.name"), primary: true, render: nameCell },
+              { key: "courseCode", header: t("columns.course"), secondary: true, render: courseCell },
+              {
+                key: "classification",
+                header: t("columns.classification"),
+                badge: true,
+                render: (f) => <ClassificationBadge value={f.classification} />,
+              },
+              { key: "size", header: t("columns.size"), render: sizeCell },
+              { key: "downloads", header: t("columns.downloads"), render: (f) => String(f.downloads) },
+              {
+                key: "createdAt",
+                header: trash ? t("columns.deletedAt") : t("columns.date"),
+                render: dateCell,
+              },
+            ]}
+            data={page.items}
+            keyExtractor={(f) => f.id}
+            emptyMessage={trash ? t("emptyTrash") : t("empty")}
+            actionsLabel={tc("actions")}
+            actions={mobileActions}
+            pagination={pagination}
+          />
+        </div>
       </ScrollRegion>
 
       {can.upload && (

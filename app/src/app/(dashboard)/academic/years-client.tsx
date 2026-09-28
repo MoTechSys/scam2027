@@ -29,6 +29,7 @@ import {
 import type { Option, SemesterRow, YearRow } from "@/features/academic/queries";
 import type { AcademicCan } from "./academic-client";
 import { SemesterDialog, YearDialog } from "./dialogs";
+import { formatDateRange } from "@/lib/format-range";
 
 type Props = { years: YearRow[]; yearOptions: Option[]; can: AcademicCan };
 
@@ -69,7 +70,7 @@ export function YearsClient({ years, yearOptions, can }: Props) {
   const [semDialog, setSemDialog] = useState<{ semester: SemesterRow | null; yearId?: string } | null>(null);
   const [confirm, setConfirm] = useState<Confirm | null>(null);
 
-  const range = (a: Date, b: Date) => f.dateTimeRange(a, b, { dateStyle: "medium" });
+  const range = (a: Date, b: Date) => formatDateRange(f, a, b);
 
   const yearMenu = (y: YearRow) => {
     const items: React.ComponentProps<typeof MenuItems>["items"] = [];

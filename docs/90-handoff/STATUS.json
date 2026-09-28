@@ -3,9 +3,9 @@
   "project": "MoTechSys/scam2027",
   "repo": "https://github.com/MoTechSys/scam2027",
   "entryPoint": "AGENTS.md",
-  "updatedAt": "2026-09-06",
-  "updatedInPr": 20,
-  "mainHead": "660dad6",
+  "updatedAt": "2026-09-28",
+  "updatedInPr": 22,
+  "mainHead": "c761778",
   "branches": {
     "main": "main",
     "work": "genspark_ai_developer",
@@ -115,39 +115,47 @@
     "command": "cd app && pnpm check",
     "definition": "typecheck + lint + test + build must all pass; then playwright e2e against `pnpm build && pnpm start -p 3000`",
     "lastRun": {
-      "date": "2026-09-07",
-      "commit": "P1-08 unified trash (PR #20)",
+      "date": "2026-09-28",
+      "commit": "session 21 hardening (PR #22)",
       "typecheck": "PASS (0 errors)",
       "lint": "PASS (0 errors)",
       "unitAndIntegration": {
         "runner": "vitest",
-        "passed": 181,
+        "passed": 183,
         "failed": 0,
-        "files": 25
+        "files": 26
       },
       "e2e": {
         "runner": "playwright",
-        "passed": 80,
+        "passed": 96,
         "skipped": 10,
         "failed": 0,
         "projects": [
           "desktop-chromium",
           "mobile-safari"
         ],
-        "skippedReason": "logout fixme (2) + Radix Select dialogs on mobile-safari (5, covered on desktop) + dashboard student assertions mobile-only (1) + files admin upload mobile (1) + trash bulk-select desktop-only (1)"
+        "skippedReason": "logout fixme (2) + Radix Select dialogs on mobile-safari (5, covered on desktop) + dashboard student assertions mobile-only (1) + files admin upload mobile (1) + trash bulk-select desktop-only (1)",
+        "note": "14 files x 2 projects incl. new crawl.spec (4 roles x 2 + 2 API/CSP probes x 2)"
       },
       "build": "PASS",
-      "buildId": "2Wmwy5NXVNDO_25vfpcED",
-      "verifiedOnCleanClone": "2026-09-07 — fresh `git clone` of main@6813315 + `pnpm install --frozen-lockfile` + `pnpm check` → exit 0 (tsc 0, eslint 0, vitest 181/181, build ok)"
+      "buildId": "sw1UU4rNjqF-F0UabomIS",
+      "verifiedOnCleanClone": "2026-09-28 — fresh sandbox: apt postgresql-17 + pnpm 10 + migrate both DBs + seed + pnpm check + playwright; found & fixed 3 bootstrap breakers (seed .env, NODE_ENV in .env, prisma config)",
+      "deepProbe": "2026-09-28 — 200 route×role×viewport crawls + interaction flows (dialogs, uploads, i18n toggle, theme, logout) + 26 API/RBAC/redirect/header probes; all clean after fixes"
     },
     "knownDebt": [
+      "Hydration (React #418): never format dates/numbers in client components with `new Intl.*(undefined)` or `useFormatter().dateTimeRange` — server (Node ICU, thin spaces U+2009) and browser output differ. Use `useFormatter().dateTime/number` and `lib/format-range.ts` for ranges. e2e/crawl.spec fails on any pageerror.",
+      "Exactly one <h1>: PageHeader renders <p> below lg and the app bar renders the <h1> (useMediaQuery on DESKTOP_HEADER_QUERY). Do not add another h1 anywhere; crawl.spec asserts count == 1 on every route.",
+      "Both dashboard branches (mobile/desktop) are in the DOM; charts must mount only in the visible one (GrowthChart uses useMediaQuery) or Recharts logs width(0)/height(0).",
+      "CSP `upgrade-insecure-requests` is emitted only when x-forwarded-proto=https (proxy.ts). On plain http it made the browser upgrade redirects to https://localhost and fail.",
+      "Unauthenticated /api/* → 401 JSON `{ok:false,code:UNAUTHORIZED}` (proxy.ts), never a 307 to /login. Public API allow-list = /api/health + /api/auth/*.",
+      "Standalone pages outside the dashboard shell (/developer, /login, error pages) own their scroll: `<main class=\"h-dvh overflow-y-auto\">` — the document itself must never scroll (ADR-0008 applies site-wide).",
+      "Bootstrap: prisma/seed.ts imports dotenv/config (tsx does not load .env); `prisma.config.ts` replaced package.json#prisma; NODE_ENV must NOT be in .env (exporting it breaks `next build`); pnpm override deepmerge-ts>=8 closes GHSA-ggr8-5vv4-36mx.",
       "Trash (P1-08): registry handlers must import permission predicates from has-permission.ts (vitest-loadable). Purge is FK-aware: parents referenced by live children (course←offerings/files, offering←files, user←uploadedFiles) come back as `blocked`, never as a thrown FK error — purge leaves first (PURGE_ORDER). e2e/trash.spec seeds rows directly via Prisma with `E2E`-prefixed codes and uses a per-run stamp in the search term (desktop+mobile runs share the DB).",
       "PageTabs now has real ARIA tab semantics (role=tablist/tab, aria-selected, arrow keys). In e2e use getByRole('tab', …), not getByRole('button', …).",
       "Viewport-locked shell (ADR-0008): every flex level between the page root and the list needs `min-h-0`, or the ScrollRegion grows instead of scrolling. Root = `flex h-full min-h-0 flex-col`; never `space-y-*` on a page root; verify with e2e `expectNoPageScroll`.",
       "Mobile: PageHeader hides the in-content h1 below lg, so the app bar renders the h1 (ownsHeading). Detail pages that keep a visible h1 use MobilePageTitle instead. Never add a manual <header> — e2e heading assertions and axe page-has-heading-one depend on exactly one h1.",
       "Unanchored .gitignore patterns bite: `storage` (P1-06) silently excluded app/src/lib/storage from every commit until PR #16. Anchor runtime dirs (`/storage/`) and run `git status --ignored` / a clean-clone `pnpm check` before merging a PR that adds a new top-level folder.",
       "prettier --check flags ~120 pre-existing files; not part of `pnpm check`. Format ONLY files you touch (running --write on a folder pollutes the PR) or do a dedicated `style:` PR.",
-      "CI lives in .github/ci.yml.template because the agent token lacks `workflows` scope; owner must move it to .github/workflows/ci.yml.",
       "docs/50-quality/01-TESTING-STRATEGY.md §5 references scripts e2e:mobile / e2e:crawl / test:a11y that are not yet in app/package.json (a11y is covered by e2e/a11y.spec.ts; a crawl spec is not written yet).",
       "e2e logout test is fixme in auth.spec.ts.",
       "Radix Select option tap is flaky on mobile-safari in Playwright; create dialogs are skipped on that project and asserted on desktop — mobile asserts list/detail/no-horizontal-scroll.",
@@ -161,10 +169,10 @@
     ],
     "tsc": 0,
     "eslint": 0,
-    "vitest": "181/181 (25 files)",
-    "playwright": "80 passed / 10 skipped (13 files x 2 projects)",
+    "vitest": "183/183 (26 files)",
+    "playwright": "96 passed / 10 skipped (14 files x 2 projects)",
     "build": "ok",
-    "buildId": "2Wmwy5NXVNDO_25vfpcED"
+    "buildId": "sw1UU4rNjqF-F0UabomIS"
   },
   "database": {
     "engine": "PostgreSQL 17",
@@ -269,15 +277,9 @@
   "ownerActions": [
     {
       "id": 1,
-      "action": "Rotate Supabase DB password of legacy project hmqmtxgyuarccyrioics (exposed in MoTechSys/SCAM/HANDOVER.md, SEC-01)",
-      "status": "OPEN",
-      "priority": "HIGH"
-    },
-    {
-      "id": 2,
-      "action": "Move .github/ci.yml.template to .github/workflows/ci.yml (agent token lacks workflows scope)",
-      "status": "OPEN",
-      "priority": "HIGH"
+      "action": "(closed by owner decision, session 21) legacy Supabase secret — out of scope; CI on GitHub — not required, the full gate runs locally before every PR",
+      "status": "CLOSED",
+      "priority": "—"
     },
     {
       "id": 3,
@@ -406,8 +408,14 @@
       "date": "2026-09-06",
       "scope": "ADR-0008 fixed viewport: ScrollRegion/PageShell, in-flow bottom bar (4 items, no more), ☰ in app bar, all list/detail pages + dashboard cards scroll internally, compact toolbars, prettyIp, expectNoPageScroll",
       "pr": 19
+    },
+    {
+      "n": 21,
+      "date": "2026-09-28",
+      "scope": "Clean-sandbox bootstrap audit + deep probe (200 crawls, interaction flows, 26 security probes); fixed: seed env, NODE_ENV trap, prisma.config.ts, audit vuln, turbopack trace, React #418 x3 pages, duplicate h1, CSP https upgrade on http, /developer scroll, Recharts 0x0, API 401 JSON; added e2e/crawl.spec.ts + format-range; docs reconciled; owner actions 1-2 closed by owner",
+      "pr": 22
     }
   ],
   "nextTask": "P1-09 audit log",
-  "session": 19
+  "session": 21
 }

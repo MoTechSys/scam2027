@@ -45,7 +45,7 @@ function clientIp(req: NextRequest): string {
   );
 }
 
-function buildCsp(nonce: string): string {
+function buildCsp(nonce: string, secure: boolean): string {
   const dev = env.NODE_ENV !== "production";
   return [
     "default-src 'self'",
@@ -58,7 +58,9 @@ function buildCsp(nonce: string): string {
     "base-uri 'self'",
     "form-action 'self'",
     "object-src 'none'",
-    "upgrade-insecure-requests",
+    // Only meaningful once the page itself is served over TLS. On plain-http hosts (localhost, dev tunnels without
+    // x-forwarded-proto) it makes the browser upgrade followed redirects/prefetches to https:// and they fail.
+    ...(secure ? ["upgrade-insecure-requests"] : []),
   ].join("; ");
 }
 
@@ -121,11 +123,23 @@ export default async function proxy(req: NextRequest): Promise<NextResponse> {
     });
     const url = req.nextUrl.clone();
     url.pathname = "/login";
+    // API routes are machine clients (fetch/curl): answer 401 JSON (API-CONTRACT §errors) instead of an HTML redirect.
+    const apiUnauthorized = () =>
+      NextResponse.json(
+        { ok: false, code: "UNAUTHORIZED", message: "يجب تسجيل الدخول" },
+        { status: 401, headers: { "x-request-id": requestId, "cache-control": "no-store" } },
+      );
     if (!token?.sid) {
+      if (pathname.startsWith("/api/")) return apiUnauthorized();
       url.search = pathname === "/" ? "" : `?next=${encodeURIComponent(pathname + req.nextUrl.search)}`;
       return NextResponse.redirect(url, { headers: { "x-request-id": requestId } });
     }
     if (tenant && token.tid !== tenant.id) {
+      if (pathname.startsWith("/api/")) {
+        const res = apiUnauthorized();
+        res.cookies.delete(SESSION_COOKIE);
+        return res;
+      }
       url.search = "?reason=tenant_mismatch";
       const res = NextResponse.redirect(url, { headers: { "x-request-id": requestId } });
       res.cookies.delete(SESSION_COOKIE);
@@ -150,7 +164,10 @@ export default async function proxy(req: NextRequest): Promise<NextResponse> {
 
   const res = NextResponse.next({ request: { headers: reqHeaders } });
   res.headers.set("x-request-id", requestId);
-  res.headers.set("Content-Security-Policy", buildCsp(nonce));
+  res.headers.set(
+    "Content-Security-Policy",
+    buildCsp(nonce, reqHeaders.get("x-forwarded-proto") === "https"),
+  );
   if (clearSession) res.cookies.delete(SESSION_COOKIE);
   return res;
 }

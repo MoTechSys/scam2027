@@ -25,6 +25,7 @@ import type {
 import { ACADEMIC_TABS, type AcademicTab, type CatalogueListQuery } from "@/features/academic/schemas";
 import { CatalogueClient } from "./catalogue-client";
 import { YearsClient } from "./years-client";
+import { formatDateRange } from "@/lib/format-range";
 
 export type AcademicCan = {
   college: boolean;
@@ -77,7 +78,7 @@ function CurrentPeriodCard({ period, className }: { period: CurrentPeriod; class
               {t(`status.${period.semester.status}`)}
             </Badge>
             <span className="tabular-nums">
-              {f.dateTimeRange(period.semester.startDate, period.semester.endDate, { dateStyle: "medium" })}
+              {formatDateRange(f, period.semester.startDate, period.semester.endDate)}
             </span>
           </div>
         ) : (

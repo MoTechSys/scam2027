@@ -24,7 +24,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { logoutAction, setLocaleAction } from "@/lib/session/actions";
 import { NotificationBell } from "./NotificationBell";
-import { useCurrentPageHeader } from "./page-header";
+import { DESKTOP_HEADER_QUERY, useCurrentPageHeader } from "./page-header";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import type { LayoutTenant, LayoutUser } from "./types";
 
 type Props = { user: LayoutUser; tenant: LayoutTenant; onOpenMenu: () => void };
@@ -58,6 +59,7 @@ export function Header({ user, tenant, onOpenMenu }: Props) {
   const [pending, startTransition] = useTransition();
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const page = useCurrentPageHeader();
+  const desktop = useMediaQuery(DESKTOP_HEADER_QUERY);
 
   useEffect(() => {
     let stored: string | null = null;
@@ -114,7 +116,7 @@ export function Header({ user, tenant, onOpenMenu }: Props) {
         </Button>
         <div className="min-w-0 lg:hidden" data-testid="mobile-page-title">
           {/* PageHeader hides its in-content <h1> below lg → the app bar carries the page's single h1. */}
-          {page?.ownsHeading ? (
+          {page?.ownsHeading && !desktop ? (
             <h1 className="truncate text-sm leading-tight font-semibold">{page.title}</h1>
           ) : (
             <p className="truncate text-sm leading-tight font-semibold">{page?.title ?? tenant.name}</p>

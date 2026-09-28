@@ -30,7 +30,8 @@ function create(): StorageAdapter {
       forcePathStyle: env.S3_FORCE_PATH_STYLE,
     });
   }
-  return new LocalStorage(path.resolve(process.cwd(), env.STORAGE_LOCAL_ROOT));
+  // Runtime-configured root: opt out of Turbopack file tracing (it would otherwise bundle the whole project).
+  return new LocalStorage(path.resolve(/* turbopackIgnore: true */ process.cwd(), env.STORAGE_LOCAL_ROOT));
 }
 
 export function storage(): StorageAdapter {

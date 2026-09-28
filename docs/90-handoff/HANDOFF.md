@@ -11,9 +11,9 @@
 | المستودع | `MoTechSys/scam2027` (عام) — `main` = بعد PR #19 (viewport ثابت) |
 | الفرع الرئيسي | `main` |
 | فرع العمل | `genspark_ai_developer` → PR → `main` (squash-merge مباشر مصرّح به من المالك) → مزامنة الفرع بـ`git reset --hard origin/main && git push -f` |
-| التقدّم | **24 / 65 مهمة (37%)** — P0 16/16 ☑ · P1 8/15 (P1-01..P1-08) · P2–P5 لم تبدأ |
+| التقدّم | **24 / 65 مهمة (37%)** — P0 16/16 ☑ · P1 8/15 (P1-01..P1-08) · P2–P5 لم تبدأ · **+ تصليب الجلسة 21 (PR #22)** |
 | المهمة التالية | **P1-09** سجل التدقيق (`/audit`) — المخرجات في `STATUS.json` → `progress.nextTask`، الصف في `AGENTS.md` §5 |
-| بوابة الجودة | tsc 0 · eslint 0 · Vitest 181/181 (25 ملفًا) · build `2Wmwy5NXVNDO_25vfpcED` · Playwright 80 ✅ / 10 skip (desktop + mobile) — الجلسة 20 (PR #20) |
+| بوابة الجودة | tsc 0 · eslint 0 · audit 0 · Vitest 183/183 (26 ملفًا) · build `sw1UU4rNjqF-F0UabomIS` · Playwright 96 ✅ / 10 skip (desktop + mobile + crawl) — الجلسة 21 (PR #22) |
 | قاعدة البيانات | آخر هجرة في `app/prisma/migrations/` (لا هجرات جديدة منذ P1-01؛ P1-06/P1-07 استخدما الجداول الموجودة) — **قاعدتان** (`scam2027`, `scam2027_test`) يجب هجرتهما معًا؛ seed كامل: مستأجر demo + أدوار + مستخدمون + بنية أكاديمية + مقررات/شُعب + 30 طالبًا + ملفّان + 3 إشعارات |
 | بيئة التطوير | `/home/user/webapp` (sandbox)؛ المراجع التراثية في `.refs/` (غير ملتزمة، تُستنسخ بالحلقة في §3) |
 | الوحدات المبنية | users, roles, academic, courses, offerings, enrollment, files, notifications — كلها بنمط `features/<x>/{schemas,scope,queries,core,actions}` + صفحة `(dashboard)/<x>` + seed + unit/integration/e2e |
@@ -34,8 +34,7 @@
 
 | # | الإجراء | السبب |
 |---|---|---|
-| 1 | **تدوير كلمة مرور قاعدة Supabase** للمشروع القديم (`hmqmtxgyuarccyrioics`) | مكشوفة في `MoTechSys/SCAM/HANDOVER.md` (SEC-01). يُفضَّل أيضاً حذف الملف من تاريخ Git أو أرشفة المستودع كخاص. |
-| 2 | **نقل `.github/ci.yml.template` إلى `.github/workflows/ci.yml`** | رمز الوكيل لا يملك نطاق `workflows`؛ بدونه لا تعمل بوابة CI على GitHub |
+| 1–2 | ~~Supabase القديم~~ · ~~CI على GitHub~~ | **أُغلقا بقرار المالك (الجلسة 21)** — الأول خارج النطاق، والثاني غير مطلوب: الوكيل يشغّل البوابة الكاملة محليًا قبل كل PR |
 | 3 | تحديد النطاق الرئيسي المستقبلي (مثال `scam.app`) | لتصميم النطاقات الفرعية للمستأجرين (يمكن تأجيله؛ التطوير على `localhost` بمستأجر `demo`) |
 | 4 | تحديد مزوّد AI المفضّل ومفتاح تطوير (OpenAI-compatible أو Gemini) | لـ P2-05 |
 | 5 | بيانات SMTP للمنصة | لـ P1-12 (تفعيل/استعادة بالبريد) |
@@ -272,3 +271,31 @@ pnpm test && pnpm lint && pnpm typecheck
 **تحقّق الاستلام (نهاية الجلسة):** استنساخ نظيف لـ`main@6813315` → `pnpm install --frozen-lockfile` → `pnpm check` exit 0 (181/181). أُصلحت أرقام متأخّرة في README/AGENTS §0/§2 وSTATUS `phases.P1`/`percent`، ووُحّد اسم مسار التدقيق إلى `/audit` (المسار الموجود في `lib/nav/items.ts`).
 
 **التالي:** P1-09 سجل التدقيق — انسخ هيكل `/trash` (PageShell + ScrollRegion + تبويبات) وافلتر `AuditLog` (فاعل/كيان/إجراء/تاريخ) + Sheet لعرض `before/after` + تصدير CSV بتدفّق. صلاحيتا `audit.view`/`audit.export` موجودتان؛ عنصر التنقّل `audit` موجود بـ`phase: "P1"` — أزل `phase` عند الشحن.
+
+## الجلسة 21 — إقلاع من صفر + فحص عميق + تصليب (PR #22) — ☑
+
+**طلب المالك:** «النظام عادة خارب وفيه أشياء كثيرة — اختبر كل شيء بنفسك وأصلح كل شيء». قرار المالك: إغلاق إجرائَي Supabase القديم وCI على GitHub؛ البوابة بيد الوكيل محليًا.
+
+**المنهج:** (1) sandbox نظيف تمامًا (لا pnpm/لا Postgres) → Bootstrap §2 حرفيًا. (2) `pnpm check` + Playwright الكاملة. (3) **زحف 200 حالة** (20 مسارًا × 4 أدوار × desktop+mobile + صفحات التفاصيل المكتشفة ديناميكيًا) بتسجيل: الحالة، الوجهة النهائية، `h1`، تمرير أفقي/عمودي، أخطاء الصفحة/الكونسول/الطلبات. (4) **تدفقات تفاعلية**: حوارات إنشاء + تحقق الحقول + Escape، حالة فارغة، رفع `.exe` (رفض) وPDF (قبول وظهور)، تبديل EN/AR على 8 صفحات + قياس التمرير، السمة، الخروج، درج الطالب. (5) **26 مسبارًا أمنيًا**: API بلا جلسة/بدور خاطئ، UUID مزيّف/غير صالح، `page=-1`, `kind=HACK`, `<script>` في المعاملات، open-redirect عبر `next=`, ترويسات الأمان، أعلام الكوكيز.
+
+**ما وُجد وأُصلح (كله في PR #22):**
+| # | العطل | الجذر | الإصلاح |
+|---|---|---|---|
+| 1 | `pnpm tsx prisma/seed.ts` يفشل على استنساخ نظيف (`DATABASE_URL not found`) | `tsx` لا يحمّل `.env` | `import "dotenv/config"` في seed + `prisma.config.ts` (يحل محل `package.json#prisma` المهمل) |
+| 2 | `next build` يفشل (`useContext null` في `/_global-error`) إن صُدِّر `.env` | `NODE_ENV="development"` في `.env.example` | حُذف مع تعليق تحذيري |
+| 3 | `pnpm audit`: 1 high (`deepmerge-ts` عبر `@prisma/config`) | تبعية عابرة | `overrides: deepmerge-ts >=8` في `pnpm-workspace.yaml` → 0 ثغرات |
+| 4 | تحذير Turbopack: تتبّع المشروع كله بسبب `path.resolve(process.cwd(), …)` | تخزين محلي | `/* turbopackIgnore: true */` |
+| 5 | **React #418 (hydration)** على `/files` و`/notifications` | `new Intl.DateTimeFormat(undefined)` في العميل: locale الخادم ≠ المتصفح | `useFormatter().dateTime` |
+| 6 | **React #418** على `/academic` و`/academic/years` بالإنجليزية | `dateTimeRange` → ICU Node يُخرج مسافات رفيعة U+2009 وChromium لا | `lib/format-range.ts` (تنسيق كل طرف + «–») + اختبار وحدة |
+| 7 | **`h1` مكرّر** في كل صفحة قائمة (2 في DOM، واحد مخفي بـCSS) | PageHeader وApp bar يرسمان h1 معًا | PageHeader يرسم `<p>` تحت lg والـApp bar يرسم h1 فقط تحت lg (`useMediaQuery(DESKTOP_HEADER_QUERY)`) |
+| 8 | `/developer` تُمرَّر (28px/390px) — خرق ADR-0008 | `min-h-dvh` على `main` | `main` = `h-dvh overflow-y-auto` حاوية تمرير خاصة |
+| 9 | `ERR_SSL_PROTOCOL_ERROR` على `https://localhost:3000/dashboard` عند prefetch `/login` وأنت مسجّل | CSP `upgrade-insecure-requests` على http | يُرسَل فقط عند `x-forwarded-proto=https` |
+| 10 | تحذير Recharts `width(0) height(0)` في لوحة التحكم | فرعا الجوال/سطح المكتب كلاهما في DOM | `GrowthChart` يُركَّب في الفرع المرئي فقط |
+| 11 | `/api/*` بلا جلسة → 307 HTML إلى `/login` | بوابة الـproxy موحّدة للصفحات وAPI | 401 JSON `{ok:false,code:"UNAUTHORIZED"}` (وفق API-CONTRACT) |
+| 12 | `e2e/crawl.spec.ts` الموعود منذ P0 غير موجود | — | كُتب: كل رابط شِل × كل دور (200، h1=1، صفر تمرير، صفر أخطاء)، المسارات المخفية تُعاد توجيهها، مسابير 401 وCSP |
+
+**ما تحقّق أنه سليم (لا تغيير):** RBAC خادميًا (طالب → `/unauthorized` على users/roles/trash؛ رفع ملف 403)، UUID مزيّف → 404، معاملات URL خبيثة → قيم افتراضية آمنة، open-redirect مرفوض (`next=https://evil.com` → `/dashboard`)، ترويسات الأمان كاملة (CSP nonce+strict-dynamic، HSTS، X-Frame DENY، COOP، no X-Powered-By)، كوكي الجلسة `HttpOnly+Secure+Lax`، تحقق الحقول في الحوارات، رفض `.exe` بفحص magic bytes، تبديل اللغة يقلب `dir/lang` بلا تمرير على كل الصفحات، السمة الفاتحة (`data-theme="light"`)، الخروج يُبطل الجلسة. **ملاحظة:** الطالب يرى «البنية الأكاديمية» في القائمة — هذا **مقصود** (مصفوفة الصلاحيات تمنح `academic.view` للأدوار الأربعة؛ الصفحة للقراءة فقط).
+
+**دروس:** (1) الأرقام الخضراء لا تكشف hydration errors — Playwright لا يفشل على `pageerror` ما لم تُلتقط صراحة؛ لذلك crawl.spec تجمعها. (2) `Intl.*` ليس حتميًا بين Node والمتصفح (ICU مختلف) — نسّق دائمًا عبر next-intl بنفس locale/timeZone. (3) «h1 واحد» يجب أن يكون في DOM لا بصريًا فقط (axe يفحص DOM). (4) اختبر البوابة على sandbox **خالٍ** من أي أداة — ثلاثة أعطال إقلاع لم تظهر لأي جلسة سابقة لأن البيئة كانت مهيّأة مسبقًا.
+
+**التالي:** P1-09 سجل التدقيق (التصميم التفصيلي في تقرير الجلسة 21 — `features/audit/{schemas,queries}` + `GET /api/audit/export` CSV بتدفّق + `/audit` بـSheet للـdiff).

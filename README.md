@@ -2,7 +2,7 @@
 
 منصّة إدارة مقررات وتقييم أكاديمي **متعدّدة المستأجرين** (جامعة واحدة أو عدة جامعات على نفس المنصّة)، مبنيّة على واجهة **Omnitrix الخضراء** (React 19 + Tailwind 4 + shadcn/ui، RTL، جوال أولًا) ومحرّك خلفي حديث (Next.js 16 + Prisma + PostgreSQL RLS + Auth.js).
 
-> **الحالة الحالية (2026-09-07):** **24 / 65 مهمة (37%)** — **P0 مكتمل (16/16)**: أساس Next.js 16 + Prisma + PostgreSQL RLS + Auth.js + RBAC (114 صلاحية) + واجهة Omnitrix بقشرة تطبيق للجوال (ADR-0007/0008: viewport ثابت، القوائم تُمرَّر داخل مناطقها) + اختبارات (Vitest 181 ✅ · Playwright 80 ✅ سطح مكتب + جوال). **P1 قيد التنفيذ (8/15)**: P1-01..P1-08 (مخطط، مستخدمون، أدوار، بنية أكاديمية، مقررات/شُعب/تسجيل، ملفات، إشعارات، سلة المحذوفات). **المهمة التالية: P1-09** (سجل التدقيق — النطاق والمخرجات في `docs/90-handoff/STATUS.json → progress.nextTask` والمؤشرات في `HANDOFF.md` الجلسة 20).
+> **الحالة الحالية (2026-09-28):** **24 / 65 مهمة (37%)** — **P0 مكتمل (16/16)**: أساس Next.js 16 + Prisma + PostgreSQL RLS + Auth.js + RBAC (114 صلاحية) + واجهة Omnitrix بقشرة تطبيق للجوال (ADR-0007/0008: viewport ثابت، القوائم تُمرَّر داخل مناطقها) + اختبارات (Vitest 183 ✅ · Playwright سطح مكتب + جوال + زحف كل المسارات لكل دور). **P1 قيد التنفيذ (8/15)**: P1-01..P1-08 (مخطط، مستخدمون، أدوار، بنية أكاديمية، مقررات/شُعب/تسجيل، ملفات، إشعارات، سلة المحذوفات). **المهمة التالية: P1-09** (سجل التدقيق — النطاق والمخرجات في `docs/90-handoff/STATUS.json → progress.nextTask` والمؤشرات في `HANDOFF.md` الجلسة 20).
 >
 > 🤖 **لأي وكيل/مطوّر جديد: ابدأ من [`AGENTS.md`](AGENTS.md)** — نقطة الدخول الوحيدة (المصادر، الإقلاع، الحالة الفعلية، ما تبقّى، دورة العمل، المعايير). الحالة الآلية في [`docs/90-handoff/STATUS.json`](docs/90-handoff/STATUS.json).
 
@@ -22,7 +22,7 @@
 |---|---|
 | إطار العمل | Next.js 16 (App Router, Server Actions) · React 19 · TypeScript strict |
 | الواجهة | Tailwind 4 `@theme inline` · shadcn/ui (60 + 5 مكوّنات جوال) · lucide-react · Recharts · خط Cairo · RTL |
-| البيانات | PostgreSQL 16 · Prisma 6 · RLS (`app.current_tenant_id`) |
+| البيانات | PostgreSQL 17 · Prisma 6 · RLS (`app.current_tenant_id`) |
 | المصادقة | Auth.js v5 · Argon2id · جلسات DB + `sessionVersion` · OTP · قفل الحساب |
 | التحقق | Zod 4 |
 | الاختبار | Vitest · Playwright (1280×800 + 390×844) · axe-core |
@@ -56,7 +56,7 @@
 
 1. كل تغيير كود ⇒ تحديث الوثائق المتأثرة + `CHANGELOG.md` في **نفس الالتزام** ([سياسة التوثيق](docs/50-quality/02-DOCUMENTATION-POLICY.md)).
 2. رسائل الالتزام بصيغة Conventional Commits.
-3. الفرع `genspark_ai_developer` → PR إلى `main` → دمج بعد نجاح CI.
+3. الفرع `genspark_ai_developer` → PR إلى `main` → دمج بعد نجاح البوابة المحلية الكاملة (`pnpm check` + Playwright) — لا CI على GitHub بقرار المالك.
 4. لا بيانات وهمية ولا placeholders في المنتج المُسلَّم؛ كل دور يُختبر على سطح المكتب والجوال (390×844 بلا تمرير أفقي).
 5. OWASP ASVS 5.0 L2 · WCAG 2.1 AA · PDPL.
 
@@ -69,7 +69,7 @@ cp .env.example .env                   # ولّد AUTH_SECRET و APP_ENCRYPTION_
 pnpm install
 pnpm exec prisma migrate deploy        # قاعدة التطوير (DIRECT_DATABASE_URL)
 DIRECT_DATABASE_URL="postgresql://postgres:postgres@localhost:5432/scam2027_test?schema=public" pnpm exec prisma migrate deploy   # قاعدة الاختبار — إلزامي
-pnpm tsx prisma/seed.ts                # مستأجر demo + الحسابات التجريبية
+pnpm db:seed                           # مستأجر demo + الحسابات التجريبية
 pnpm check                             # typecheck + lint + test + build
 pnpm build && pnpm start -p 3000 &     # ثم: pnpm exec playwright test
 ```

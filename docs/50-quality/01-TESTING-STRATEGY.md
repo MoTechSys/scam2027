@@ -26,8 +26,8 @@ projects: [
 
 ## 3. الحزم الإلزامية
 
-### 3.1 `e2e/crawl.spec.ts`
-لكل دور: اجمع روابط Sidebar + BottomNav + Drawer → زر كل رابط → `expect(status).toBe(200)` + لا `console.error` + axe 0 serious + `scrollWidth ≤ viewport.width` على الموبايل.
+### 3.1 `e2e/crawl.spec.ts` ☑ (PR #22)
+لكل دور: اجمع روابط Sidebar + BottomNav + Drawer → زر كل رابط → `status 200` على مساره نفسه (لا إعادة توجيه) + **`h1` واحد** + **صفر تمرير للمستند** (ADR-0008) + صفر تمرير أفقي + **صفر `pageerror`** (يلتقط hydration #418) + صفر `console.error`. المسارات غير المعروضة للدور تُطرَق أيضًا: يجب أن تُعاد توجيهها أو 404، لا 500. + مسابير: `/api/*` بلا جلسة = 401 JSON؛ CSP بلا `upgrade-insecure-requests` على http. (axe يبقى في `a11y.spec.ts`.)
 
 ### 3.2 `e2e/auth.spec.ts`
 UC-AUTH-001..004 + قفل بعد 5 محاولات + OTP منتهٍ + host/session mismatch.
