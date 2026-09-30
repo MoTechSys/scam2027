@@ -18,7 +18,8 @@ beforeAll(async () => {
     tenantId: t.id,
     sessionId: "test",
     requestId: "test",
-    user: { id: "00000000-0000-0000-0000-000000000000", name: "t", email: "t", academicId: "t", locale: "ar", mustChangePassword: false, roles: [], permissions: new Set() },
+    user: { id: "00000000-0000-0000-0000-000000000000", name: "t", email: "t", academicId: "t", locale: "ar", mustChangePassword: false,
+    passwordChangeRequired: null, roles: [], permissions: new Set() },
   };
   await tx(t.id, async (x) => {
     const role = await x.role.create({ data: { tenantId: t.id, code: "STUDENT", name: "طالب", isSystem: true } });

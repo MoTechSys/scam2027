@@ -4,8 +4,8 @@
   "repo": "https://github.com/MoTechSys/scam2027",
   "entryPoint": "AGENTS.md",
   "updatedAt": "2026-09-30",
-  "updatedInPr": 24,
-  "mainHead": "2032ee5 (before PR #24 merge; see sessions)",
+  "updatedInPr": 25,
+  "mainHead": "9803526 (before PR #25 merge)",
   "branches": {
     "main": "main",
     "work": "genspark_ai_developer",
@@ -13,8 +13,8 @@
   },
   "progress": {
     "totalTasks": 65,
-    "doneTasks": 26,
-    "percent": 40,
+    "doneTasks": 27,
+    "percent": 42,
     "phases": {
       "P0": {
         "name": "Foundation",
@@ -29,7 +29,7 @@
       "P1": {
         "name": "Core LMS",
         "total": 15,
-        "done": 10,
+        "done": 11,
         "status": "IN_PROGRESS",
         "prs": [
           4,
@@ -47,7 +47,8 @@
           20,
           22,
           23,
-          24
+          24,
+          25
         ]
       },
       "P2": {
@@ -101,20 +102,19 @@
       "P1-07",
       "P1-08",
       "P1-09",
-      "P1-10"
+      "P1-10",
+      "P1-11"
     ],
     "nextTask": {
-      "id": "P1-11",
-      "name": "المصادقة المكتملة",
+      "id": "P1-12",
+      "name": "Worker + بريد",
       "status": "TODO",
-      "scope": "تفعيل الحساب (/activate عبر VerificationCode)، استعادة كلمة المرور (/forgot → /reset عبر PasswordResetToken، 10 دقائق)، «تذكرني» (Session.expiresAt من security.sessionMaxDays)، إجبار تغيير كلمة المرور عند أول دخول (User.mustChangePassword + security.forcePasswordChangeOnNextLogin)، وربط security.* من SETTINGS_REGISTRY بمسار الدخول فعليًا (passwordMinLength/RequireSymbol/MaxAgeDays، lockoutMaxFails/WindowMinutes، sessionIdleMinutes). البريد يُصدَر كـ Job mail.send يستهلكه worker P1-12 (Mailpit محليًا) — لا SMTP مباشر من الطلب.",
-      "prerequisite": "ADR-0009: OTP مقابل رابط موقّع للاستعادة/التفعيل (القرار قبل الكود؛ يجب أن يتوافق مع FR-AUTH-003/004/005/010 وASVS V2/V3)",
+      "scope": "عملية worker مستقلة (app/worker/ أو scripts/worker.ts، `pnpm worker`) تلتقط Job PENDING بقفل (lockedAt/lockedBy، FOR UPDATE SKIP LOCKED أو updateMany الشرطي الموجود) بدور المالك (DIRECT_DATABASE_URL) وتضبط app.current_tenant_id لكل مهمة، تعالج mail.send / notification.fanout / trash.purge عبر المعالجات الموجودة (processMailJob, processFanoutJob, trash purge)، إعادة محاولة حتى maxAttempts، إيقاف رشيق (SIGTERM)، سجل. ناقل smtp في lib/mail (nodemailer) + Mailpit في docker-compose للتطوير؛ MAIL_TRANSPORT=smtp يعمل. قرار: هل يبقى after() inline كمسار احتياطي عند غياب worker (ADR-0010 إن لزم).",
       "deliverables": [
-        "docs/60-adr/0009-*.md",
-        "features/auth/{schemas,core,actions} + صفحات (auth)/{activate,forgot,reset,change-password}",
-        "تطبيق سياسة security.* على lib/auth (password policy, lockout, session TTL) مع اختبارات تكامل",
-        "Job mail.send (payload contract في lib/contracts/json-columns.ts) + قوالب رسائل ar/en",
-        "اختبارات unit + integration + e2e desktop+mobile لكل تدفق + توثيق (REQUIREMENTS FR-AUTH-*, AUTH-RBAC, API-CONTRACT, HANDOFF, STATUS)"
+        "worker entry + package script + supervisor/pm2 example + docs (AGENTS §2, ARCHITECTURE)",
+        "lib/mail smtp transport (nodemailer) + Mailpit compose service + .env.example",
+        "اختبارات تكامل: قفل تنافسي (worker-ان لا يعالجان نفس Job)، إعادة المحاولة، mail.send عبر smtp (Mailpit API)",
+        "توثيق: ROADMAP P1-12 ☑، REQUIREMENTS FR-NTF-006، API-CONTRACT (Job), HANDOFF, STATUS"
       ]
     }
   },
@@ -123,36 +123,37 @@
     "definition": "typecheck + lint + test + build must all pass; then playwright e2e against `pnpm build && pnpm start -p 3000`",
     "lastRun": {
       "date": "2026-09-30",
-      "commit": "P1-10 settings (PR #24)",
+      "commit": "P1-11 complete auth (PR #25)",
       "typecheck": "PASS (0 errors)",
       "lint": "PASS (0 errors)",
       "unitAndIntegration": {
         "runner": "vitest",
-        "passed": 238,
+        "passed": 259,
         "failed": 0,
-        "files": 33
+        "files": 35
       },
       "e2e": {
         "runner": "playwright",
-        "passed": 111,
+        "passed": 121,
         "skipped": 11,
         "failed": 0,
-        "durationMinutes": 7.3,
+        "durationMinutes": 7.9,
         "projects": [
           "desktop-chromium",
           "mobile-safari"
         ],
         "skippedReason": "logout fixme (2) + Radix Select dialogs on mobile-safari (5, covered on desktop) + dashboard student assertions mobile-only (1) + files admin upload mobile (1) + trash bulk-select desktop-only (1) + settings mobile-only viewport test on desktop (1)",
-        "note": "15 files x 2 projects incl. settings.spec (8x2) + crawl.spec. Measured in session 24 on a clean sandbox (Postgres 17 + pnpm + Chromium deps installed from scratch); full run, not arithmetic."
+        "note": "16 files x 2 projects incl. auth-recovery.spec (5x2), settings.spec, crawl.spec. Measured in session 25, full run."
       },
       "build": "PASS",
-      "buildId": "pTQfIcJyevUnMOoLGtL-F",
+      "buildId": "vkKlK7NQpoHsEIz40rTuW",
       "dbSessionsAfterBoot": "app_user 1 / postgres 1 (was 8 / 3 before the globalThis singleton fix)",
       "verifiedOnCleanClone": "2026-09-30 — fresh sandbox: apt postgresql-17 + pnpm 10 + playwright install-deps + migrate both DBs + seed + pnpm check + full playwright",
       "deepProbe": "2026-09-28 — 200 route×role×viewport crawls + interaction flows + 26 API/RBAC/redirect/header probes (session 21); crawl.spec re-run green in session 24"
     },
     "knownDebt": [
-      "Settings (P1-10): every TenantSetting key lives in features/settings/schemas.ts SETTINGS_REGISTRY (category/key/Zod/default/secret) — adding a setting is a registry row, never a migration. Secrets go through setSecretSettingAction and are AES-256-GCM `v1:` ciphertext at rest (lib/crypto); never return decrypted secrets to the client (readSecretState → hasValue + masked tail). security.* values are stored/validated but NOT yet enforced on the login path — P1-11 wires them.",
+      "Auth (P1-11, ADR-0009): recovery/activation = single-use signed links; PasswordResetToken.tokenHash is `<RESET|ACTIVATE>:<sha256>` (purpose is part of the unique key). Never store raw tokens; never send SMTP from a request — enqueueMail inside the same tx + after(() => processMailJob). MAIL_TRANSPORT=log in dev/test (preview in Job.result.text; e2e reads links from there). Forced password change is enforced by requireUser/requireUserOrThrow via Ctx.user.passwordChangeRequired; only pass { allowPasswordChangeRequired: true } for actions that must run before the change (change itself, logout, locale). Proxy rate-limit buckets: login:<ip> 20/min and recover:<ip> 30/15min — keep them separate.",
+      "Settings (P1-10): every TenantSetting key lives in features/settings/schemas.ts SETTINGS_REGISTRY (category/key/Zod/default/secret) — adding a setting is a registry row, never a migration. Secrets go through setSecretSettingAction and are AES-256-GCM `v1:` ciphertext at rest (lib/crypto); never return decrypted secrets to the client (readSecretState → hasValue + masked tail). security.* values are enforced on login/lockout/session/password policy since P1-11 (features/auth/core.loadSecurityPolicy).",
       "Module-level state is NOT a singleton under Turbopack (Route Handlers / RSC / proxy each get their own copy, in production too). Cross-request state (caches, PrismaClient) must be registered on globalThis via Symbol.for keys — see lib/db/prisma.ts and lib/auth/tenant-resolver.ts; unit test imports the module twice (?instance=2) to prove sharing. Symptom before the fix: invalidateTenantCache() from /api/branding/logo never reached /login's copy; 3 connection pools per client.",
       "Brand primary is text on dark surfaces: primaryColorSchema rejects colours where lib/color.primaryContrast(hex).min < 4.5 (binding surface = color-mix(primary 10%, card)). e2e/a11y.spec fails /dashboard on any lower-contrast primary. Zod 4 runs .refine even after .regex failed — guard refinements against malformed input.",
       "users.academicIdFormat grammar (features/users/academic-id.ts): YYYY/YY = year, exactly one N-run = zero-padded sequence, everything else literal; only A-Z 0-9 - _ allowed. Braces are NOT placeholders. DEFAULT_ACADEMIC_ID_FORMAT is the single default (imported by SETTINGS_REGISTRY).",
@@ -172,7 +173,6 @@
       "Mobile: PageHeader hides the in-content h1 below lg, so the app bar renders the h1 (ownsHeading). Detail pages that keep a visible h1 use MobilePageTitle instead. Never add a manual <header> — e2e heading assertions and axe page-has-heading-one depend on exactly one h1.",
       "Unanchored .gitignore patterns bite: `storage` (P1-06) silently excluded app/src/lib/storage from every commit until PR #16. Anchor runtime dirs (`/storage/`) and run `git status --ignored` / a clean-clone `pnpm check` before merging a PR that adds a new top-level folder.",
       "prettier --check flags ~120 pre-existing files; not part of `pnpm check`. Format ONLY files you touch (running --write on a folder pollutes the PR) or do a dedicated `style:` PR.",
-      "e2e logout test is fixme in auth.spec.ts.",
       "Radix Select option tap is flaky on mobile-safari in Playwright; create dialogs are skipped on that project and asserted on desktop — mobile asserts list/detail/no-horizontal-scroll.",
       "Modules imported by integration tests must import permission predicates from src/lib/auth/has-permission.ts, never runtime from rbac.ts (next-auth → next/server is not resolvable under vitest).",
       "Never gate dev-only behaviour on NODE_ENV: `next start` (preview/sandbox) runs as production. Use an explicit env var (e.g. DEFAULT_TENANT_SLUG) instead.",
@@ -181,14 +181,15 @@
       "features/*/actions.ts imports `after` from next/server → never import actions in vitest; test core/scope/schemas/queries instead.",
       "Background jobs (notification.fanout) run inline via after(); no standalone worker until P1-12 — a Job left PENDING after a crash is re-run by processFanoutJob.",
       "Full Playwright run under load may fail login `toHaveURL` in roles/users specs; rerun those files alone before treating as regression.",
-      "docs/50-quality/01-TESTING-STRATEGY.md §5 references scripts e2e:mobile / e2e:crawl / test:a11y that are not in app/package.json (a11y is e2e/a11y.spec.ts; crawl is e2e/crawl.spec.ts — run via `pnpm exec playwright test <file>`)."
+      "docs/50-quality/01-TESTING-STRATEGY.md §5 references scripts e2e:mobile / e2e:crawl / test:a11y that are not in app/package.json (a11y is e2e/a11y.spec.ts; crawl is e2e/crawl.spec.ts — run via `pnpm exec playwright test <file>`).",
+      "e2e logout test is fixme in auth.spec.ts (Radix dropdown + form action); logout is exercised indirectly by auth-recovery.spec (forced-change page has a logout button, not asserted)."
     ],
     "tsc": 0,
     "eslint": 0,
-    "vitest": "238/238 (33 files)",
-    "playwright": "111 passed / 11 skipped (15 files x 2 projects)",
+    "vitest": "259/259 (35 files)",
+    "playwright": "121 passed / 11 skipped (16 files x 2 projects)",
     "build": "ok",
-    "buildId": "pTQfIcJyevUnMOoLGtL-F"
+    "buildId": "vkKlK7NQpoHsEIz40rTuW"
   },
   "database": {
     "engine": "PostgreSQL 17",
@@ -204,14 +205,15 @@
         "migrateCommand": "DIRECT_DATABASE_URL=\"postgresql://postgres:postgres@localhost:5432/scam2027_test?schema=public\" pnpm exec prisma migrate deploy"
       }
     },
-    "latestMigration": "20260928140000_p1_10_tenant_self_update",
+    "latestMigration": "20260930090000_p1_11_password_changed_at",
     "migrations": [
       "20260904221859_init_p0",
       "20260904222500_rls_p0",
       "20260905015633_p1_01_academic_content_comms",
       "20260905015700_rls_p1_01",
       "20260928120000_p1_10_branding_logo_key",
-      "20260928140000_p1_10_tenant_self_update"
+      "20260928140000_p1_10_tenant_self_update",
+      "20260930090000_p1_11_password_changed_at"
     ],
     "tenantScopedTables": 30,
     "platformTables": 4,
@@ -451,6 +453,12 @@
       "date": "2026-09-30",
       "scope": "P1-10 closed: clean-sandbox bootstrap (pg_ctlcluster, playwright install-deps); root-caused login logo (Turbopack module duplication → globalThis singletons for tenant cache + Prisma clients, 8→1 DB sessions); academicIdFormat grammar unified (DEFAULT_ACADEMIC_ID_FORMAT single source); WCAG AA gate for brand primary (lib/color, primaryColorSchema, live readout); full gate measured; docs; PR #24 merged",
       "pr": 24
+    },
+    {
+      "n": 25,
+      "date": "2026-09-30",
+      "scope": "P1-11 complete auth: ADR-0009, lib/mail (templates + log transport), features/auth (policy from settings, signed single-use tokens, mail.send job, actions), pages forgot/reset/activate/change-password, security.* enforced on login/lockout/session, forced change via Ctx, activation mail on pending user creation, migration passwordChangedAt, separate recovery rate-limit bucket; 13 unit + 7 integration + 5x2 e2e; docs",
+      "pr": 25
     }
   ]
 }

@@ -24,6 +24,9 @@ export const config = {
 
 const PUBLIC_PATHS = new Set([
   "/login",
+  "/forgot",
+  "/reset",
+  "/activate",
   "/developer",
   "/tenant-not-found",
   "/tenant-suspended",
@@ -78,9 +81,15 @@ export default async function proxy(req: NextRequest): Promise<NextResponse> {
   reqHeaders.set("x-nonce", nonce);
   normalizeForwardedHeaders(reqHeaders);
 
-  // 3. Login / auth rate limit
-  if (req.method === "POST" && (pathname === "/login" || pathname.startsWith("/api/auth/"))) {
-    const rl = rateLimit(`login:${ip}`, 20, 60_000);
+  // 3. Login / auth rate limit. Recovery pages get their own bucket: they are far less frequent than sign-in and the
+  //    actions behind them enforce tighter per-identifier limits (features/auth/actions). Sharing one bucket made a
+  //    burst of legitimate recovery + sign-in traffic from one NAT/IP trip the login limiter (seen in the e2e suite).
+  const isLoginPost = pathname === "/login" || pathname.startsWith("/api/auth/");
+  const isRecoveryPost = pathname === "/forgot" || pathname === "/reset" || pathname === "/activate";
+  if (req.method === "POST" && (isLoginPost || isRecoveryPost)) {
+    const rl = isLoginPost
+      ? rateLimit(`login:${ip}`, 20, 60_000)
+      : rateLimit(`recover:${ip}`, 30, 15 * 60_000);
     if (!rl.ok) {
       return new NextResponse(JSON.stringify({ ok: false, error: { code: "RATE_LIMITED" } }), {
         status: 429,

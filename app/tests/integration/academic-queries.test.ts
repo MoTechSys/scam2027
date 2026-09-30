@@ -28,7 +28,8 @@ const mkCtx = (tenantId: string): Ctx => ({
   tenantId,
   sessionId: "test",
   requestId: "test",
-  user: { id: "00000000-0000-0000-0000-000000000000", name: "t", email: "t", academicId: "t", locale: "ar", mustChangePassword: false, roles: [], permissions: new Set() },
+  user: { id: "00000000-0000-0000-0000-000000000000", name: "t", email: "t", academicId: "t", locale: "ar", mustChangePassword: false,
+    passwordChangeRequired: null, roles: [], permissions: new Set() },
 });
 const d = (s: string) => new Date(`${s}T00:00:00.000Z`);
 const q = (o: Record<string, unknown> = {}) => catalogueListQuerySchema.parse(o);

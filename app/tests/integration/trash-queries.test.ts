@@ -35,6 +35,7 @@ const mkCtx = (
     academicId: "t",
     locale: "ar",
     mustChangePassword: false,
+    passwordChangeRequired: null,
     roles,
     permissions: new Set(perms),
   },

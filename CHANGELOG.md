@@ -11,6 +11,19 @@
 
 ## [Unreleased]
 
+### Added — المصادقة المكتملة (P1-11, FR-AUTH-003/004/005/010/011, PR #25)
+- **ADR-0009**: التفعيل والاستعادة برابط موقّع أحادي الاستخدام (32 بايت base64url، `sha256` فقط في القاعدة بصيغة `<PURPOSE>:<hex>`، 10 دقائق/72 ساعة، طلب جديد يُبطل السابق)؛ لا OTP في P1 (`VerificationCode` محجوز لـ MFA)؛ البريد عبر `Job mail.send` لا SMTP من الطلب.
+- `lib/mail/{templates,index}`: قوالب `auth.reset`/`auth.activate` ar/en (نص + HTML مع escaping) وناقل `log` (المعاينة في `Job.result`)؛ `MAIL_TRANSPORT=smtp` يرفض الإقلاع بوضوح حتى P1-12. متغيّرات `MAIL_*`/`SMTP_*` في `env.ts` و`.env.example`.
+- `features/auth/{schemas,core,actions}`: `loadSecurityPolicy` (كل `security.*` في جولة واحدة + `forceSince`)، `passwordPolicyIssues` (الحد الأدنى والرمز من الإعدادات)، `sessionExpiry` («تذكرني» = `sessionMaxDays`، وإلا `sessionIdleMinutes` أو 12 ساعة)، `forcedChangeReason` (`ADMIN_RESET | TENANT_FORCED | EXPIRED`)، دورة الرمز (`issueToken/peekToken/consumeToken` بمقارنة ثابتة الزمن)، `enqueueMail/processMailJob` بنفس بروتوكول القفل، وActions: `forgotPasswordAction` (رد متطابق دائمًا + rate-limit بالمعرّف وبالـIP)، `inspectTokenAction`، `resetPasswordAction`، `activateAccountAction`، `changePasswordAction`، `sendActivationAction`.
+- صفحات `(auth)/{forgot,reset,activate,change-password}` على قشرة `AuthCard` موحّدة (h1 واحد، تمرير داخلي)، `NewPasswordFields` بترجمة رموز السياسة، حالة الرمز (غير صالح/منتهٍ/مستخدم) تُعرض قبل النموذج؛ رابط «نسيت كلمة المرور؟» في `/login`؛ زر «إعادة إرسال رابط التفعيل» في صفحة المستخدم.
+- **تطبيق `security.*` فعليًا**: `authenticateWithPassword` يقرأ القفل والجلسة من إعدادات المستأجر؛ `loadCtx` يحسب `passwordChangeRequired` و`requireUser`/`requireUserOrThrow` يفرضانه (`/change-password` أو `PASSWORD_CHANGE_REQUIRED`) مع استثناء صريح `allowPasswordChangeRequired` للتغيير/الخروج/اللغة؛ إنشاء المستخدم بحالة `PENDING_ACTIVATION` لا يولّد كلمة مؤقتة بل رمز تفعيل + بريد.
+- Migration `20260930090000_p1_11_password_changed_at` (`User.passwordChangedAt` + backfill).
+- اختبارات: وحدة `auth-core` (13: المخططات، الرموز، انتهاء الجلسة، أسباب الإجبار، القوالب) + `password` محدَّث (6)؛ تكامل `auth-tokens` (7: إبطال السابق، الغرض/التلاعب/الانتهاء/الاستخدام، أحادية الاستهلاك، عزل RLS، السياسة، معالجة `mail.send` وإعادة المحاولة حتى `FAILED`)؛ e2e `auth-recovery.spec` (5 × desktop+mobile: استعادة كاملة مع رفض القديمة وإبطال الجلسات، رموز تالفة، تفعيل من إنشاء مدير حقيقي، إجبار التغيير، «تذكرني» 12 ساعة/30 يومًا).
+
+### Changed — (PR #25)
+- ثوابت `LOCKOUT_*`/`SESSION_*` انتقلت إلى `lib/auth/password-policy.ts` كافتراضيات للسجل (`SETTINGS_REGISTRY` يستوردها — مصدر وحيد)؛ `lib/auth/password.passwordIssues` حُذف لصالح `passwordPolicyIssues`؛ عمر كوكي الجلسة 90 يومًا كسقف (الصف هو الملزم).
+- الـproxy: `/forgot|/reset|/activate` عامة؛ دلو rate-limit مستقل لها (30/15 دقيقة) — الدلو المشترك مع `/login` كان يُسقط دخولًا مشروعًا تحت حمل الحزمة.
+
 ### Added — الإعدادات (P1-10, FR-SET-001/005, FR-TEN-004/007, PR #24)
 - `lib/crypto.ts`: AES-256-GCM بمفتاح `APP_ENCRYPTION_KEY` (صيغة `v1:` مُرقَّمة للتدوير، `maskSecret` لا يكشف الأسرار القصيرة) + `lib/svg-safe.ts` (SVG خامل: لا script/on*/foreignObject/مراجع خارجية).
 - `features/settings/{schemas,core,queries,actions}`: **`SETTINGS_REGISTRY`** (category/key/Zod/default/secret — إعداد جديد = سطر لا migration)؛ `getSetting/setSetting/getSettings` مع سقوط آمن للصف الفاسد؛ الأسرار مشفّرة في القاعدة ولا تُعاد للعميل (`hasValue` + ذيل مقنَّع)؛ 5 Server Actions بالنمط القياسي (`updateGeneralAction`, `updateSecurityAction`, `updateBrandingAction`, `removeLogoAction`, `setSecretSettingAction`) تُبطل كاش المستأجر وتُعيد التحقق من التخطيط.

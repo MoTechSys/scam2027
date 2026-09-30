@@ -26,6 +26,7 @@ const ctx = (perms: PermissionCode[]): Pick<Ctx, "user"> => ({
     academicId: "t",
     locale: "ar",
     mustChangePassword: false,
+    passwordChangeRequired: null,
     roles: [],
     permissions: new Set<PermissionCode>(perms),
   },

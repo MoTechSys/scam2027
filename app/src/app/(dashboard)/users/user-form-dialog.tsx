@@ -196,7 +196,7 @@ export function UserFormDialog({ open, onOpenChange, roles, user }: Props) {
                   </fieldset>
 
                   <label className="flex min-h-11 items-center gap-2 text-sm">
-                    <Checkbox name="statusActive" defaultChecked /> {t("form.statusActive")}
+                    <Checkbox name="statusActive" defaultChecked data-testid="u-status-active" /> {t("form.statusActive")}
                   </label>
                   <label className="flex min-h-11 items-center gap-2 text-sm">
                     <Checkbox name="mustChange" defaultChecked /> {t("form.mustChange")}

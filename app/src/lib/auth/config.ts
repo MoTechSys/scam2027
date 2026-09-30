@@ -7,19 +7,19 @@
  *
  * Credentials flow:
  *   identifier (email | academicId) + password + tenantId (from resolved host, never from the client body)
- *   → lockout check (5 fails / 15 min) → Argon2id verify → status check → Session row → JWT.
+ *   → tenant security policy (SETTINGS_REGISTRY security.*; constants below are only the registry defaults)
+ *   → lockout check → Argon2id verify → status check → Session row (expiry per policy / remember-me, ADR-0009 §5) → JWT.
  */
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
-import { db } from "@/lib/db/tenant";
+import { db, tx } from "@/lib/db/tenant";
 import { logger } from "@/lib/logger";
 import { verifyPassword } from "./password";
+import { loadSecurityPolicy, sessionExpiry } from "@/features/auth/core";
 
-export const LOCKOUT_MAX_FAILS = 5;
-export const LOCKOUT_WINDOW_MIN = 15;
-export const SESSION_HOURS = 12;
-export const SESSION_REMEMBER_DAYS = 30;
+import { SESSION_COOKIE_MAX_DAYS } from "./password-policy";
+export { LOCKOUT_MAX_FAILS, LOCKOUT_WINDOW_MIN, SESSION_HOURS, SESSION_MAX_DAYS } from "./password-policy";
 
 const credentialsSchema = z.object({
   identifier: z.string().trim().min(1).max(254),
@@ -53,13 +53,14 @@ export async function authenticateWithPassword(
   const remember = parsed.data.remember === true || parsed.data.remember === "true";
   const prisma = db(tenantId);
   const identLower = identifier.toLowerCase();
+  const policy = await tx(tenantId, (t) => loadSecurityPolicy(t, tenantId));
 
-  // Lockout window: count failures for this identifier in the last N minutes.
-  const since = new Date(Date.now() - LOCKOUT_WINDOW_MIN * 60_000);
+  // Lockout window: count failures for this identifier in the last N minutes (tenant policy).
+  const since = new Date(Date.now() - policy.lockoutWindowMinutes * 60_000);
   const recentFails = await prisma.loginAttempt.count({
     where: { tenantId, email: identLower, success: false, createdAt: { gte: since } },
   });
-  if (recentFails >= LOCKOUT_MAX_FAILS) {
+  if (recentFails >= policy.lockoutMaxFails) {
     await prisma.loginAttempt.create({
       data: { tenantId, email: identLower, success: false, reason: "LOCKED", ip, userAgent },
     });
@@ -93,10 +94,13 @@ export async function authenticateWithPassword(
         where: { id: user.id },
         data: {
           failedLoginCount: fails,
-          lockedUntil: fails >= LOCKOUT_MAX_FAILS ? new Date(Date.now() + LOCKOUT_WINDOW_MIN * 60_000) : null,
+          lockedUntil:
+            fails >= policy.lockoutMaxFails
+              ? new Date(Date.now() + policy.lockoutWindowMinutes * 60_000)
+              : null,
         },
       });
-      if (fails >= LOCKOUT_MAX_FAILS) {
+      if (fails >= policy.lockoutMaxFails) {
         await prisma.auditLog.create({
           data: {
             tenantId,
@@ -117,9 +121,7 @@ export async function authenticateWithPassword(
   if (user.status === "DISABLED") throw new AuthFailure("DISABLED");
   if (user.status === "PENDING_ACTIVATION") throw new AuthFailure("PENDING");
 
-  const expiresAt = new Date(
-    Date.now() + (remember ? SESSION_REMEMBER_DAYS * 86_400_000 : SESSION_HOURS * 3_600_000),
-  );
+  const expiresAt = sessionExpiry(policy, remember);
   const [session] = await Promise.all([
     prisma.session.create({ data: { tenantId, userId: user.id, ip, userAgent, expiresAt } }),
     prisma.user.update({
@@ -154,7 +156,7 @@ export async function authenticateWithPassword(
 
 export const authConfig: NextAuthConfig = {
   trustHost: true,
-  session: { strategy: "jwt", maxAge: SESSION_REMEMBER_DAYS * 86_400 },
+  session: { strategy: "jwt", maxAge: SESSION_COOKIE_MAX_DAYS * 86_400 },
   pages: { signIn: "/login", error: "/login" },
   cookies: {
     sessionToken: {

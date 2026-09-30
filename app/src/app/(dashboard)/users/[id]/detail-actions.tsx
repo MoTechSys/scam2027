@@ -1,11 +1,12 @@
 "use client";
 
-import { KeyRound, Pencil, RotateCcw, Shield, Snowflake, Trash2, UserCheck, UserX, X } from "lucide-react";
+import { KeyRound, MailPlus, Pencil, RotateCcw, Shield, Snowflake, Trash2, UserCheck, UserX, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { sendActivationAction } from "@/features/auth/actions";
 import { restoreUserAction, revokeUserSessionsAction, setUserStatusAction, softDeleteUserAction } from "@/features/users/actions";
 import type { RoleOption, UserDetail } from "@/features/users/queries";
 import { AssignRolesDialog, ConfirmDialog, ResetPasswordDialog } from "../user-dialogs";
@@ -57,6 +58,11 @@ export function DetailActions({ user, roles, self, can }: { user: UserDetail; ro
           {can.resetPassword && (
             <Button variant="outline" className="min-h-11 gap-2" onClick={() => setReset(true)}>
               <KeyRound className="size-4" aria-hidden /> {t("actions.resetPassword")}
+            </Button>
+          )}
+          {!self && can.edit && user.status === "PENDING_ACTIVATION" && (
+            <Button variant="outline" className="min-h-11 gap-2" data-testid="resend-activation" onClick={() => simple(() => sendActivationAction({ id: user.id }), t("toast.activationSent"))}>
+              <MailPlus className="size-4" aria-hidden /> {t("actions.resendActivation")}
             </Button>
           )}
           {!self && can.activate && user.status !== "ACTIVE" && (

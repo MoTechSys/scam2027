@@ -11,10 +11,12 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { randomUUID } from "node:crypto";
 import { auth } from "./auth";
-import { db } from "@/lib/db/tenant";
+import { db, tx } from "@/lib/db/tenant";
 import { AppError } from "@/lib/result";
 import { canManagePermissionSet, type PermissionCode } from "./permissions";
 import { hasRole } from "./has-permission";
+import { forcedChangeReason, loadSecurityPolicy } from "@/features/auth/core";
+import type { ChangeReason } from "@/features/auth/schemas";
 
 export type Ctx = {
   tenantId: string;
@@ -26,6 +28,8 @@ export type Ctx = {
     academicId: string;
     locale: string;
     mustChangePassword: boolean;
+    /** ADR-0009 §6 — non-null ⇒ every page redirects to /change-password and every action fails PASSWORD_CHANGE_REQUIRED. */
+    passwordChangeRequired: ChangeReason | null;
     roles: string[]; // role codes
     permissions: ReadonlySet<PermissionCode>;
   };
@@ -69,6 +73,7 @@ export const loadCtx = cache(async (): Promise<CtxLoadResult> => {
           deletedAt: true,
           sessionVersion: true,
           mustChangePassword: true,
+          passwordChangedAt: true,
           roles: {
             select: {
               role: {
@@ -83,6 +88,9 @@ export const loadCtx = cache(async (): Promise<CtxLoadResult> => {
   if (!row) return { ok: false, reason: "SESSION_INVALID" };
   const u = row.user;
   if (u.deletedAt || u.status !== "ACTIVE") return { ok: false, reason: "USER_INACTIVE" };
+  // Cheap when nothing is configured (one findMany on the settings PK prefix + one findUnique), cached per request.
+  const policy = await tx(tenantId, (t) => loadSecurityPolicy(t, tenantId));
+  const passwordChangeRequired = forcedChangeReason(u, policy);
 
   const roles = u.roles.filter((r) => !r.role.deletedAt).map((r) => r.role.code);
   const perms = new Set<PermissionCode>();
@@ -109,6 +117,7 @@ export const loadCtx = cache(async (): Promise<CtxLoadResult> => {
         academicId: u.academicId,
         locale: u.locale,
         mustChangePassword: u.mustChangePassword,
+        passwordChangeRequired,
         roles,
         permissions: perms,
       },
@@ -119,17 +128,26 @@ export const loadCtx = cache(async (): Promise<CtxLoadResult> => {
   };
 });
 
-/** For pages/layouts: redirect to /login when unauthenticated. */
-export async function requireUser(): Promise<Ctx> {
+export type RequireOptions = {
+  /** Only /change-password itself (page + action) and sign-out may proceed while a password change is pending. */
+  allowPasswordChangeRequired?: boolean;
+};
+
+/** For pages/layouts: redirect to /login when unauthenticated, to /change-password when a rotation is pending. */
+export async function requireUser(opts: RequireOptions = {}): Promise<Ctx> {
   const r = await loadCtx();
   if (!r.ok) redirect(`/login?reason=${r.reason.toLowerCase()}`);
+  if (r.ctx.user.passwordChangeRequired && !opts.allowPasswordChangeRequired)
+    redirect(`/change-password?reason=${r.ctx.user.passwordChangeRequired.toLowerCase()}`);
   return r.ctx;
 }
 
 /** For Server Actions: throw AppError instead of redirecting (converted to Result by safeAction). */
-export async function requireUserOrThrow(): Promise<Ctx> {
+export async function requireUserOrThrow(opts: RequireOptions = {}): Promise<Ctx> {
   const r = await loadCtx();
   if (!r.ok) throw new AppError("UNAUTHENTICATED", "يجب تسجيل الدخول");
+  if (r.ctx.user.passwordChangeRequired && !opts.allowPasswordChangeRequired)
+    throw new AppError("PASSWORD_CHANGE_REQUIRED", "يجب تغيير كلمة المرور أولًا");
   return r.ctx;
 }
 
