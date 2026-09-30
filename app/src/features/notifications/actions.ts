@@ -12,14 +12,14 @@
  *    `notification.manage`.
  */
 import { revalidatePath } from "next/cache";
-import { after } from "next/server";
+import { kickJob } from "@/lib/jobs/kick";
 import { audit } from "@/lib/audit";
 import { assertPermission, requireUserOrThrow } from "@/lib/auth/rbac";
 import { db, tx } from "@/lib/db/tenant";
 import { rateLimit } from "@/lib/ratelimit";
 import { AppError, type Result } from "@/lib/result";
 import { safeAction } from "@/lib/safe-action";
-import { countRecipients, fanOut, processFanoutJob } from "./core";
+import { countRecipients, fanOut } from "./core";
 import { addressableUsers, type UserOption } from "./queries";
 import { assertCanTarget, isNotificationAdmin } from "./scope";
 import {
@@ -105,7 +105,7 @@ export async function sendNotificationAction(input: unknown): Promise<Result<Sen
 
       if (out.jobId) {
         const jobId = out.jobId;
-        after(() => processFanoutJob(ctx.tenantId, jobId, "after"));
+        kickJob(ctx.tenantId, jobId, "notification.fanout");
       }
       revalidateNotifications();
       return { id: out.id, recipientCount: out.recipientCount, queued: out.jobId !== null };

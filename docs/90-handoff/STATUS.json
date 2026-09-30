@@ -4,8 +4,8 @@
   "repo": "https://github.com/MoTechSys/scam2027",
   "entryPoint": "AGENTS.md",
   "updatedAt": "2026-09-30",
-  "updatedInPr": 25,
-  "mainHead": "9803526 (before PR #25 merge)",
+  "updatedInPr": 26,
+  "mainHead": "0824f1d (before PR #26 merge)",
   "branches": {
     "main": "main",
     "work": "genspark_ai_developer",
@@ -13,42 +13,23 @@
   },
   "progress": {
     "totalTasks": 65,
-    "doneTasks": 27,
-    "percent": 42,
+    "doneTasks": 28,
+    "percent": 43,
     "phases": {
       "P0": {
         "name": "Foundation",
         "total": 16,
         "done": 16,
         "status": "DONE",
-        "prs": [
-          2,
-          3
-        ]
+        "prs": [2, 3]
       },
       "P1": {
         "name": "Core LMS",
         "total": 15,
-        "done": 11,
+        "done": 12,
         "status": "IN_PROGRESS",
         "prs": [
-          4,
-          5,
-          6,
-          8,
-          9,
-          10,
-          13,
-          14,
-          16,
-          17,
-          18,
-          19,
-          20,
-          22,
-          23,
-          24,
-          25
+          4, 5, 6, 8, 9, 10, 13, 14, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26
         ]
       },
       "P2": {
@@ -103,18 +84,20 @@
       "P1-08",
       "P1-09",
       "P1-10",
-      "P1-11"
+      "P1-11",
+      "P1-12"
     ],
     "nextTask": {
-      "id": "P1-12",
-      "name": "Worker + بريد",
+      "id": "P1-13",
+      "name": "التقارير الأساسية",
       "status": "TODO",
-      "scope": "عملية worker مستقلة (app/worker/ أو scripts/worker.ts، `pnpm worker`) تلتقط Job PENDING بقفل (lockedAt/lockedBy، FOR UPDATE SKIP LOCKED أو updateMany الشرطي الموجود) بدور المالك (DIRECT_DATABASE_URL) وتضبط app.current_tenant_id لكل مهمة، تعالج mail.send / notification.fanout / trash.purge عبر المعالجات الموجودة (processMailJob, processFanoutJob, trash purge)، إعادة محاولة حتى maxAttempts، إيقاف رشيق (SIGTERM)، سجل. ناقل smtp في lib/mail (nodemailer) + Mailpit في docker-compose للتطوير؛ MAIL_TRANSPORT=smtp يعمل. قرار: هل يبقى after() inline كمسار احتياطي عند غياب worker (ADR-0010 إن لزم).",
+      "scope": "/reports/[tab] (overview | users | courses | files) with real per-tenant aggregates (Prisma groupBy/count inside tx(tenantId)), Recharts charts mounted only in the visible branch (useMediaQuery), permission report.view / report.export (check 02-PERMISSIONS-MATRIX.md for existing codes before adding), CSV export route in the streamed /api/audit/export style, PageTabs semantics, ADR-0007/0008 shell rules, nav item `reports` (remove `phase` in src/lib/nav/items.ts + update login-helpers test).",
       "deliverables": [
-        "worker entry + package script + supervisor/pm2 example + docs (AGENTS §2, ARCHITECTURE)",
-        "lib/mail smtp transport (nodemailer) + Mailpit compose service + .env.example",
-        "اختبارات تكامل: قفل تنافسي (worker-ان لا يعالجان نفس Job)، إعادة المحاولة، mail.send عبر smtp (Mailpit API)",
-        "توثيق: ROADMAP P1-12 ☑، REQUIREMENTS FR-NTF-006، API-CONTRACT (Job), HANDOFF, STATUS"
+        "features/reports/{schemas,queries} (+ core if export) with integration tests per aggregate (tenant isolation)",
+        "app/(dashboard)/reports/[tab] pages + charts (useFormatter for numbers/dates)",
+        "GET /api/reports/[kind]/export CSV (strict Zod filters, audit 'report.export')",
+        "e2e/reports.spec.ts desktop+mobile (h1 = 1, no page scroll, tabs, export headers)",
+        "docs: ROADMAP P1-13 ☑, REQUIREMENTS FR-RPT-001/002/003/006, API-CONTRACT, AGENTS §0/§4/§5, HANDOFF session 27, STATUS"
       ]
     }
   },
@@ -123,35 +106,35 @@
     "definition": "typecheck + lint + test + build must all pass; then playwright e2e against `pnpm build && pnpm start -p 3000`",
     "lastRun": {
       "date": "2026-09-30",
-      "commit": "P1-11 complete auth (PR #25)",
+      "commit": "P1-12 worker + mail (PR #26)",
       "typecheck": "PASS (0 errors)",
       "lint": "PASS (0 errors)",
       "unitAndIntegration": {
         "runner": "vitest",
-        "passed": 259,
+        "passed": 264,
         "failed": 0,
-        "files": 35
+        "files": 36
       },
       "e2e": {
         "runner": "playwright",
         "passed": 121,
         "skipped": 11,
         "failed": 0,
-        "durationMinutes": 7.9,
-        "projects": [
-          "desktop-chromium",
-          "mobile-safari"
-        ],
+        "durationMinutes": 8.0,
+        "projects": ["desktop-chromium", "mobile-safari"],
         "skippedReason": "logout fixme (2) + Radix Select dialogs on mobile-safari (5, covered on desktop) + dashboard student assertions mobile-only (1) + files admin upload mobile (1) + trash bulk-select desktop-only (1) + settings mobile-only viewport test on desktop (1)",
-        "note": "16 files x 2 projects incl. auth-recovery.spec (5x2), settings.spec, crawl.spec. Measured in session 25, full run."
+        "note": "16 files x 2 projects incl. auth-recovery.spec, settings.spec, crawl.spec. Measured in session 26, full run on the P1-12 build."
       },
       "build": "PASS",
-      "buildId": "vkKlK7NQpoHsEIz40rTuW",
+      "buildId": "_pCSxXFTdG0pH0o8TKEDH",
       "dbSessionsAfterBoot": "app_user 1 / postgres 1 (was 8 / 3 before the globalThis singleton fix)",
       "verifiedOnCleanClone": "2026-09-30 — fresh sandbox: apt postgresql-17 + pnpm 10 + playwright install-deps + migrate both DBs + seed + pnpm check + full playwright",
-      "deepProbe": "2026-09-28 — 200 route×role×viewport crawls + interaction flows + 26 API/RBAC/redirect/header probes (session 21); crawl.spec re-run green in session 24"
+      "deepProbe": "2026-09-28 — 200 route×role×viewport crawls + interaction flows + 26 API/RBAC/redirect/header probes (session 21); crawl.spec re-run green in session 24",
+      "worker": "tests/integration/worker.test.ts 5/5 — disjoint claims, exactly-once race (2 workers × 1 job), stale-lock reaper, unknown type → FAILED, real SMTP delivery verified via Mailpit /api/v1/messages",
+      "audit": "pnpm audit: No known vulnerabilities found (brace-expansion resolved 1.1.21 / 5.0.12 via lockfile; no bare-name override — it breaks eslint/minimatch@3)"
     },
     "knownDebt": [
+      "Jobs (P1-12, ADR-0010): request code enqueues a Job inside its tx and calls lib/jobs/kick.kickJob(tenantId, jobId, type) — never a processor directly. JOBS_INLINE=true (dev/test default) runs it via after(); production sets JOBS_INLINE=false and runs `pnpm worker` (tsx --conditions=react-server because features/* import server-only). Worker reserves with lockedBy/lockedAt via FOR UPDATE SKIP LOCKED; the processor owns the conditional PENDING→RUNNING transition (exactly-once). New Job type = entry in lib/jobs/registry.JOB_PROCESSORS; unknown types are marked FAILED. Mail transport is a globalThis singleton; MAIL_TRANSPORT=smtp needs SMTP_HOST (Mailpit 127.0.0.1:1025 locally via app/docker-compose.yml).",
       "Auth (P1-11, ADR-0009): recovery/activation = single-use signed links; PasswordResetToken.tokenHash is `<RESET|ACTIVATE>:<sha256>` (purpose is part of the unique key). Never store raw tokens; never send SMTP from a request — enqueueMail inside the same tx + after(() => processMailJob). MAIL_TRANSPORT=log in dev/test (preview in Job.result.text; e2e reads links from there). Forced password change is enforced by requireUser/requireUserOrThrow via Ctx.user.passwordChangeRequired; only pass { allowPasswordChangeRequired: true } for actions that must run before the change (change itself, logout, locale). Proxy rate-limit buckets: login:<ip> 20/min and recover:<ip> 30/15min — keep them separate.",
       "Settings (P1-10): every TenantSetting key lives in features/settings/schemas.ts SETTINGS_REGISTRY (category/key/Zod/default/secret) — adding a setting is a registry row, never a migration. Secrets go through setSecretSettingAction and are AES-256-GCM `v1:` ciphertext at rest (lib/crypto); never return decrypted secrets to the client (readSecretState → hasValue + masked tail). security.* values are enforced on login/lockout/session/password policy since P1-11 (features/auth/core.loadSecurityPolicy).",
       "Module-level state is NOT a singleton under Turbopack (Route Handlers / RSC / proxy each get their own copy, in production too). Cross-request state (caches, PrismaClient) must be registered on globalThis via Symbol.for keys — see lib/db/prisma.ts and lib/auth/tenant-resolver.ts; unit test imports the module twice (?instance=2) to prove sharing. Symptom before the fix: invalidateTenantCache() from /api/branding/logo never reached /login's copy; 3 connection pools per client.",
@@ -179,17 +162,18 @@
       "AUTH_URL must stay UNSET (multi-tenant): Auth.js pins every redirect to that origin. Origins come from x-forwarded-host/proto normalised in proxy.ts via src/lib/auth/forwarded.ts; /api/auth route rebases request.url because `next start` builds it from the server hostname. When adding a new reverse proxy, echo its headers first (some send x-client-proto only).",
       "Prisma enums in tests must be read from schema.prisma (UserStatus: PENDING_ACTIVATION/ACTIVE/FROZEN/DISABLED; EnrollmentStatus: ACTIVE/WITHDRAWN/COMPLETED); JSON columns are typed Prisma.InputJsonObject.",
       "features/*/actions.ts imports `after` from next/server → never import actions in vitest; test core/scope/schemas/queries instead.",
-      "Background jobs (notification.fanout) run inline via after(); no standalone worker until P1-12 — a Job left PENDING after a crash is re-run by processFanoutJob.",
       "Full Playwright run under load may fail login `toHaveURL` in roles/users specs; rerun those files alone before treating as regression.",
       "docs/50-quality/01-TESTING-STRATEGY.md §5 references scripts e2e:mobile / e2e:crawl / test:a11y that are not in app/package.json (a11y is e2e/a11y.spec.ts; crawl is e2e/crawl.spec.ts — run via `pnpm exec playwright test <file>`).",
-      "e2e logout test is fixme in auth.spec.ts (Radix dropdown + form action); logout is exercised indirectly by auth-recovery.spec (forced-change page has a logout button, not asserted)."
+      "e2e logout test is fixme in auth.spec.ts (Radix dropdown + form action); logout is exercised indirectly by auth-recovery.spec (forced-change page has a logout button, not asserted).",
+      "pnpm overrides: keep deepmerge-ts>=8 only. Do NOT add a bare `brace-expansion` override — it forces 5.x onto minimatch@3 (eslint) → `expand is not a function`. Lockfile already resolves the patched 1.1.21 / 5.0.12.",
+      "Worker is not supervised by `next start`; the sandbox runs neither a permanent worker nor Mailpit by default (integration SMTP test skips when Mailpit is down — start it with docker compose or the mailpit binary to un-skip)."
     ],
     "tsc": 0,
     "eslint": 0,
-    "vitest": "259/259 (35 files)",
+    "vitest": "264/264 (36 files)",
     "playwright": "121 passed / 11 skipped (16 files x 2 projects)",
     "build": "ok",
-    "buildId": "vkKlK7NQpoHsEIz40rTuW"
+    "buildId": "_pCSxXFTdG0pH0o8TKEDH"
   },
   "database": {
     "engine": "PostgreSQL 17",
@@ -316,7 +300,7 @@
     },
     {
       "id": 5,
-      "action": "Provide SMTP credentials for P1-12 platform mail",
+      "action": "Provide production SMTP credentials (MAIL_TRANSPORT=smtp, SMTP_HOST/PORT/USER/PASSWORD, MAIL_FROM) — code path shipped in PR #26 and verified against Mailpit",
       "status": "OPEN",
       "priority": "MEDIUM"
     },
@@ -459,6 +443,12 @@
       "date": "2026-09-30",
       "scope": "P1-11 complete auth: ADR-0009, lib/mail (templates + log transport), features/auth (policy from settings, signed single-use tokens, mail.send job, actions), pages forgot/reset/activate/change-password, security.* enforced on login/lockout/session, forced change via Ctx, activation mail on pending user creation, migration passwordChangedAt, separate recovery rate-limit bucket; 13 unit + 7 integration + 5x2 e2e; docs",
       "pr": 25
+    },
+    {
+      "n": 26,
+      "date": "2026-09-30",
+      "scope": "P1-12 worker + mail: ADR-0010, src/worker (FOR UPDATE SKIP LOCKED claim, reaper, graceful stop), lib/jobs registry/kick (JOBS_INLINE), SMTP transport (nodemailer) verified against Mailpit, docker-compose (postgres + mailpit), 5 integration tests, pnpm audit clean",
+      "pr": 26
     }
   ]
 }

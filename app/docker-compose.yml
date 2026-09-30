@@ -1,0 +1,34 @@
+# Local infrastructure for scam2027 (docs/30-architecture/00-ARCHITECTURE.md). App + worker run from the host with
+# `pnpm dev` / `pnpm worker`; this only provides PostgreSQL 17 and Mailpit.
+#   docker compose up -d           # db + mailpit
+#   DATABASE_URL / DIRECT_DATABASE_URL → localhost:5432 (see .env.example)
+#   MAIL_TRANSPORT=smtp SMTP_HOST=localhost SMTP_PORT=1025 → inbox at http://localhost:8025
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: scam2027
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/docker/init-test-db.sql:/docker-entrypoint-initdb.d/10-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d scam2027"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  mailpit:
+    image: axllent/mailpit:v1.31
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # web UI + REST API (used by tests/integration/worker.test.ts)
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+
+volumes:
+  pgdata:

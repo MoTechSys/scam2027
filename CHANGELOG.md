@@ -11,6 +11,16 @@
 
 ## [Unreleased]
 
+### Added — Worker + بريد (P1-12, GAP-24, FR-NTF-006 جزئيًا, ADR-0010, PR #26)
+- `src/worker/index.ts` (`pnpm worker` = `tsx --conditions=react-server`): عامل مهام مستقل يلتقط `Job PENDING` بدور المالك عبر `FOR UPDATE SKIP LOCKED` (حجز `lockedBy/lockedAt`)، تزامن `WORKER_CONCURRENCY`، حاصد أقفال راكدة (`WORKER_STALE_LOCK_MINUTES`؛ تجاوز `maxAttempts` → `FAILED`)، نوع بلا معالج → `FAILED`، إيقاف رشيق على SIGINT/SIGTERM.
+- `lib/jobs/registry.ts` (`JOB_PROCESSORS`: `mail.send` / `notification.fanout` / `trash.purge`) و`lib/jobs/kick.ts` (`kickJob` — inline عبر `after()` فقط إن `JOBS_INLINE=true`); actions المصادقة/الإشعارات/السلة/المستخدمين تستدعي `kickJob` بدل المعالج مباشرة.
+- ناقل `smtp` في `lib/mail` (nodemailer؛ `MAIL_TRANSPORT`/`MAIL_FROM`/`SMTP_*`) كـ singleton على `globalThis`؛ `docker-compose.yml` (postgres:17 + قاعدة الاختبار + Mailpit) و`scripts/docker/init-test-db.sql`.
+- 5 اختبارات تكامل (`tests/integration/worker.test.ts`): تفرّد الالتقاط واحترام `runAt`، سباق «مرّة واحدة بالضبط»، الحاصد، النوع المجهول، تسليم SMTP فعلي مُتحقَّق منه عبر واجهة Mailpit.
+
+### Fixed
+- `pnpm audit` نظيف: `brace-expansion` 1.1.21/5.0.12 عبر lockfile (override بالاسم المجرّد كان يكسر eslint — موثَّق في AGENTS #23).
+
+
 ### Added — المصادقة المكتملة (P1-11, FR-AUTH-003/004/005/010/011, PR #25)
 - **ADR-0009**: التفعيل والاستعادة برابط موقّع أحادي الاستخدام (32 بايت base64url، `sha256` فقط في القاعدة بصيغة `<PURPOSE>:<hex>`، 10 دقائق/72 ساعة، طلب جديد يُبطل السابق)؛ لا OTP في P1 (`VerificationCode` محجوز لـ MFA)؛ البريد عبر `Job mail.send` لا SMTP من الطلب.
 - `lib/mail/{templates,index}`: قوالب `auth.reset`/`auth.activate` ar/en (نص + HTML مع escaping) وناقل `log` (المعاينة في `Job.result`)؛ `MAIL_TRANSPORT=smtp` يرفض الإقلاع بوضوح حتى P1-12. متغيّرات `MAIL_*`/`SMTP_*` في `env.ts` و`.env.example`.

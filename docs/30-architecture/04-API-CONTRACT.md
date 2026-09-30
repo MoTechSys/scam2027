@@ -61,7 +61,8 @@ type Page<T> = { items: T[]; total: number; page: number; pageSize: number };
 | `/api/v1/**` | * | واجهة تكامل عامة بـ API Key لكل مستأجر — P3 | `Authorization: Bearer <tenant api key>` |
 | `/api/lti/login`, `/launch`, `/jwks`, `/deep-link` | GET/POST | LTI 1.3 — P5 | OIDC/JWT |
 | `/api/webhooks/[id]` | POST | استقبال — P4 | HMAC |
-| `/api/cron/retention`, `/api/cron/digest` | POST | مهام دورية (إن لم يوجد worker) | `CRON_SECRET` |
+| `/api/cron/retention`, `/api/cron/digest` | POST | مهام دورية (إن لم يوجد worker) — غير مبنية؛ اليوم `trash.purge` عبر Job + worker (ADR-0010) | `CRON_SECRET` |
+| *(بلا HTTP)* `pnpm worker` | عملية | عامل المهام المستقل (`src/worker/index.ts`): `claimJobs` (`FOR UPDATE SKIP LOCKED`، `WORKER_CONCURRENCY`)، `reapStaleLocks` (`WORKER_STALE_LOCK_MINUTES`)، معالجات `lib/jobs/registry.ts` (`mail.send`, `notification.fanout`, `trash.purge`)؛ نوع بلا معالج → `FAILED`؛ `SIGINT/SIGTERM` = إيقاف رشيق. من الطلب: `kickJob()` فقط (inline إن `JOBS_INLINE`) — لا تستدعِ معالجًا مباشرة | دور المالك (`platformPrisma`) ثم `tx(tenantId)` لكل مهمة |
 
 ## 4. قواعد
 

@@ -15,9 +15,9 @@
 |---|---|
 | المنتج | **scam2027** — نظام إدارة تعلّم (LMS) جامعي **متعدد المستأجرين** (عدة جامعات على منصة واحدة) بواجهة **Omnitrix الخضراء** RTL، عربي/إنجليزي، جوال أولًا |
 | المستودع | `https://github.com/MoTechSys/scam2027` (عام) — `main` محمي بالمنطق التالي: فرع `genspark_ai_developer` → PR → **squash-merge** مصرّح به للوكيل |
-| التقدّم | **27 / 65 مهمة (42%)** — P0 كامل (16/16) · P1 11/15 (P1-01..P1-11) · P2–P5 لم تبدأ. انظر §4 |
+| التقدّم | **28 / 65 مهمة (43%)** — P0 كامل (16/16) · P1 12/15 (P1-01..P1-12) · P2–P5 لم تبدأ. انظر §4 |
 | آخر تصليب | **PR #22 (الجلسة 21):** إقلاع من صفر + فحص عميق (200 زحف × دور × عرض، تدفقات، 26 مسبارًا أمنيًا) → 12 إصلاحًا + `e2e/crawl.spec.ts`. انظر HANDOFF الجلسة 21 |
-| التالي مباشرة | **P1-12 Worker + بريد**: `worker/` مستقل يلتقط `Job` (`lockedAt/lockedBy`، إعادة محاولة) بدور المالك ويضبط GUC لكل مهمة؛ ناقل `smtp` في `lib/mail` (nodemailer + Mailpit)؛ يستبدل `after()` inline لـ`mail.send`/`notification.fanout`/`trash.purge` — §5 |
+| التالي مباشرة | **P1-13 التقارير الأساسية**: `/reports` (نظرة عامة/مستخدمون/مقررات/ملفات) بأرقام حقيقية من قاعدة المستأجر + رسوم Recharts، صلاحية `report.*`، تصدير CSV بنفس نمط `/api/audit/export` — §5 |
 | كيف تبدأ | §2 (Bootstrap 10 أوامر) → §6 (دورة العمل الإلزامية لكل مهمة) |
 | المرجع الكامل | `docs/` (28 وثيقة) — خريطتها في §3 |
 
@@ -62,7 +62,7 @@ git clone https://github.com/MoTechSys/scam2027.git /home/user/webapp && cd /hom
 git checkout genspark_ai_developer || git checkout -b genspark_ai_developer origin/main
 
 # 2) قاعدة البيانات (دور التشغيل app_user بلا BYPASSRLS يُنشأ بواسطة migration RLS)
-sudo service postgresql start   # أو: sudo pg_ctlcluster 17 main start (بلا systemd) · أو: docker compose up -d db
+sudo service postgresql start   # أو: sudo pg_ctlcluster 17 main start (بلا systemd) · أو: (cd app && docker compose up -d) → postgres:17 + scam2027_test + Mailpit (SMTP 1025 / UI 8025)
 # على sandbox خالٍ: sudo apt-get install -y postgresql-17 ثم ALTER USER postgres PASSWORD 'postgres'
 sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';" -c "CREATE DATABASE scam2027;" -c "CREATE DATABASE scam2027_test;"
 
@@ -82,6 +82,11 @@ pnpm exec playwright install chromium
 sudo pnpm exec playwright install-deps chromium   # مكتبات النظام (libatk…) — لازمة على sandbox خالٍ (الجلسة 24)
 scripts/restart-server.sh                    # خادم إنتاج على :3000
 pnpm exec playwright test                    # الأرقام الحالية في STATUS.json (يشمل crawl.spec: كل مسار × كل دور)
+
+# 5) العامل (P1-12، ADR-0010) — اختياري في التطوير لأن JOBS_INLINE=true ينفّذ المهام داخل الطلب عبر after()
+pnpm worker                                  # عملية مستقلة: تلتقط Job بقفل، SIGINT للإيقاف. في الإنتاج: JOBS_INLINE=false + worker دائم
+# بريد فعلي محليًا: MAIL_TRANSPORT=smtp SMTP_HOST=127.0.0.1 SMTP_PORT=1025 (Mailpit من docker compose أو ثنائي mailpit)
+# اختبار التكامل tests/integration/worker.test.ts يرسل عبر SMTP إلى Mailpit فعليًا ويتحقق من واجهة /api/v1/messages (يُتخطّى إن لم يكن Mailpit يعمل)
 ```
 
 **حسابات demo** (مستأجر `demo`، `localhost` يُحلّ إليه عبر `DEFAULT_TENANT_SLUG`):
@@ -138,16 +143,17 @@ pnpm exec playwright test                    # الأرقام الحالية ف�
 | **P1-09 سجل التدقيق** | `features/audit/{schemas,queries}`: مرشّحات (نص/فاعل/نوع الفاعل/كيان/معرّف/إجراء دقيق أو بادئة `resource.`/من–إلى بحدود يوم المستأجر)، حلّ أسماء الفاعلين بلا FK (محذوف = «مستخدم محذوف»، null = «النظام»)، facets؛ `GET /api/audit/export` CSV بتدفّق keyset (BOM، حماية حقن الصيغ، سقف 50k، يُدوَّن `audit.export`)؛ `/audit` (بحث + لوحة مرشّحات + جدول/قائمة جوال + Sheet تفاصيل مع diff قبل/بعد «التغييرات فقط» + نسخ JSON) | `app/src/features/audit/*`, `app/src/app/(dashboard)/audit/**`, `app/src/app/api/audit/export/route.ts` |
 | **P1-10 الإعدادات** | `lib/crypto.ts` (AES-256-GCM، `v1:` مُرقَّم، `maskSecret`) + `lib/svg-safe.ts`؛ `features/settings/{schemas,core,queries,actions}`: **`SETTINGS_REGISTRY`** (category/key/Zod/default/secret — إضافة إعداد = سطر لا migration)، `getSetting/setSetting` مع سقوط آمن للصف الفاسد، أسرار مشفّرة لا تُعاد للعميل (`hasValue` + ذيل مقنَّع)؛ `/settings/[tab]` (عام: اسم/لغة/منطقة زمنية/صيغة الرقم الأكاديمي/بريد الدعم · أمان: سياسة كلمات المرور/الجلسة/القفل/MFA للأدوار · هوية: ألوان + شعار)؛ `POST /api/branding/logo` (magic bytes + SVG inert + `<tenantId>/branding/` + حذف القديم) و`GET /api/branding/logo/:tid/:v` (عام، CSP sandbox)؛ حقن `--primary`/الشعار/رسالة الدخول في `/login` والتخطيط عبر `resolveTenant` | `app/src/lib/{crypto,svg-safe}.ts`, `app/src/features/settings/*`, `app/src/app/(dashboard)/settings/**`, `app/src/app/api/branding/**`, `app/prisma/migrations/20260928*` |
 | **P1-11 المصادقة المكتملة** | ADR-0009: `features/auth/{schemas,core,actions}` — رابط موقّع أحادي (`PasswordResetToken.tokenHash = <PURPOSE>:<sha256>`, 10 دقائق/72 ساعة، إبطال السابق، مقارنة ثابتة الزمن)، `loadSecurityPolicy` يقرأ `security.*` **ويُطبَّق فعليًا** على القفل/الجلسة/سياسة كلمات المرور، `forcedChangeReason` → `Ctx.user.passwordChangeRequired` تفرضه `requireUser`/`requireUserOrThrow`؛ `lib/mail` (قوالب ar/en + ناقل `log`؛ `smtp` في P1-12) و`Job mail.send` يُعالَج inline؛ صفحات `/forgot`, `/reset`, `/activate`, `/change-password` على `AuthCard`؛ إنشاء مستخدم `PENDING_ACTIVATION` = رمز تفعيل + بريد، وزر إعادة الإرسال | `app/src/features/auth/*`, `app/src/lib/mail/*`, `app/src/app/(auth)/**`, `app/src/lib/auth/{config,rbac,password-policy}.ts`, `app/prisma/migrations/20260930090000*` |
+| **P1-12 Worker + بريد** | ADR-0010: `src/worker/index.ts` (`pnpm worker` = `tsx --conditions=react-server`): `claimJobs` بـ`FOR UPDATE SKIP LOCKED` (حجز `lockedBy/lockedAt`)، `reapStaleLocks` (RUNNING راكد → PENDING، تجاوز `maxAttempts` → FAILED)، نوع بلا معالج → FAILED، إيقاف رشيق؛ `lib/jobs/registry.ts` (`mail.send`/`notification.fanout`/`trash.purge`) + `lib/jobs/kick.ts` (`kickJob` = inline عبر `after()` فقط إن `JOBS_INLINE`); `lib/mail` ناقل `smtp` (nodemailer، Mailpit محليًا) singleton على `globalThis`؛ `docker-compose.yml` (postgres:17 + scam2027_test + mailpit)؛ 5 اختبارات تكامل (تفرّد الالتقاط، سباق مرّة واحدة، حاصد، نوع مجهول، تسليم SMTP فعلي إلى Mailpit) | `app/src/worker/*`, `app/src/lib/jobs/*`, `app/src/lib/mail/index.ts`, `app/docker-compose.yml`, `app/tests/integration/worker.test.ts`, ADR-0010 |
 | **P1-01 المخطط** | 18 موديلًا (أكاديمي/مقررات/محتوى/تواصل/نظام) + قيود SQL يدوية + RLS على 30 جدولًا + عقود Zod لأعمدة Json | `app/prisma/schema.prisma`, `app/prisma/migrations/20260905*`, `app/src/lib/contracts/json-columns.ts`, ADR-0006 |
 
-**مقاييس الجودة الحالية (PR #25، 2026-09-30، مقاسة في الجلسة نفسها):** `tsc` 0 · `eslint` 0 · Vitest **259/259** (35 ملفًا: 24 وحدة + 11 تكامل بقاعدة اختبار مستقلة) · Playwright **121 ✓ / 11 skip / 0 ✗** (16 ملفًا × 2 مشروع بما فيها `crawl.spec` و`auth-recovery.spec`؛ skips = logout fixme + حوارات Radix Select/compose على mobile-safari المغطّاة على سطح المكتب + تحديد جماعي في السلة desktop-only؛ فشل `toHaveURL` في login تحت الحمل الكامل عابر — أعد الملف وحده) · مُتحقَّق منها على **sandbox خالٍ تمامًا** (الجلسة 21: تثبيت Postgres/pnpm من الصفر → `pnpm check` exit 0 → Playwright كاملة) · `pnpm build` ✓ · 0 تمرير أفقي على 390px · 0 انتهاكات axe serious/critical على الصفحات المبنية.
+**مقاييس الجودة الحالية (PR #26، 2026-09-30، مقاسة في الجلسة نفسها):** `tsc` 0 · `eslint` 0 · Vitest **264/264** (36 ملفًا: 24 وحدة + 12 تكامل بقاعدة اختبار مستقلة، منها `worker.test.ts` بتسليم SMTP فعلي إلى Mailpit) · Playwright **121 ✓ / 11 skip / 0 ✗** (16 ملفًا × 2 مشروع بما فيها `crawl.spec` و`auth-recovery.spec`؛ skips = logout fixme + حوارات Radix Select/compose على mobile-safari المغطّاة على سطح المكتب + تحديد جماعي في السلة desktop-only؛ فشل `toHaveURL` في login تحت الحمل الكامل عابر — أعد الملف وحده) · مُتحقَّق منها على **sandbox خالٍ تمامًا** (الجلسة 21: تثبيت Postgres/pnpm من الصفر → `pnpm check` exit 0 → Playwright كاملة) · `pnpm build` ✓ · `pnpm audit` 0 ثغرات · 0 تمرير أفقي على 390px · 0 انتهاكات axe serious/critical على الصفحات المبنية.
 
 ### 4.2 ما هو **غير** مبني (بصراحة)
 - لا اختبارات (quizzes) ولا درجات ولا حضور **في الواجهة** — الجداول موجودة (P1-01) لكن بلا صفحات أو Server Actions. المبني: مستخدمون/أدوار/بنية أكاديمية/مقررات/شُعب/تسجيل/ملفات/إشعارات. الطالب يرى لوحة التحكم + المقررات + شُعبه + ملفاته + إشعاراته؛ المدرّس يرى شُعبه وقوائم طلابه ويرفع ملفات ويرسل إشعارات لشُعبه.
-- الإشعارات in-app فقط: لا بريد (FR-NTF-006 → P1-12/P2) ولا مشغّلات آلية عند رفع ملف/نشر اختبار (FR-NTF-007 → P2)؛ `Job notification.fanout` يُنفَّذ inline عبر `after()` — لا عامل خلفي مستقل بعد (P1-12).
+- الإشعارات in-app فقط: قناة البريد للإشعارات وSMTP لكل مستأجر (FR-NTF-006 → P2-07) والمشغّلات الآلية عند رفع ملف/نشر اختبار (FR-NTF-007 → P2) غير مبنية؛ البريد اليوم للتفعيل/الاستعادة فقط (منصة، `MAIL_TRANSPORT`/`SMTP_*` من البيئة).
 - القائمة الجانبية تُظهر: لوحة التحكم، المستخدمون، الأدوار، البنية الأكاديمية، المقررات، الشُعب، الملفات، الإشعارات، سلة المحذوفات، سجل التدقيق، الإعدادات (+ ما يُضاف عند إزالة `phase` من `src/lib/nav/items.ts` لكل وحدة تُبنى).
 - `seed.ts` يبذر المستأجر والأدوار والمستخدمين والبنية الأكاديمية والمقررات/الشُعب/30 طالبًا وملفَّين على CS101 (P1-06)، و3 إشعارات نموذجية (53 مستلمًا) (P1-07).
-- لا worker مستقل للمهام (`Job` يُعالَج inline عبر `after()` لـ`mail.send`/`notification.fanout`) — P1-12. البريد بناقل `log` فقط (المعاينة في `Job.result`)؛ SMTP في P1-12. لا MFA (P3) ولا OTP (محجوز لـ MFA). `mfaRequiredRoles` يُخزَّن ولا يُطبَّق (P3).
+- العامل (P1-12) موجود لكن **لا يُشغَّل تلقائيًا** مع `next start` — عملية منفصلة `pnpm worker`؛ في التطوير/الاختبار `JOBS_INLINE=true` فينفَّذ كل Job داخل الطلب عبر `after()` والعامل يلتقط ما تبقّى فقط. لا مهام دورية (cron) ولا لوحة `/jobs` لمراقبة الطابور. ناقل البريد في `.env` الافتراضي `log` (المعاينة في `Job.result`). لا MFA (P3) ولا OTP (محجوز لـ MFA). `mfaRequiredRoles` يُخزَّن ولا يُطبَّق (P3).
 - CI غير مفعَّل على GitHub (ملف القالب موجود، انظر §7).
 - `e2e/crawl.spec.ts` مكتوب (PR #22): كل رابط شِل لكل دور = 200 + h1 واحد + صفر تمرير + صفر أخطاء صفحة/كونسول؛ المسارات المخفية تُعاد توجيهها لا 500؛ مسابير 401 JSON وCSP.
 - اختبار logout في Playwright معلَّم `fixme`.
@@ -170,7 +176,8 @@ pnpm exec playwright test                    # الأرقام الحالية ف�
 16. **`ScrollRegion` هو `relative`** (PR #24): مدخلات Radix المخفية المطلقة (`Switch/Checkbox`) كانت تهرب من الحاوية وتُضخّم `document.scrollHeight` على الجوال. لا تُزل `relative` منه.
 17. **Turbopack يُصدر نسخة مستقلة من كل وحدة لكل نوع مدخل (Route Handlers / صفحات RSC / proxy)** حتى في الإنتاج → أي «singleton» على مستوى الوحدة (`const cache = new Map()`، `new PrismaClient()`) يتكرّر 3 مرات؛ `invalidateTenantCache()` من `/api/branding/logo` لم يكن يصل إلى النسخة التي تقرأها `/login`، وكان الخادم يفتح 3 مجمّعات اتصال. **القاعدة:** كل حالة عابرة للطلبات تُسجَّل على `globalThis` بمفتاح `Symbol.for(...)` (انظر `lib/db/prisma.ts` و`lib/auth/tenant-resolver.ts`)، مع اختبار وحدة يستورد الوحدة مرتين (`?instance=2`) ويثبت المشاركة.
 20. **إجبار تغيير كلمة المرور يمرّ عبر `requireUser`/`requireUserOrThrow`** (ADR-0009 §6): كل صفحة داخل `(dashboard)` وكل action يُرفض تلقائيًا حتى يغيّر المستخدم كلمته. الاستثناء الوحيد `{ allowPasswordChangeRequired: true }` — لا تضفه إلا لما يلزم قبل التغيير (التغيير نفسه، الخروج، اللغة). اختبارات التكامل التي تبني `Ctx` يدويًا تحتاج `passwordChangeRequired: null`.
-21. **لا SMTP من الطلب أبدًا**: أي بريد = `enqueueMail` داخل نفس `tx` ثم `after(() => processMailJob(...))`. القوالب في `lib/mail/templates.ts` (بلا next-intl — تُعرض داخل job بلا request scope). `MAIL_TRANSPORT=log` في التطوير/الاختبار؛ e2e يقرأ الرابط من `Job.result.text`.
+21. **لا SMTP من الطلب أبدًا**: أي بريد = `enqueueMail` داخل نفس `tx` ثم `kickJob(tenantId, jobId, "mail.send")` (لا `after(() => processMailJob(...))` مباشرة — P1-12). القوالب في `lib/mail/templates.ts` (بلا next-intl — تُعرض داخل job بلا request scope). `MAIL_TRANSPORT=log` في التطوير/الاختبار؛ e2e يقرأ الرابط من `Job.result.text`.
+23. **العامل يعمل خارج Next** (ADR-0010): `pnpm worker` يشغّل `tsx --conditions=react-server` لأن `features/*` تستورد `server-only`؛ بدون الشرط يرمي عند الاستيراد. **لا تستدعِ معالجًا من الطلب مباشرة** — `kickJob()` فقط، وهو يحترم `JOBS_INLINE` (true في التطوير/الاختبار، false في الإنتاج مع عامل دائم). المعالج هو مالك الانتقال `PENDING→RUNNING` الشرطي (`updateMany where status=PENDING`) — العامل يحجز بـ`lockedBy` فقط؛ لا تغيّر أحدهما دون الآخر وإلا كسرت «مرّة واحدة بالضبط» (اختبار `worker.test.ts`). ناقل البريد singleton على `globalThis` (نفس سبب #17). `pnpm audit` ينظّف `brace-expansion` عبر lockfile (1.1.21/5.0.12) — **لا** تضف override بالاسم المجرّد `brace-expansion: ">=5"`: يُسقط 5.x على `minimatch@3` داخل eslint فيتعطّل بـ`expand is not a function`.
 22. **دلاءُ rate-limit في الـproxy منفصلة**: `login:` (20/دقيقة) و`recover:` (30/15 دقيقة). دلو مشترك أسقط دخولًا مشروعًا في الحزمة الكاملة (كل الاختبارات من IP واحد).
 19. **لون العلامة التجارية = نص على أسطح داكنة**: أي `--primary` يُحقن يجب أن يمرّ `primaryContrast(hex).passesAA` (`lib/color.ts`؛ الحد الملزم هو السطح المظلّل `color-mix(primary 10%, card)` لا الكارت نفسه). `e2e/a11y.spec` يفشل على `/dashboard` لأي لون دون 4.5:1. لا ترفع الحد ولا تُضف `color-contrast` إلى قائمة الاستثناءات — أصلح اللون.
 18. **قواعد صيغة الرقم الأكاديمي** (`users.academicIdFormat`): `YYYY`/`YY` = السنة، تسلسل `N` واحد، وبقية الحروف حرفية؛ الأحرف المسموحة `A-Z 0-9 - _` فقط. لا أقواس `{}` ولا `{year}`: المحرّك (`features/users/academic-id.ts`) يطبعها حرفيًا. الافتراضي `DEFAULT_ACADEMIC_ID_FORMAT` (`YYYY-NNNNN`) هو المصدر الوحيد ويُستورد في `SETTINGS_REGISTRY`.
@@ -182,7 +189,7 @@ pnpm exec playwright test                    # الأرقام الحالية ف�
 
 > مصدر الحقيقة: `docs/40-plan/01-ROADMAP.md`. لا تُغيّر الترتيب دون ADR. كل مهمة = PR واحد مُدمَج.
 
-### P1 — النواة الإدارية (متبقٍ 4 مهام)
+### P1 — النواة الإدارية (متبقٍ 3 مهام)
 | # | المهمة | مخرجات محددة | ملاحظات تنفيذ |
 |---|---|---|---|
 | ~~**P1-06**~~ ☑ PR #13 | الملفات | storage adapter (local/S3 عبر واجهة واحدة)، رفع stream متعدد بتقدّم، فحص magic bytes + قائمة سماح + حد حجم حسب الاشتراك، اسم مُعاد التوليد `tenant/course/uuid`، تصنيف، روابط تنزيل موقّعة قصيرة العمر (`/api/files/[id]/download`)، `/files` بتبويبات | `lib/storage/`؛ حذف ناعم؛ `file.manage_all` |
@@ -191,7 +198,7 @@ pnpm exec playwright test                    # الأرقام الحالية ف�
 | **P1-09** ☑ | سجل التدقيق | `features/audit/{schemas,queries}` (قراءة فقط)، `GET /api/audit/export` CSV بتدفّق، `/audit` بلوحة مرشّحات + Sheet للـdiff عبر `?entry=` — PR #23 | كل action جديد يظهر تلقائيًا (facets من البيانات) |
 | ~~**P1-10**~~ ☑ PR #24 | الإعدادات | `/settings/[tab]` عام/أمان/هوية، `SETTINGS_REGISTRY`، أسرار AES-256-GCM، شعار عبر `lib/storage` + مساري `/api/branding/logo`، حقن العلامة في `/login` | أي إعداد جديد = سطر في `SETTINGS_REGISTRY`؛ الأسرار عبر `setSecretSettingAction` |
 | ~~**P1-11**~~ ☑ PR #25 | المصادقة المكتملة | ADR-0009 · `/forgot`→`/reset` (10 دقائق) · `/activate` (72 ساعة) · «تذكرني» من `security.sessionMaxDays` · `/change-password` إلزامي (`ADMIN_RESET/TENANT_FORCED/EXPIRED`) · `security.*` مطبَّقة على الدخول | أي action جديد يمرّ عبر `requireUserOrThrow` يُرفض تلقائيًا أثناء إجبار التغيير؛ لا تستثنِ إلا ما لا يمكن تنفيذه بعد التغيير |
-| **P1-12** | Worker + بريد | `worker/` يلتقط `Job` بقفل (`lockedAt/lockedBy`)، إعادة محاولة، SMTP أساسي للمنصة (تفعيل/استعادة)، `mail.send` | يتصل بدور المالك ويضبط GUC لكل مهمة |
+| ~~**P1-12**~~ ☑ PR #26 | Worker + بريد | ADR-0010 · `src/worker/index.ts` (`pnpm worker`) التقاط `FOR UPDATE SKIP LOCKED` + حاصد + إعادة محاولة · `lib/jobs/{registry,kick}` · ناقل SMTP (nodemailer/Mailpit) · `docker-compose.yml` | أي نوع Job جديد = معالج في `JOB_PROCESSORS` يملك قفل `PENDING→RUNNING`؛ من الطلب `kickJob()` فقط |
 | **P1-13** | التقارير الأساسية | `/reports`: مستخدمون/مقررات/ملفات/نظرة عامة + رسوم Recharts | |
 | **P1-14** | الملف الشخصي | `/profile`: بيانات، كلمة مرور، مظهر (فاتح/داكن)، تفضيلات الإشعارات | |
 | **P1-15** | اختبارات P1 | وحدة لكل action، E2E لكل UC، `e2e/crawl.spec.ts` (كل رابط Sidebar لكل دور = 200)، عزل لكل موديل | يُغلق P1 |

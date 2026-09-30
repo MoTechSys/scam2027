@@ -28,7 +28,7 @@
           PostgreSQL 16 (RLS)   Object Storage      Redis (optional)
           tenant_id everywhere  tenant/…/uuid       ratelimit · jobs · cache
                     ▲
-          Worker (same codebase, `pnpm worker`) — jobs: import, export, AI, retention, email
+          Worker (same codebase, `pnpm worker`, ADR-0010) — jobs: mail.send, notification.fanout, trash.purge (+ import, export, AI, retention لاحقًا)
 ```
 
 ## 2. المبادئ
@@ -66,11 +66,11 @@ scam2027/
 │   │   ├── i18n/ ar.json · en.json · request.ts
 │   │   └── middleware.ts          # tenant resolution + auth guard + locale
 │   ├── e2e/                       # Playwright (desktop + mobile projects)
-│   ├── worker/                    # jobs runner
+│   ├── worker/                    # jobs runner (src/worker/index.ts — claim FOR UPDATE SKIP LOCKED، reaper، processors من lib/jobs/registry)
 │   ├── package.json · next.config.ts · tailwind (v4 via CSS) · vitest.config.ts · playwright.config.ts
 ├── docs/                          # هذا التوثيق
 ├── .github/workflows/ci.yml
-├── docker-compose.yml             # postgres + redis + app + worker (dev/prod)
+├── app/docker-compose.yml         # postgres:17 (+ scam2027_test) + mailpit (dev) — لا Redis (ADR-0010)
 ├── .env.example
 ├── CHANGELOG.md · README.md · .gitignore
 ```
@@ -82,7 +82,7 @@ scam2027/
 3. تفاعل المستخدم → Server Action: `const ctx = await requireUser(); assertPermission(ctx, 'user.create'); const input = schema.parse(raw); ... await audit(ctx, 'user.create', entity)`.
 4. الخطأ → `failure(code, message)` → يُعرض بـ `sonner` toast؛ لا تفاصيل داخلية.
 5. الملفات: رفع عبر Route Handler (stream) → storage adapter → سجل `File`.
-6. Jobs: `enqueue({ tenantId, type, payload })` → worker يضبط المستأجر → ينفّذ → يكتب نتيجة + إشعار.
+6. Jobs (ADR-0010): الـaction ينشئ `Job` داخل نفس `tx` ثم `kickJob(tenantId, jobId, type)` (يُنفَّذ inline عبر `after()` فقط إن `JOBS_INLINE=true`) → العامل `pnpm worker` يلتقط `PENDING` بدور المالك عبر `FOR UPDATE SKIP LOCKED` ويضبط `lockedBy/lockedAt` → المعالج (من `lib/jobs/registry.ts`) يملك قفل `PENDING→RUNNING` الشرطي ويعمل داخل `tx(tenantId)` → يكتب `result`/`error`، ويعيد الجدولة أو يُفشِل بعد `maxAttempts`؛ حاصد يعيد أقفال RUNNING الراكدة (>`WORKER_STALE_LOCK_MINUTES`) إلى `PENDING`.
 
 ## 5. الأمان بالتصميم (خلاصة، التفاصيل في R2)
 

@@ -2,10 +2,13 @@
  * Mail transport (P1-11, ADR-0009 §4). One interface, two drivers:
  *  - `log`  (default): renders and writes the message to the logger; returns the rendered body so the Job stores a
  *            preview (`Job.result`). No network — what dev/test/e2e run.
- *  - `smtp` : P1-12 (nodemailer + Mailpit locally). Selecting it before P1-12 fails loudly at boot, never silently.
+ *  - `smtp` : nodemailer over SMTP_HOST:SMTP_PORT (Mailpit locally: 1025, no auth). Missing SMTP_HOST fails at first
+ *            use with a clear message, never silently.
+ * The transport is a globalThis singleton (P1-12) — see mailTransport().
  * Never import from client components. Never call from a request handler directly — enqueue `Job mail.send`
- * (features/auth/mail.ts) so delivery is retried and audited by the worker.
+ * (features/auth/core.enqueueMail) so delivery is retried by the worker (P1-12) and recorded in Job.result.
  */
+import nodemailer, { type Transporter } from "nodemailer";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { renderMail, type MailTemplate, type TemplateParams } from "./templates";
@@ -30,17 +33,50 @@ class LogTransport implements MailTransport {
   }
 }
 
-let cached: MailTransport | null = null;
-export function mailTransport(): MailTransport {
-  if (cached) return cached;
-  if (env.MAIL_TRANSPORT === "smtp") {
-    // P1-12 wires nodemailer here. Refusing early is safer than pretending to send.
-    throw new Error(
-      "MAIL_TRANSPORT=smtp is not available before P1-12 (worker + SMTP). Use MAIL_TRANSPORT=log.",
-    );
+class SmtpTransport implements MailTransport {
+  readonly name = "smtp" as const;
+  private readonly transporter: Transporter;
+  constructor() {
+    if (!env.SMTP_HOST) {
+      throw new Error("MAIL_TRANSPORT=smtp requires SMTP_HOST (Mailpit locally: 127.0.0.1:1025).");
+    }
+    this.transporter = nodemailer.createTransport({
+      host: env.SMTP_HOST,
+      port: env.SMTP_PORT ?? 587,
+      secure: env.SMTP_SECURE ?? false,
+      ...(env.SMTP_USER ? { auth: { user: env.SMTP_USER, pass: env.SMTP_PASSWORD ?? "" } } : {}),
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 20_000,
+    });
   }
-  cached = new LogTransport();
-  return cached;
+  async send(message: MailMessage): Promise<MailResult> {
+    const info = await this.transporter.sendMail({
+      from: env.MAIL_FROM,
+      to: message.to,
+      subject: message.subject,
+      text: message.text,
+      html: message.html,
+    });
+    logger.info({ to: message.to, subject: message.subject, messageId: info.messageId }, "mail.smtp_sent");
+    return { transport: "smtp", messageId: String(info.messageId) };
+  }
+}
+
+/**
+ * Singleton on globalThis (not module scope): Turbopack duplicates modules per entry kind (route handler / RSC /
+ * proxy), so a module-level cache would create one SMTP pool per copy. Same pattern as prisma.ts / tenant-resolver.ts.
+ */
+const TRANSPORT_KEY = Symbol.for("scam2027.mailTransport");
+const store = globalThis as unknown as Record<symbol, MailTransport | undefined>;
+
+export function mailTransport(): MailTransport {
+  return (store[TRANSPORT_KEY] ??= env.MAIL_TRANSPORT === "smtp" ? new SmtpTransport() : new LogTransport());
+}
+
+/** Test-only: drop the cached transport so a changed env takes effect. */
+export function resetMailTransportForTests(): void {
+  store[TRANSPORT_KEY] = undefined;
 }
 
 /** Render + send in one step (used by the mail.send job processor). */

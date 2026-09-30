@@ -412,3 +412,31 @@ pnpm exec playwright test                   # الحزمة كاملة (desktop +
 **دروس:** (1) Zod 4 يُنفّذ `refine` بعد فشل `regex` — احرس الدالة. (2) اختبار «الحزمة كاملة» يكشف تفاعل الحدود المشتركة (rate-limit) الذي لا يظهر بتشغيل ملف واحد. (3) عند إضافة حقل إلى `Ctx` ابحث في `tests/` عن الـfixtures اليدوية (8 ملفات).
 
 **التالي:** P1-12 Worker + بريد — `worker/` مستقل (`pnpm worker`) يلتقط `Job` بـ`FOR UPDATE SKIP LOCKED`/`lockedAt` ويعالج `mail.send`/`notification.fanout`/`trash.purge` بدور المالك مع ضبط GUC لكل مهمة؛ ناقل `smtp` (nodemailer) في `lib/mail` + Mailpit في docker-compose؛ إزالة `after()` inline أو إبقاؤه كمسار احتياطي عند غياب worker (يُقرَّر في ADR-0010 إن لزم).
+
+## الجلسة 26 — P1-12 Worker + بريد (PR #26) — ☑
+
+**القرار أولًا:** `docs/60-adr/0010-job-worker.md` — عامل مستقل على جدول `Job` نفسه (لا Redis/BullMQ): التقاط بـ`FOR UPDATE SKIP LOCKED` مع حجز `lockedBy/lockedAt`، المعالج يملك الانتقال الشرطي `PENDING→RUNNING` (فيكون التنفيذ مرّة واحدة بالضبط حتى مع عاملين)، حاصد أقفال راكدة، `kickJob()` بديل inline في التطوير (`JOBS_INLINE`)، SMTP عبر nodemailer وMailpit محليًا.
+
+**المُنفَّذ:**
+- `src/worker/index.ts` (`pnpm worker` = `tsx --conditions=react-server` — بدون الشرط يرمي `server-only`): `claimJobs(limit, workerId)` SQL خام، `reapStaleLocks`, `runClaimed` (نوع مجهول → `FAILED "no processor for type"`), `runWorker({pollMs, concurrency, signal})`، إيقاف رشيق SIGINT/SIGTERM؛ `WORKER_ID = host#pid#rand`.
+- `lib/jobs/registry.ts` (`JOB_PROCESSORS` لثلاثة أنواع) + `lib/jobs/kick.ts`؛ استُبدل كل `after(() => processX(...))` في actions المصادقة/الإشعارات/السلة/المستخدمين بـ`kickJob`.
+- `lib/mail/index.ts`: `SmtpTransport` (مهلات 10/10/20 ث، `auth` فقط إن وُجد `SMTP_USER`) + singleton على `globalThis` (`Symbol.for("scam2027.mailTransport")`) + `resetMailTransportForTests`.
+- `env.ts`: `JOBS_INLINE` (افتراضي true)، `WORKER_POLL_MS` 2000، `WORKER_CONCURRENCY` 4، `WORKER_STALE_LOCK_MINUTES` 15؛ `.env.example` قسم Jobs + ملاحظة Mailpit.
+- `docker-compose.yml` (postgres:17-alpine يُنشئ `scam2027_test` عبر `scripts/docker/init-test-db.sql` + `axllent/mailpit`).
+- `tests/integration/worker.test.ts` ×5 — منها اختبار SMTP **فعلي**: يُرسل عبر ناقل smtp إلى Mailpit (ثنائي `mailpit` مُشغَّل في الـsandbox لعدم توفر Docker) ويتحقق من `/api/v1/messages`؛ يُتخطّى بوضوح إن لم يكن Mailpit يستمع.
+
+**ما كشفته البوابة:** (1) في الجلسة السابقة كُتب استيراد `nodemailer` بينما ضاعت كتلة `SmtpTransport` من الملف → eslint `no-unused-vars` ×2؛ أُعيدت الكتلة. (2) override `brace-expansion: ">=5.0.12"` (لتنظيف `pnpm audit`) أسقط 5.x على `minimatch@3` داخل eslint → `expand is not a function`؛ حُذف الـoverride وتبيّن أن lockfile يحلّ 1.1.21/5.0.12 المرقَّعتين أصلًا فبقي `pnpm audit` نظيفًا (AGENTS #23).
+
+**الحالة المقاسة (في هذه الجلسة، على البناء `_pCSxXFTdG0pH0o8TKEDH`):**
+| البوابة | النتيجة |
+|---|---|
+| `pnpm check` | ✅ tsc 0 · eslint 0 · vitest **264/264** (36 ملفًا) · build ✓ |
+| `playwright test` كاملة (desktop + mobile، تشمل `crawl.spec`) | **121 ✓ / 11 skip / 0 ✗** (16 ملفًا × 2 مشروع، 8.0 دقيقة) |
+| `pnpm audit` | No known vulnerabilities found |
+| worker smoke | `pnpm worker` يقلع ويلتقط ويتوقف بـSIGINT |
+
+**قرارات:** (1) لا Redis — الطابور هو جدول `Job` (حجم P1–P3 لا يبرّر بنية إضافية؛ ADR-0010 يذكر معيار إعادة النظر). (2) `JOBS_INLINE=true` افتراضيًا كي تبقى e2e بلا عملية إضافية؛ الإنتاج `false` + عامل دائم. (3) الحجز (`lockedBy`) منفصل عن الحالة (`RUNNING`) عمدًا: الحاصد يعمل على كلٍّ منهما بمهلة مختلفة.
+
+**دروس:** (1) عند `pnpm audit` لا تكتب override بالاسم المجرّد لحزمة لها خطّان رئيسيان متوازيان؛ استهدف `pkg@major` أو حدّث lockfile. (2) اختبار SMTP الحقيقي أرخص من mock: Mailpit ثنائي واحد + `fetch('/api/v1/messages')`. (3) أي كود يستورد `features/*` خارج Next يحتاج `--conditions=react-server`.
+
+**التالي:** P1-13 التقارير الأساسية — `/reports/[tab]` (نظرة عامة/مستخدمون/مقررات/ملفات) بتجميعات حقيقية داخل `tx(tenantId)`، Recharts في الفرع المرئي فقط، صلاحيات `report.*` من المصفوفة، تصدير CSV بنمط `/api/audit/export`، إزالة `phase` من عنصر `reports` في `nav/items.ts`.
