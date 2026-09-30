@@ -44,6 +44,9 @@ describe("visibleNavItems", () => {
     expect(keys).not.toContain("notifications"); // shipped in P1-07 but notification.view not granted here
     expect(keys).not.toContain("reports"); // shipped in P1-13 but report.view not granted here
   });
+  it("shows profile to everyone (P1-14, no permission needed)", () => {
+    expect(visibleNavItems(new Set()).map((i) => i.key)).toContain("profile");
+  });
   it("shows reports when report.view is granted (P1-13)", () => {
     expect(visibleNavItems(new Set(["report.view"])).map((i) => i.key)).toContain("reports");
   });
@@ -91,6 +94,6 @@ describe("visibleNavItems", () => {
     expect(visibleNavItems(new Set(["audit.view"])).map((i) => i.key)).not.toContain("settings");
   });
   it("no permissions → only permission-free items", () => {
-    expect(visibleNavItems(new Set()).map((i) => i.key)).toEqual(["developer"]);
+    expect(visibleNavItems(new Set()).map((i) => i.key)).toEqual(["profile", "developer"]); // profile (P1-14) needs no permission;
   });
 });

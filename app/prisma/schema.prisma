@@ -230,14 +230,18 @@ model User {
 }
 
 model UserProfile {
-  tenantId  String    @db.Uuid
-  userId    String    @db.Uuid
-  avatarUrl String?
-  bio       String?
-  title     String? // e.g. "أستاذ مشارك"
-  gender    String?
-  birthDate DateTime?
-  updatedAt DateTime  @updatedAt
+  tenantId         String    @db.Uuid
+  userId           String    @db.Uuid
+  avatarUrl        String?
+  /// P1-14: storage key of the avatar under `<tenantId>/avatars/<uuid>.<ext>` (served by /api/profile/avatar/…).
+  avatarStorageKey String?
+  bio              String?
+  title            String? // e.g. "أستاذ مشارك"
+  gender           String?
+  birthDate        DateTime?
+  /// P1-14: persisted appearance — DARK | LIGHT | SYSTEM (applied server-side on <html>, cached in localStorage).
+  theme            String    @default("DARK")
+  updatedAt        DateTime  @updatedAt
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Cascade)

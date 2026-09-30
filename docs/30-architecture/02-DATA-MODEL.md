@@ -78,6 +78,7 @@ User 1─n Consent ; User 1─n DataSubjectRequest
 | إجراءات FK | ADR-0006: إسناد بلا FK · اختياري `NoAction` · آباء هيكليون `Restrict` · أبناء `Cascade` |
 | قيود SQL يدوية | سنة/فصل حالي واحد لكل مستأجر (فهرس فريد جزئي)، `CHECK` للتواريخ/الأعداد — في migration `p1_01` |
 | عقود Json | `src/lib/contracts/json-columns.ts` — `OfferingSchedule[]`, `NotificationTarget`, `Job.payload` حسب النوع |
+| `UserProfile` (P1-14) | `theme TEXT NOT NULL DEFAULT 'DARK'` + `CHECK IN (DARK, LIGHT, SYSTEM)` (مظهر مُخزَّن يُطبَّق من `(dashboard)/layout` → Header)، `avatarStorageKey` (مفتاح `<tenantId>/avatars/<uuid>.<ext>`؛ `avatarUrl` = `/api/profile/avatar/<tenantId>/<userId>/<version>` يُقدَّم لجلسة نفس المستأجر فقط) — migration `20260930120000_p1_14_profile_theme_avatar` |
 | `Job` (ADR-0010) | `status PENDING→RUNNING→DONE/FAILED`؛ `lockedBy/lockedAt` = **حجز** العامل (يُضبط عند الالتقاط وقبل `RUNNING`، ويُحرَّر بعد الانتهاء أو بالحاصد)؛ الانتقال `PENDING→RUNNING` شرطي (`updateMany where status=PENDING`) داخل المعالج فيكون التنفيذ مرّة واحدة بالضبط؛ `attempts/maxAttempts/runAt/result/error`؛ لا فهرس إضافي — التقاط `FOR UPDATE SKIP LOCKED` على `(status, runAt)` |
 
 ## 4. تصنيف البيانات الشخصية (لـ PDPL)

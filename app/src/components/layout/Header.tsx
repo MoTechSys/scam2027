@@ -9,10 +9,11 @@
  */
 import { Languages, LogOut, Menu, Moon, Sun, User as UserIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,7 +23,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { updateThemeAction } from "@/features/profile/actions";
+import type { Theme } from "@/features/profile/schemas";
 import { logoutAction, setLocaleAction } from "@/lib/session/actions";
+import { applyThemeToDocument, resolveTheme, type Resolved } from "@/lib/theme";
 import { NotificationBell } from "./NotificationBell";
 import { DESKTOP_HEADER_QUERY, useCurrentPageHeader } from "./page-header";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -30,54 +34,28 @@ import type { LayoutTenant, LayoutUser } from "./types";
 
 type Props = { user: LayoutUser; tenant: LayoutTenant; onOpenMenu: () => void };
 
-const THEME_KEY = "scam.theme";
-
-function readTheme(): "dark" | "light" {
-  if (typeof document === "undefined") return "dark";
-  return document.documentElement.dataset.theme === "light" ? "light" : "dark";
-}
-
-function applyTheme(theme: "dark" | "light") {
-  const root = document.documentElement;
-  if (theme === "light") {
-    root.dataset.theme = "light";
-    root.classList.remove("dark");
-  } else {
-    delete root.dataset.theme;
-    root.classList.add("dark");
-  }
-  try {
-    localStorage.setItem(THEME_KEY, theme);
-  } catch {
-    /* storage may be unavailable (private mode) */
-  }
-}
-
 export function Header({ user, tenant, onOpenMenu }: Props) {
   const t = useTranslations();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<Resolved>(() => resolveTheme(user.theme));
   const page = useCurrentPageHeader();
   const desktop = useMediaQuery(DESKTOP_HEADER_QUERY);
 
+  // Persisted preference wins (P1-14); localStorage is only a pre-hydration cache written by applyThemeToDocument.
   useEffect(() => {
-    let stored: string | null = null;
-    try {
-      stored = localStorage.getItem(THEME_KEY);
-    } catch {
-      /* ignore */
-    }
-    const initial = stored === "light" ? "light" : readTheme();
-    if (initial !== readTheme()) applyTheme(initial);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing with persisted browser state
-    setTheme(initial);
-  }, []);
+    const resolved = applyThemeToDocument(user.theme);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing the resolved SYSTEM value after mount
+    setTheme(resolved);
+  }, [user.theme]);
 
   const toggleTheme = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    applyTheme(next);
-    setTheme(next);
+    const next: Theme = theme === "dark" ? "LIGHT" : "DARK";
+    setTheme(applyThemeToDocument(next));
+    startTransition(async () => {
+      const r = await updateThemeAction({ theme: next });
+      if (!r.ok) toast.error(r.message);
+    });
   };
 
   const otherLocaleLabel = user.locale === "ar" ? t("common.english") : t("common.arabic");
@@ -163,6 +141,7 @@ export function Header({ user, tenant, onOpenMenu }: Props) {
             data-testid="user-menu"
           >
             <Avatar className="size-8">
+              {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt="" />}
               <AvatarFallback className="bg-primary/15 text-xs font-bold text-primary">
                 {initials}
               </AvatarFallback>
@@ -179,10 +158,11 @@ export function Header({ user, tenant, onOpenMenu }: Props) {
             <span className="text-xs font-normal text-primary">{user.roles.join(" · ")}</span>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem disabled className="min-h-11 gap-2">
-            <UserIcon className="size-4" aria-hidden="true" />
-            {t("nav.profile")}
-            <span className="ms-auto text-xs text-muted-foreground">P1</span>
+          <DropdownMenuItem asChild className="min-h-11 gap-2">
+            <Link href="/profile" data-testid="menu-profile">
+              <UserIcon className="size-4" aria-hidden="true" />
+              {t("nav.profile")}
+            </Link>
           </DropdownMenuItem>
           {/* Mobile-only utilities (desktop shows them as header buttons) */}
           <DropdownMenuItem className="min-h-11 gap-2 lg:hidden" onSelect={toggleLocale} disabled={pending}>

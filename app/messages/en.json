@@ -1626,5 +1626,56 @@
       "text": "Text",
       "other": "Other"
     }
+  },
+  "profile": {
+    "title": "Profile",
+    "subtitle": "Your details, password, app appearance and notification preferences",
+    "saved": "Your details were saved",
+    "tabs": {
+      "info": "Details",
+      "password": "Password",
+      "appearance": "Appearance",
+      "notifications": "Notifications"
+    },
+    "fields": {
+      "email": "Email",
+      "academicId": "Academic / employee ID",
+      "name": "Full name",
+      "phone": "Phone",
+      "title": "Title (e.g. Associate Professor)",
+      "locale": "Interface language",
+      "bio": "Bio"
+    },
+    "locales": {
+      "ar": "العربية",
+      "en": "English"
+    },
+    "meta": {
+      "joined": "Member since {date}",
+      "lastLogin": "Last login {date}"
+    },
+    "avatar": {
+      "alt": "Profile picture",
+      "change": "Change picture",
+      "remove": "Remove",
+      "hint": "PNG, WebP or JPEG up to 512 KB",
+      "saved": "Picture updated",
+      "removed": "Picture removed",
+      "tooLarge": "Picture is larger than 512 KB"
+    },
+    "password": {
+      "title": "Change password",
+      "lastChanged": "Last changed: {date}",
+      "neverChanged": "Password never changed yet"
+    },
+    "appearance": {
+      "title": "App appearance",
+      "desc": "Your choice is saved to your account and applied on every device",
+      "DARK": "Dark",
+      "LIGHT": "Light",
+      "SYSTEM": "System",
+      "current": "Current",
+      "saved": "Appearance saved"
+    }
   }
 }

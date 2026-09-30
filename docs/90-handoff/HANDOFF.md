@@ -462,3 +462,23 @@ pnpm exec playwright test                   # الحزمة كاملة (desktop +
 **قرارات:** (1) لا Server Actions للتقارير — قراءة RSC فقط، التصدير عبر Route Handler بتدفّق. (2) «الطلاب حسب التخصص» = مستخدمون مميَّزون مسجَّلون في شُعب مقررات مرتبطة بالتخصص (لا يوجد عمود تخصص على المستخدم حتى P2-06 SIS). (3) متوسط الإشغال يُحسب فقط على الشُعب ذات `capacity` وإلا «—» مع تلميح.
 
 **التالي:** P1-14 الملف الشخصي (النطاق التفصيلي في STATUS.json → nextTask).
+
+## الجلسة 28 — P1-14 الملف الشخصي (PR #28) — ☑
+
+**المُنفَّذ:**
+- Migration `20260930120000_p1_14_profile_theme_avatar` (`UserProfile.theme` + CHECK، `avatarStorageKey`) على القاعدتَين؛ `migrate diff` = لا فرق؛ RLS على `UserProfile` قائمة أصلًا.
+- `features/profile/{schemas,queries,core,actions}` — `applyProfileUpdate/applyTheme/applyAvatar` داخل `TenantTx` مع تدقيق؛ `updateProfileAction` يحدّث كوكي اللغة؛ `updateThemeAction` مسموح أثناء إجبار تغيير كلمة المرور.
+- `/profile/[tab]`: بيانات (نموذج + صورة، البريد/الرقم الأكاديمي للقراءة)، كلمة المرور (إعادة استخدام `ChangePasswordForm` بـ`forced=false`)، المظهر (RadioGroup DARK/LIGHT/SYSTEM يُطبَّق فورًا بـ`lib/theme.applyThemeToDocument` ويُحفَظ)، الإشعارات (مكوّن `Preferences` **مُستخرَج** إلى `notifications/preferences.tsx` ومشترك).
+- `POST /api/profile/avatar` (magic bytes PNG/WebP/JPEG، ≤512KB، `<tenantId>/avatars/<uuid>`، حذف القديم) + `GET /api/profile/avatar/[t]/[u]/[v]` (جلسة نفس المستأجر، CSP sandbox، private immutable).
+- القشرة: `LayoutUser.theme/avatarUrl` من `loadAppearance(ctx)` في `(dashboard)/layout`؛ Header يطبّق المخزَّن ويكتب التبديل عبر `updateThemeAction`، `AvatarImage`، رابط «الملف الشخصي» فعّال؛ عنصر nav `profile` بلا `phase`.
+- اختبارات: `profile-core.test.ts` ×7 (تحديث + تدقيق قبل/بعد، المظهر + رفض CHECK على قيمة فاسدة، الصورة set/replace/remove بمفاتيح سابقة، RLS)، `e2e/profile.spec.ts` ×5 (تعديل + خطأ تحقق + الاسم في الرأس + صف تدقيق؛ رفع PNG يظهر في الصفحة والرأس، `.exe` → 415، الإزالة → 404؛ LIGHT يثبت بعد إعادة التحميل وفي القاعدة وعلى `/dashboard`؛ كلمة مرور خاطئة/صحيحة مع إرجاع الـhash؛ تفضيلات مشتركة + 404 لتبويب مجهول؛ طالب يرى بياناته و404 لمسار أفاتار مستأجر آخر).
+
+**عطل كشفته e2e:** ترويسة CSP الـsandbox الخاصة بمسار الأفاتار كانت تُستبدل بالـCSP العام لأن `proxy.ts` كان يستثني شعار المستأجر فقط → `BINARY_ASSET` يشمل الآن الأفاتار (AGENTS #25). كذلك probe الأول أظهر «0 صور» لأن Radix `AvatarImage` لا يُرسَم إلا بعد تحميل الصورة — انتظر التحميل في الاختبارات.
+
+**الحالة المقاسة:**
+| البوابة | النتيجة |
+|---|---|
+| `pnpm check` | ✅ tsc 0 · eslint 0 · vitest **288/288** (38 ملفًا) · build ✓ |
+| `playwright test` كاملة (desktop + mobile، تشمل `crawl.spec` الذي يزحف الآن إلى `/profile`) | **139 ✓ / 11 skip / 0 ✗** (18 ملفًا × 2 مشروع، 9.6 دقيقة) |
+
+**التالي:** P1-15 إغلاق اختبارات P1 (النطاق في STATUS.json → nextTask) ثم P2-01 بـ ADR-0011.

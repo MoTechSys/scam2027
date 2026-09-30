@@ -68,7 +68,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { key: "reports", href: "/reports", icon: BarChart3, permission: "report.view" },
   { key: "audit", href: "/audit", icon: FileText, permission: "audit.view" },
   { key: "settings", href: "/settings", icon: Settings, permission: "settings.view" },
-  { key: "profile", href: "/profile", icon: User, phase: "P1" },
+  { key: "profile", href: "/profile", icon: User },
   { key: "developer", href: "/developer", icon: Code2 },
 ] as const;
 
