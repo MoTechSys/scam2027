@@ -10,7 +10,7 @@ test.describe("notifications", () => {
   const title = `E2E إعلان ${Date.now().toString().slice(-6)}`;
 
   test("admin composes to ALL and sees it in SENT with read stats", async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name === "mobile-safari", "compose covered on desktop");
+    void testInfo; // P1-15: compose runs on both projects
     await login(page, USERS.admin);
     await expect(page.getByTestId("notif-bell")).toBeVisible();
     await page.goto("/notifications?new=1");
@@ -72,7 +72,7 @@ test.describe("notifications", () => {
   });
 
   test("instructor sends to a taught section; SENT tab shows own only", async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name === "mobile-safari", "compose covered on desktop");
+    void testInfo; // P1-15: compose runs on both projects
     await login(page, USERS.instructor);
     await page.goto("/notifications?new=1");
     await expect(page.getByTestId("compose-form")).toBeVisible();

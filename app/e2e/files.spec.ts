@@ -8,7 +8,10 @@ import { USERS, expectNoHorizontalScroll, login } from "./helpers";
  */
 test.describe("files", () => {
   test("admin uploads, edits, downloads, trashes and restores a file", async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name === "mobile-safari", "Radix Select flake on mobile — covered on desktop");
+    test.skip(
+      testInfo.project.name === "mobile-safari",
+      "row menu is desktop-only (`إجراءات: <name>` label); mobile uses the generic list actions menu — P2-12 follow-up",
+    );
     test.setTimeout(120_000);
     await login(page, USERS.admin);
     const name = `E2E-notes-${Date.now().toString().slice(-6)}.txt`;

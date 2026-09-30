@@ -11,6 +11,13 @@
 
 ## [Unreleased]
 
+### Added — إغلاق اختبارات P1 (P1-15, PR #29) — **P1 مكتمل**
+- `tests/integration/files-queries.test.ts` ×12: نطاق الملفات لكل دور، تبويبات/بحث/مرشّحات/ترقيم، `resolveAttachment`، خيارات الإرفاق، RLS.
+- `p1-schema-isolation`: ثابت على مستوى القاعدة — كل جدول بعمود `tenantId NOT NULL` له RLS مفعَّلة ومُجبَرة وسياسة `tenant_isolation`؛ `app_user` بلا BYPASSRLS؛ `UserProfile.theme` CHECK.
+- e2e: تسجيل الخروج لم يعد `fixme`؛ `pickOption` مشترك وآمن على الجوال → تدفقات إنشاء المقرر/الشعبة/التسجيل/الانسحاب/التسجيل الجماعي/إرسال الإشعارات تعمل على سطح المكتب والجوال.
+- scripts: `e2e:mobile`, `e2e:crawl`, `test:a11y`, `test:all` (مطابقة لـ TESTING-STRATEGY §5).
+
+
 ### Added — الملف الشخصي (P1-14, FR-USR-011, PR #28)
 - Migration `20260930120000_p1_14_profile_theme_avatar`: `UserProfile.theme` (DARK/LIGHT/SYSTEM + CHECK) و`avatarStorageKey`.
 - `features/profile/{schemas,queries,core,actions}`: تعديل الاسم/الهاتف/المسمّى/النبذة/اللغة (البريد والرقم الأكاديمي للقراءة)، المظهر، الصورة — كل مسار داخل `tx` مع تدقيق `profile.update/theme/avatar/avatar_remove`.

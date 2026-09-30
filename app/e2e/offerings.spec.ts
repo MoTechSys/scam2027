@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { USERS, expectNoHorizontalScroll, login } from "./helpers";
+import { USERS, expectNoHorizontalScroll, login, pickOption } from "./helpers";
 
 /**
  * P1-05 part 2 — sections (offerings), roster and enrolment.
@@ -9,19 +9,11 @@ import { USERS, expectNoHorizontalScroll, login } from "./helpers";
 const save = (page: Page, form: string, label: RegExp = /حفظ|Save/) =>
   page.getByTestId(form).getByRole("button", { name: label }).click();
 
-async function pickOption(page: Page, trigger: string, text: string | RegExp) {
-  await page.locator(trigger).click();
-  await page.getByRole("option", { name: text }).first().click();
-}
-
 test.describe("offerings", () => {
   test("admin creates a section, opens it, enrols a student and withdraws them", async ({
     page,
   }, testInfo) => {
-    test.skip(
-      testInfo.project.name === "mobile-safari",
-      "Radix Select option tap flake on mobile — covered on desktop; mobile asserts pages below",
-    );
+    const mobile = testInfo.project.name === "mobile-safari"; // P1-15: runs on both projects
     test.setTimeout(120_000);
     await login(page, USERS.admin);
 
@@ -45,12 +37,26 @@ test.describe("offerings", () => {
     await expect(page.getByTestId("offering-form")).toBeHidden();
 
     await page.goto(`/offerings?q=${code}`);
-    const row = page.getByTestId("offering-link").filter({ hasText: code }).first();
+    // Desktop table and mobile list are both in the DOM — match the visible one (AGENTS #8).
+    const row = page.getByTestId("offering-link").filter({ hasText: code }).locator("visible=true").first();
     await expect(row).toBeVisible();
-    await expect(page.getByText(/مسودة|Draft/).first()).toBeVisible();
+    await expect(
+      page
+        .getByText(/مسودة|Draft/)
+        .locator("visible=true")
+        .first(),
+    ).toBeVisible();
 
-    // 3. DRAFT → OPEN through the status dialog
-    await page.getByRole("button", { name: new RegExp(`${code} E1`) }).click();
+    // 3. DRAFT → OPEN through the status dialog (desktop: row menu button; mobile: list actions menu)
+    if (mobile) {
+      await page
+        .getByRole("button", { name: /إجراءات|Actions/ })
+        .locator("visible=true")
+        .first()
+        .click();
+    } else {
+      await page.getByRole("button", { name: new RegExp(`${code} E1`) }).click();
+    }
     await page.getByRole("menuitem", { name: /تغيير حالة الشعبة|Change section status/ }).click();
     await expect(page.locator("#off-next")).toBeVisible(); // first allowed transition (OPEN) preselected
     await page
@@ -58,7 +64,12 @@ test.describe("offerings", () => {
       .last()
       .click();
     await expect(page.locator("#off-next")).toBeHidden();
-    await expect(page.getByText(/مفتوحة|Open/).first()).toBeVisible();
+    await expect(
+      page
+        .getByText(/مفتوحة|Open/)
+        .locator("visible=true")
+        .first(),
+    ).toBeVisible();
 
     // 4. detail + roster: enrol student 30 (search by academic id), then withdraw
     await row.click();
@@ -70,20 +81,24 @@ test.describe("offerings", () => {
     await page.getByTestId("student-candidate").first().click();
     await save(page, "enroll-form", /تسجيل طالب|Enrol student/);
     await expect(page.getByTestId("enroll-form")).toBeHidden();
-    await expect(page.getByText("443100030").first()).toBeVisible();
+    await expect(page.getByText("443100030").locator("visible=true").first()).toBeVisible();
 
     await page
       .getByRole("button", { name: /إجراءات|Actions/ })
+      .locator("visible=true")
       .first()
       .click();
     await page.getByRole("menuitem", { name: /انسحاب|Withdraw/ }).click();
-    await page.getByRole("button", { name: /^تأكيد$|^Confirm$/ }).click();
-    await page.goto(`${page.url()}?status=WITHDRAWN`);
-    await expect(page.getByText("443100030").first()).toBeVisible();
+    const confirm = page.getByRole("alertdialog");
+    await expect(confirm).toBeVisible();
+    await confirm.getByRole("button", { name: /^تأكيد$|^Confirm$/ }).click();
+    await expect(confirm).toBeHidden();
+    await page.goto(`${page.url().split("?")[0]}?status=WITHDRAWN`);
+    await expect(page.getByText("443100030").locator("visible=true").first()).toBeVisible();
   });
 
   test("admin bulk-enrols by identifiers and sees the per-line result", async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name === "mobile-safari", "covered on desktop");
+    void testInfo; // P1-15: runs on both projects
     await login(page, USERS.admin);
     await page.goto("/offerings?q=IS101");
     await page.getByTestId("offering-link").locator("visible=true").first().click();

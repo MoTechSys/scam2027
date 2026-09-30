@@ -482,3 +482,45 @@ pnpm exec playwright test                   # الحزمة كاملة (desktop +
 | `playwright test` كاملة (desktop + mobile، تشمل `crawl.spec` الذي يزحف الآن إلى `/profile`) | **139 ✓ / 11 skip / 0 ✗** (18 ملفًا × 2 مشروع، 9.6 دقيقة) |
 
 **التالي:** P1-15 إغلاق اختبارات P1 (النطاق في STATUS.json → nextTask) ثم P2-01 بـ ADR-0011.
+
+## الجلسة 29 — P1-15 إغلاق اختبارات P1 (PR #29) — ☑ — **P1 مكتمل 15/15**
+
+**جدول تغطية P1 (feature → وحدة / تكامل / e2e):**
+| Feature | وحدة | تكامل | e2e |
+|---|---|---|---|
+| users | users-schemas, academic-id | users-queries | users.spec |
+| roles | roles-schemas, rbac-escalation, permissions-catalogue | roles-queries | roles.spec |
+| academic | academic-schemas | academic-queries | academic.spec |
+| courses/offerings/enrollment | courses-schemas | courses-queries (يشمل enrolOne/resolveIdentifiers) | courses.spec, offerings.spec (الآن جوال أيضًا) |
+| files | files-storage, svg-safe | **files-queries (جديد ×12)** | files.spec |
+| notifications | notifications | notifications-queries | notifications.spec (compose جوال أيضًا) |
+| trash | trash-schemas | trash-queries | trash.spec |
+| audit | audit-schemas | audit-queries | audit.spec |
+| settings | settings-schemas, crypto, color | settings-core | settings.spec |
+| auth | auth-core, password, login-helpers, forwarded | auth-tokens | auth.spec (**logout فعّال**), auth-recovery.spec |
+| jobs/mail | — | worker | (عبر auth-recovery) |
+| reports | — | reports-queries | reports.spec |
+| profile | — | profile-core | profile.spec |
+| مخطط/عزل | json-columns | tenant-isolation, **p1-schema-isolation + ثابت القاعدة الكاملة** | crawl.spec |
+
+**المُنفَّذ:** `files-queries.test.ts` ×12؛ ثابت «كل جدول بعمود `tenantId NOT NULL` → RLS مفعَّلة + مُجبَرة + سياسة» (يلتقط أي جدول P2 مستقبلي تلقائيًا) + `app_user` بلا BYPASSRLS + `UserProfile.theme` CHECK؛ logout e2e بالكيبورد (Enter على menuitem) بدل fixme؛ `helpers.pickOption` (نقر → تحقق بنص الزناد → إعادة بالكيبورد) وإصلاح مطابقة `visible=true` في تدفقات الشُعب → أُزيلت 5 skips على الجوال (courses create، offerings create+enrol+withdraw، bulk-enrol، notifications compose ×2)؛ scripts `e2e:mobile/e2e:crawl/test:a11y/test:all`.
+
+**ما تعلّمته من الفشل:** (1) `PlatformAuditLog.tenantId` اختياري → استُثني بـ`attnotnull` كقاعدة `gen-rls.ts` نفسها. (2) افتراضي أن الروستر يعرض ACTIVE فقط كان خطأ — أُلغيت الجملة. (3) قائمة صف الملفات على الجوال لا تحمل `aria-label` بالاسم → بقيت skip موثَّقة (P2-12).
+
+**الحالة المقاسة:**
+| البوابة | النتيجة |
+|---|---|
+| `pnpm check` | ✅ tsc 0 · eslint 0 · vitest **303/303** (39 ملفًا) · build ✓ |
+| `playwright test` كاملة | ❌ **144 ✓ / 4 skip / 2 ✘** (9.8 دقيقة) — تشغيلتان كاملتان متطابقتان (`/tmp/e2e-p115.log`, `/tmp/e2e-p115b.log`). الفاشل الوحيد: `crawl.spec.ts:60 › crawl as admin` في **المشروعَين** (desktop #29، mobile #104). **دُمج PR #29 بقرار صريح من المالك (2026-09-30) رغم البوابة الحمراء؛ إصلاح هذا الفشل هو أول مهمة في الجلسة 30 قبل P2-01.** |
+
+**التالي:** **P2-01 — ADR-0011 أولًا** ثم المخطط + RLS على القاعدتَين (لا واجهة). نطاق دقيق في STATUS.json → nextTask.
+
+### 🔴 عطل مفتوح (P1-15 — دُمج؛ يجب حلّه أول الجلسة 30 قبل P2-01)
+**العرض:** في التشغيلة الكاملة فقط، `login(admin)` داخل `crawl as admin` يبقى على `/login` ويظهر `error.tsx` («حدث خطأ» + زر إعادة المحاولة). سجل الخادم `/tmp/next.log` يُظهر `⨯ Error: The destination stream closed early. digest 2609385683` (×3–4) في نفس اللحظة، بدون `auth.login.success` للأدمن، وبدون INVALID_CREDENTIALS/LOCKED (تلك تعود لاختبار «wrong password» المتعمَّد). القفل (5 فشل/15 د) **ليس** السبب.
+**ما جُرّب ولم يُعِد الإنتاج (كله أخضر):** `crawl -g admin` وحده (2/2)؛ `courses(student)+crawl admin`؛ `auth+a11y+crawl admin` (12/12)؛ `auth-recovery+auth+courses+crawl admin` desktop (17/17).
+**الفرضية الأرجح:** استنزاف/تسابق في الخادم (`next start` واحد على :3000) بعد ~28 اختبارًا (academic/audit/auth-recovery/auth/courses) — استجابة RSC تُقطع قبل إتمام إعادة التوجيه بعد `signIn`، فيعرض `error.tsx` وتبقى الصفحة على `/login`. نفس البصمة (`destination stream closed early`) تتكرر في السجل حول اختبارات أخرى دون فشل لأنها ليست في مسار التنقّل الحرج.
+**خطوات الوكيل التالي:** (1) شغّل `pnpm exec playwright test --project=desktop-chromium e2e/a*.spec.ts e2e/courses.spec.ts e2e/crawl.spec.ts` (المسار الكامل قبل crawl) والتقط `trace.zip`؛ (2) افحص `login-form` — هل يعتمد على `redirect` من signIn أم `router.push`؟ أضِف انتظارًا/إعادة محاولة صريحة في `e2e/helpers.login` **فقط إن** ثبت أنه ضعف في الاختبار لا في التطبيق؛ (3) إن كان الخادم: سجّل `digest 2609385683` عبر `instrumentation.ts` لمعرفة المسار؛ (4) لا تُخفِ الفشل بـ`retries`.
+
+### 🟠 عيب تصميم موثَّق (تعليق المالك، لقطة موبايل 390px — صفحة `/offerings/[id]`)
+البطاقة «بيانات الشعبة» تعرض 7 حقول (المقرر/الفصل/الساعات/السعة/المكان/الجدول/أُنشئ في) في **عمود واحد** على الموبايل لأن `<dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">` يبدأ بعمودَين فقط من `sm` (640px)؛ كل حقل `flex-col` (التسمية فوق القيمة) فيهدر ارتفاعًا ويترك يمين البطاقة فارغًا، وتدفع بطاقة المدرّسين والروستر خارج الشاشة الأولى.
+**الإصلاح المقترح (P2-12 / أو مع P1-15):** في `app/src/app/(dashboard)/offerings/[id]/page.tsx` L155–161: `grid-cols-2 gap-x-4 gap-y-3` من الموبايل، أو صف أفقي لكل حقل (`flex justify-between` تسمية يسارًا/قيمة يمينًا بـRTL) بحيث تسع البطاقة كاملة في ≤ 40% من ارتفاع 844px. نفس النمط في `courses/[id]` و`users/[id]` — راجعهما معًا وأضِف اختبار ADR-0008 «لا تمرير صفحة» للـ detail على الموبايل.
