@@ -34,7 +34,7 @@ type Page<T> = { items: T[]; total: number; page: number; pageSize: number };
 | `filesApi.delete` | `files/softDeleteFile`, `approveFile`, `rejectFile`, `updateFileMeta` | `file.delete/approve/edit` |
 | `notificationsApi.*` | `notifications/listInbox`, `markRead`, `markAllRead`, `archive`, `send({ title, body, priority, target })`, `listSent`, `getReadStats`, `updatePreferences` | `notification.*` |
 | `trashApi.*` | `trash/listTrash(kind)`, `restore(kind, id)`, `permanentDelete(kind, id)`, `emptyTrash(kind)` | `trash.*` |
-| `settingsApi.get/update(category)` | `settings/getSettings(category)`, `updateSettings(category, values)`, `testEmail()` | `settings.*` |
+| `settingsApi.get/update(category)` | RSC `settings/queries: loadGeneral`, `loadSecurity`, `loadBranding`, `loadEmail` (الأسرار تُعاد كحالة `hasValue` + ذيل مقنَّع فقط)؛ Server Actions `settings/updateGeneralAction`, `updateSecurityAction`, `updateBrandingAction`, `removeLogoAction`, `setSecretSettingAction({ key, value | null })` (كلها Zod strict؛ `primaryColor` يرفض ما دون WCAG AA 4.5:1 عبر `lib/color.primaryContrast` → `tx` → `audit` → `invalidateTenantCache` → `revalidatePath`)؛ `testEmail()` في P1-12 | `settings.view` + `settings.edit_general/edit_security/edit_branding` |
 | `dashboardApi.getStats` | `reports/getDashboard()` (حسب الدور) | `dashboard.view` |
 | `reportsApi.*` | `reports/getUsersReport`, `getCoursesReport`, `getFilesReport`, `getAiReport`, `getActivityReport`, `exportReport(kind, format)` | `report.*` |
 | `auditLogsApi.getAll` | RSC `audit/queries: listAuditLogs(ctx, query, tz)`, `getAuditEntry`, `auditFacets` (لا Server Actions — السجل للقراءة فقط)؛ **HTTP** `GET /api/audit/export?<filters>` CSV بتدفّق | `audit.view` / `audit.export` |
@@ -42,7 +42,7 @@ type Page<T> = { items: T[]; total: number; page: number; pageSize: number };
 | — (mock سابقاً) | `ai/summarizeFile(fileId)`, `generateQuestions(fileId, opts)`, `chat(conversationId?, message, fileIds)`, `listConversations`, `approveSummary`, `getUsage` | `ai.*` |
 | — | `quizzes/*`, `grades/*`, `assignments/*` (من V2 مع إعادة تسمية للمصفوفة) | `quiz.*`, `grade.*`, `assignment.*` |
 | — | `privacy/exportMyData`, `createDsar`, `listDsar`, `resolveDsar`, `listRopa`, `upsertRopa`, `listIncidents`, `createIncident` | `privacy.*` |
-| — | `tenant/getBranding`, `updateBranding`, `getUsage` | `settings.edit_branding` |
+| — | العلامة التجارية ضمن `settings/*` أعلاه (`updateBrandingAction`, `removeLogoAction`)؛ `getUsage` في P3 | `settings.edit_branding` |
 | — (منصة) | `platform/listTenants`, `createTenant`, `updateTenant`, `suspendTenant`, `exportTenant`, `setSubscription` | `platform.*` |
 
 ## 3. Route Handlers (HTTP)
@@ -52,6 +52,8 @@ type Page<T> = { items: T[]; total: number; page: number; pageSize: number };
 | `/api/health` | GET | `{ status, db, storage, redis, version }` | عامة (بلا تفاصيل حساسة) |
 | `/api/files` | POST | رفع multipart (stream → storage) | جلسة + `file.upload` |
 | `/api/files/[id]/download` | GET | تنزيل برابط موقّع (5 دقائق) | توقيع HMAC + جلسة |
+| `/api/branding/logo` | POST | رفع/استبدال شعار المستأجر (multipart `logo`، ≤512 KB، النوع بالـmagic bytes: PNG/WebP/JPEG، أو SVG بعد فحص `svgIsInert` — لا script/on*/foreignObject/مراجع خارجية)؛ يُكتب تحت `<tenantId>/branding/<uuid>.<ext>` عبر `lib/storage`، يحدّث `TenantBranding.logoUrl/faviconUrl/logoStorageKey` ويحذف الكائن القديم، يدوّن `settings.upload_logo`، rate-limit 10/دقيقة؛ 401/403/400/413/415/429 | جلسة + `settings.edit_branding` |
+| `/api/branding/logo/[tenantId]/[version]` | GET | الشعار الحالي للمستأجر (عام بطبيعته — يُعرض لزائر `/login` بلا جلسة)؛ `version` كاسر كاش فقط؛ `Cache-Control: immutable` + CSP `default-src 'none'; sandbox` + `nosniff`؛ يُقرأ المفتاح عبر العميل المالك (لا GUC بلا جلسة) ويُرفض أي مفتاح خارج `<tenantId>/branding/`؛ 404 لغير الموجود | عامة |
 | `/api/audit/export` | GET | CSV بتدفّق (UTF-8 BOM، RFC 4180، حماية من حقن الصيغ، keyset batches ×1000، سقف 50k صف، `x-audit-rows`/`x-audit-total`)؛ المرشّحات = `auditExportSchema` **strict** (مجهول → 400)؛ التصدير نفسه يُدوَّن `audit.export` | جلسة + `audit.export` |
 | `/api/files/[id]/preview` | GET | تدفق للعارض (Range) | توقيع + جلسة |
 | `/api/docs` | GET | OpenAPI 3.1 (من zod-openapi) — P3 | جلسة admin |

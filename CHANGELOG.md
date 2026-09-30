@@ -11,6 +11,26 @@
 
 ## [Unreleased]
 
+### Added — الإعدادات (P1-10, FR-SET-001/005, FR-TEN-004/007, PR #24)
+- `lib/crypto.ts`: AES-256-GCM بمفتاح `APP_ENCRYPTION_KEY` (صيغة `v1:` مُرقَّمة للتدوير، `maskSecret` لا يكشف الأسرار القصيرة) + `lib/svg-safe.ts` (SVG خامل: لا script/on*/foreignObject/مراجع خارجية).
+- `features/settings/{schemas,core,queries,actions}`: **`SETTINGS_REGISTRY`** (category/key/Zod/default/secret — إعداد جديد = سطر لا migration)؛ `getSetting/setSetting/getSettings` مع سقوط آمن للصف الفاسد؛ الأسرار مشفّرة في القاعدة ولا تُعاد للعميل (`hasValue` + ذيل مقنَّع)؛ 5 Server Actions بالنمط القياسي (`updateGeneralAction`, `updateSecurityAction`, `updateBrandingAction`, `removeLogoAction`, `setSecretSettingAction`) تُبطل كاش المستأجر وتُعيد التحقق من التخطيط.
+- `/settings/[tab]`: عام (اسم/لغة/منطقة زمنية/صيغة الرقم الأكاديمي/بريد الدعم) · أمان (سياسة كلمات المرور، الجلسة، القفل، MFA للأدوار، إجبار تغيير كلمة المرور) · هوية (ألوان + شعار مع معاينة وإزالة)؛ عنصر التنقّل `settings` مفعَّل؛ i18n `settings.*` ar/en.
+- `POST /api/branding/logo` (≤512 KB، النوع بالـmagic bytes أو SVG خامل، `<tenantId>/branding/<uuid>.<ext>`، حذف القديم، تدقيق، rate-limit) و`GET /api/branding/logo/[tenantId]/[version]` (عام، `immutable`، CSP `sandbox`).
+- حقن العلامة: `--primary`/الشعار/رسالة الدخول في `/login` والتخطيط عبر `resolveTenant().branding`.
+- Migrations: `20260928120000_p1_10_branding_logo_key` (`TenantBranding.logoStorageKey`) و`20260928140000_p1_10_tenant_self_update` (`GRANT UPDATE (name, nameEn, locale, timezone, updatedAt) ON Tenant TO app_user`؛ `scripts/gen-rls.ts` محدَّث).
+- اختبارات: وحدة `crypto` (5)، `svg-safe` (8)، `settings-schemas` (7)، `color` (4)، `tenant-resolver` (+1 singleton)؛ تكامل `settings-core` (7: افتراضيات/upsert/صف فاسد/سر مشفّر فعليًا/RLS)؛ `e2e/settings.spec.ts` (8 سيناريوهات × desktop+mobile، يعيد حالة مستأجر demo).
+
+### Fixed — (PR #24)
+- **كاش المستأجر وعملاء Prisma كانا مكرّرين 3 مرات في الإنتاج:** Turbopack يُصدر نسخة مستقلة من `tenant-resolver.ts` و`lib/db/prisma.ts` لكل نوع مدخل (Route Handlers / RSC / proxy)، فـ`invalidateTenantCache()` من مسار رفع الشعار لم يصل إلى نسخة `/login` (الشعار لا يظهر حتى انتهاء TTL) وكان الخادم يفتح 3 مجمّعات اتصال (8 جلسات `app_user` خاملة بعد طلب واحد). الحل: تسجيل الكاش وعملاء Prisma على `globalThis` بمفاتيح `Symbol.for` في كل البيئات + اختبار وحدة يستورد الوحدة مرتين. بعد الإصلاح: جلسة `app_user` واحدة.
+- **صيغة الرقم الأكاديمي:** افتراضي السجل كان `{YY}NNNNNN` بينما المحرّك (`academic-id.ts`) لا يعرف الأقواس ويطبعها حرفيًا، ما أنتج معرّفات `{26}000001` وأسقط `e2e/users.spec`. أصبح الافتراضي `DEFAULT_ACADEMIC_ID_FORMAT` (`YYYY-NNNNN`) مصدرًا وحيدًا، والمخطط يقبل `A-Z 0-9 - _` فقط مع تسلسل `N` واحد، وتلميح الواجهة يشرح القواعد الفعلية.
+- **لون العلامة التجارية يخضع لبوابة WCAG AA:** `#1e90ff` مرّ بمخطط HEX لكنه أسقط `e2e/a11y.spec` على `/dashboard` (3.8:1 كنص على السطح المظلّل `color-mix(primary 10%, card)`) — أي لون داكن كان سيُفشل الوصولية لكل مستخدمي المستأجر. جديد `lib/color.ts` (luminance/contrast/mix وفق WCAG 2.1) و`primaryContrast()` يقيس اللون على الكارت والسطح المظلّل ونص الزر؛ `primaryColorSchema` يرفض ما دون 4.5:1 خادميًا، والنموذج يعرض القراءة حيًا (`contrast-readout`). اختبارات وحدة (4) + e2e يتحقق من الرفض ثم القبول بـ`#38bdf8`.
+- `PASSWORD_MIN` يُستورد من `lib/auth/password-policy.ts` (ثابت خالص) — استيراد `password.ts` (argon2) في مكوّن عميل كان يكسر `next build`.
+- `ScrollRegion` أصبح `relative` — مدخلات Radix المخفية المطلقة كانت تُضخّم `document.scrollHeight` على الجوال (خرق ADR-0008 في `/settings/security`).
+- الـproxy لم يعد يكتب CSP العام فوق CSP `sandbox` لمسار الشعار العام؛ نماذج الإعدادات `noValidate` كي تظهر أخطاء Zod من الخادم.
+
+### Docs — (PR #24)
+- ROADMAP P1-10 ☑؛ REQUIREMENTS FR-SET-001/005، FR-TEN-004 ☑، FR-TEN-007 ◐؛ DATA-MODEL (P1-10 + `SETTINGS_REGISTRY`)؛ API-CONTRACT (`/api/branding/logo` POST/GET + Server Actions الإعدادات)؛ AGENTS (§0، §2 bootstrap على sandbox خالٍ، §4، pitfalls #14–#18)؛ HANDOFF الجلسة 24؛ STATUS.json؛ README.
+
 ### Added — سجل التدقيق (P1-09, FR-SET-004, PR #23)
 - `features/audit/`: `schemas` (مرشّحات URL، عقد تصدير strict، `csvEscape` RFC 4180 + حارس حقن الصيغ، `diffSnapshots`، `dayRangeInTimeZone`)، `queries` (`listAuditLogs` ببحث يشمل الفاعل، `getAuditEntry`, `auditFacets`, `iterateAuditLogs` keyset بدفعات 1000 وسقف 50k، `tenantTimeZone`).
 - `GET /api/audit/export`: CSV بتدفّق (BOM، `attachment`، `no-store`)، 401/403/400، ويدوّن `audit.export`.

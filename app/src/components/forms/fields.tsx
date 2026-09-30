@@ -83,9 +83,10 @@ export function TextAreaField({
   label,
   errors,
   optional,
+  hint,
   className,
   ...ta
-}: Common & Omit<React.ComponentProps<typeof Textarea>, "id" | "name">) {
+}: Common & { hint?: string } & Omit<React.ComponentProps<typeof Textarea>, "id" | "name">) {
   const tc = useTranslations("common");
   return (
     <div className={`space-y-1.5 ${className ?? ""}`}>
@@ -97,9 +98,14 @@ export function TextAreaField({
         name={name}
         rows={2}
         aria-invalid={!!errors[name]}
-        aria-describedby={`${name}-error`}
+        aria-describedby={`${hint ? `${id}-hint ` : ""}${name}-error`}
         {...ta}
       />
+      {hint && (
+        <p id={`${id}-hint`} className="text-xs text-muted-foreground">
+          {hint}
+        </p>
+      )}
       <FieldError errors={errors} name={name} />
     </div>
   );

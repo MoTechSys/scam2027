@@ -80,6 +80,13 @@ describe("visibleNavItems", () => {
     expect(a?.bottom).toBeUndefined();
     expect(visibleNavItems(new Set(["trash.view"])).map((i) => i.key)).not.toContain("audit");
   });
+  it("shows settings when settings.view is granted (P1-10); never in the bottom bar", () => {
+    const items = visibleNavItems(new Set(["settings.view"]));
+    const s = items.find((i) => i.key === "settings");
+    expect(s?.href).toBe("/settings");
+    expect(s?.bottom).toBeUndefined();
+    expect(visibleNavItems(new Set(["audit.view"])).map((i) => i.key)).not.toContain("settings");
+  });
   it("no permissions → only permission-free items", () => {
     expect(visibleNavItems(new Set()).map((i) => i.key)).toEqual(["developer"]);
   });

@@ -53,7 +53,7 @@ for (const t of tenantTables) {
 
 out.push(`-- Platform tables: minimal grants for the runtime role`);
 const platformGrants: Record<string, string> = {
-  Tenant: "SELECT", // host → tenant resolution
+  Tenant: 'SELECT, UPDATE ("name", "nameEn", "locale", "timezone", "updatedAt")', // host → tenant resolution; self-edit (P1-10)
   TenantBranding: "SELECT, UPDATE", // tenant admin edits branding (guarded by RBAC; row limited by app code)
   Subscription: "SELECT",
   TenantSetting: "SELECT, INSERT, UPDATE, DELETE",

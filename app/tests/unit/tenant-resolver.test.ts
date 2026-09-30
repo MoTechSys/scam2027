@@ -30,3 +30,21 @@ describe("safePrimaryColor (CSS injection guard)", () => {
     expect(safePrimaryColor(null)).toBeNull();
   });
 });
+
+describe("tenant cache is a process-wide singleton (survives bundle duplication)", () => {
+  it("two module instances share one Map and one invalidation", async () => {
+    // Vite treats a different query string as a distinct module instance — the same situation Turbopack creates
+    // when it emits separate copies of this module for Route Handlers, RSC pages and the proxy.
+    type Resolver = typeof import("@/lib/auth/tenant-resolver");
+    const a: Resolver = await import("@/lib/auth/tenant-resolver");
+    // The query string makes Vite create a second module instance; the path is not statically typed.
+    const second = "@/lib/auth/tenant-resolver?instance=2";
+    const b: Resolver = await import(/* @vite-ignore */ second);
+    expect(a).not.toBe(b);
+    const store = a.tenantCacheStore();
+    expect(b.tenantCacheStore()).toBe(store);
+    store.set("probe.localhost", { at: Date.now(), value: null });
+    b.invalidateTenantCache();
+    expect(store.has("probe.localhost")).toBe(false);
+  });
+});

@@ -6,7 +6,13 @@
  *  - unknown host (preview/sandbox URL) with no customDomain match → DEFAULT_TENANT_SLUG when set
  * DEFAULT_TENANT_SLUG is an explicit opt-in (empty in production, see .env.example); it is NOT gated on NODE_ENV
  * because `next start` forces NODE_ENV=production even for preview deployments.
- * Cached in-memory for 60 s. Tenant table has no RLS (app_user has SELECT); branding is read via db(tenantId).
+ * Cached in-memory for 60 s. Tenant table has no RLS (app_user has SELECT); branding is read via db(tenantId)
+ * (the extended client sets the tenant GUC per operation, so no session is required).
+ *
+ * The cache lives on `globalThis`, NOT in a module-level `const`: Turbopack emits a separate copy of this module
+ * for Route Handlers, for RSC pages and for the proxy, so a module-scoped Map would be three independent caches and
+ * `invalidateTenantCache()` called from `POST /api/branding/logo` would never reach the copy `/login` reads from
+ * (observed in P1-10: login message refreshed, logo did not). One process = one cache, whichever bundle imports it.
  */
 import type { TenantStatus } from "@prisma/client";
 import { basePrisma } from "@/lib/db/prisma";
@@ -26,7 +32,10 @@ export type ResolvedTenant = {
 };
 
 const TTL_MS = 60_000;
-const cache = new Map<string, { at: number; value: ResolvedTenant | null }>();
+type CacheEntry = { at: number; value: ResolvedTenant | null };
+const CACHE_KEY = Symbol.for("scam2027.tenantResolverCache");
+const globalStore = globalThis as unknown as { [CACHE_KEY]?: Map<string, CacheEntry> };
+const cache: Map<string, CacheEntry> = (globalStore[CACHE_KEY] ??= new Map());
 
 export function hostToSlug(hostHeader: string | null | undefined): { slug: string | null; isRoot: boolean } {
   const host = (hostHeader ?? "").split(":")[0]?.toLowerCase() ?? "";
@@ -78,6 +87,12 @@ export async function resolveTenant(hostHeader: string | null | undefined): Prom
   return value;
 }
 
+/** Drop every cached host → tenant entry (all hosts: a tenant may be reachable via slug and custom domain). */
 export function invalidateTenantCache(): void {
   cache.clear();
+}
+
+/** Process-wide cache handle — exported for tests that assert the singleton survives module duplication. */
+export function tenantCacheStore(): Map<string, CacheEntry> {
+  return cache;
 }

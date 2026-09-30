@@ -316,3 +316,73 @@ pnpm test && pnpm lint && pnpm typecheck
 **دروس:** (1) `Intl.DateTimeFormat.formatToParts` بـ`hourCycle:"h23"` يعطي حدود اليوم لأي منطقة بلا مكتبة تواريخ. (2) مع الجداول بلا FK: استعلام أسماء منفصل بـ`IN` أرخص وأأمن من join وهمي. (3) في e2e الجوال: النقر على الصف (`onItemClick`) أثبت من فتح قائمة `⋮` داخل قائمة Radix.
 
 **التالي:** P1-10 الإعدادات — `lib/crypto` (AES-256-GCM بمفتاح `APP_ENCRYPTION_KEY` الموجود) + `features/settings` + `/settings/[tab]` + حقن `TenantBranding` في `/login` والتخطيط.
+
+## Session 23 — P1-10 الإعدادات (WIP, PR #24 draft, NOT merged) — 93 % done
+
+> **للوكيل الجديد:** ابدأ من هنا. الحالة الدقيقة أدناه؛ لا تعيد كتابة شيء موجود. اقرأ `AGENTS.md` أولًا ثم هذا القسم.
+
+### الحالة المقاسة (آخر تشغيل فعلي)
+| البوابة | النتيجة |
+|---|---|
+| `pnpm check` (tsc · eslint · vitest · build) | ✅ أخضر — vitest **32 ملف / 260 اختبار** ، build `bmjvhP1yquCqj4JiijW7K` |
+| `playwright test e2e/settings.spec.ts` | **13 ✅ / 2 ❌ / 1 skipped** — الفاشلان هما نفس التوكيد (السطر 202) على desktop + mobile |
+| بقية Playwright (crawl وغيره) | **لم تُشغَّل بعد** بعد تغييرات هذه الجلسة → يجب تشغيل الحزمة كاملة قبل الدمج |
+| Migrations | `20260928120000_p1_10_branding_logo_key` + `20260928140000_p1_10_tenant_self_update` مطبَّقتان على dev + test |
+
+### ما أُنجز في هذه الجلسة (كله ملتزَم ومدفوع على `genspark_ai_developer`)
+- `lib/crypto.ts` AES-256-GCM + `lib/svg-safe.ts` — اختبارات وحدة (5 + 8). **عيب أُصلح:** `maskSecret` كان يكشف الأسرار القصيرة.
+- `features/settings/{schemas,core,queries,actions}.ts`، `/settings/[tab]` (عام/أمان/هوية)، i18n `settings.*` (67 مفتاحًا، تطابق ar/en).
+- `tests/unit/settings-schemas.test.ts` (7)، `tests/integration/settings-core.test.ts` (7: افتراضيات، upsert، صف فاسد → افتراضي، سر مشفّر فعليًا في القاعدة، عزل RLS)، اختبار nav.
+- `e2e/settings.spec.ts` (8 سيناريوهات × 2 أجهزة، يعيد حالة المستأجر demo في `afterAll`).
+- **عيوب اكتشفتها البوابة وأُصلحت:**
+  1. `PASSWORD_MIN` كان يُستورد من `lib/auth/password.ts` (argon2) داخل مكوّن عميل → فشل build. **الحل:** `lib/auth/password-policy.ts` (ثابت خالص) ويعيد `password.ts` تصديره.
+  2. `app_user` لم يملك `UPDATE` على `Tenant` → `updateGeneralAction` فشل بـ 42501. **الحل:** migration `20260928140000_p1_10_tenant_self_update` = `GRANT UPDATE (name, nameEn, locale, timezone, updatedAt)` (صلاحية على مستوى الأعمدة؛ `slug/customDomain/status` تبقى للمنصة)، وتحديث `scripts/gen-rls.ts`.
+  3. `GET /api/branding/logo/:tid/:v` أعاد 404: `TenantBranding` محمي بـ RLS ولا جلسة → استخدام `platformPrisma` (نفس نمط `tenant-resolver.ts`/`health`).
+  4. الـproxy كان يكتب CSP العام فوق CSP `sandbox` لمسار الشعار → استثناء `PUBLIC_LOGO` في `proxy.ts`.
+  5. جوّال: `document.scrollHeight` 1403 على `/settings/security` بسبب `<input>` المخفي المطلق لـ Radix Switch/Checkbox يهرب من الـScrollRegion → `ScrollRegion` أصبح `relative` (إصلاح عام يفيد كل الصفحات).
+  6. التحقق الأصلي للمتصفح (`type=email`, `min`) كان يمنع إظهار أخطاء Zod من الخادم → `noValidate` على نماذج الإعدادات الأربعة.
+
+### ❌ العنصر المفتوح الوحيد (ابدأ به)
+`e2e/settings.spec.ts:202` — بعد رفع شعار PNG بنجاح (الـDB يحوي `logoUrl` و`logoStorageKey` صحيحين، وطلب GET عليه يعيد 200 + CSP sandbox)، تُمسح الكوكيز ويُزار `/login`؛ **`img[src^="/api/branding/logo/<tid>/"]` غير مرئي**. رسالة الدخول (`loginMessage`) تظهر، أي أن الكاش أُبطل جزئيًا.
+تحقّق بالترتيب:
+1. `src/lib/auth/tenant-resolver.ts` — الكاش 60 ثانية مفهرس بالـhost؛ هل `invalidateTenantCache()` يمسح الخريطة كلها أم مفتاحًا واحدًا؟ هل قراءة `branding` عبر `db(tenant.id)` تعمل بدون GUC في سياق `/login` (لا جلسة)؟ (قد تُعيد `null` بصمت بسبب RLS → السقوط إلى الحرف الأول). **الاحتمال الأرجح.** إن كان كذلك: اقرأ `TenantBranding` عبر `platformPrisma` في الـresolver (بيانات عامة بطبيعتها) ووثّق ذلك.
+2. `next/image` مع `unoptimized` + مسار نسبي: افحص لقطة `test-results/…exe-refused-desktop-chromium/test-failed-1.png`.
+3. بعد الإصلاح: `pnpm build` → `setsid scripts/restart-server.sh` → `pnpm exec playwright test e2e/settings.spec.ts` ثم **الحزمة كاملة** `pnpm exec playwright test`.
+
+### ثم لإغلاق P1-10 (بالترتيب)
+4. الوثائق: ROADMAP P1-10 ☑ (PR #24)؛ REQUIREMENTS FR-SET-001/005، FR-TEN-004/007 ☑؛ DATA-MODEL (`TenantBranding.logoStorageKey` + grant أعمدة Tenant)؛ API-CONTRACT (صفوف `/api/branding/logo` POST + GET)؛ STATUS.json (progress 26/65، `nextTask` P1-11، `latestMigration` = `20260928140000_p1_10_tenant_self_update`، أرقام البوابة المقاسة)؛ AGENTS §0 + pitfall جديد (#14 argon2 في العميل، #15 grants Tenant، #16 ScrollRegion relative)؛ README؛ CHANGELOG.
+5. حوّل PR #24 من Draft إلى Ready، squash-merge، ثم `git reset --hard origin/main && git push -f origin genspark_ai_developer`.
+6. ابدأ **P1-11** (المصادقة الكاملة — يحتاج ADR-0009 OTP مقابل رابط).
+
+### أوامر التشغيل السريعة (من `app/`)
+```bash
+pnpm install && pnpm exec prisma migrate deploy && pnpm db:seed
+pnpm check                                  # tsc · eslint · vitest · build
+setsid scripts/restart-server.sh            # يعيد تشغيل :3000 على آخر build
+pnpm exec playwright test                   # الحزمة كاملة (desktop + mobile)
+```
+
+## الجلسة 24 — إغلاق P1-10 الإعدادات (PR #24) — ☑
+
+**نقطة البداية:** sandbox خالٍ تمامًا (لا pnpm، لا PostgreSQL، لا مكتبات Chromium). Bootstrap §2 نجح بعد إضافتين وثِّقتا في AGENTS §2: `sudo pg_ctlcluster 17 main start` (لا systemd) و`sudo pnpm exec playwright install-deps chromium` (بدونها كل اختبار e2e يفشل بـ`libatk-1.0.so.0`). المهاجرتان `20260928120000` و`20260928140000` مطبَّقتان على القاعدتين، seed نظيف.
+
+**العنصر المفتوح (`e2e/settings.spec.ts:202`) — التشخيص الفعلي ≠ المرجَّح في الجلسة 23:**
+- الفرضية المرجَّحة (RLS بلا جلسة في `resolveTenant`) **خاطئة**: `db(tenantId)` عميل ممدَّد يضبط GUC داخل معاملة لكل عملية، فقراءة `TenantBranding` تعمل بلا جلسة. الدليل: رسالة الدخول (`loginMessage`) من الصف نفسه كانت تظهر.
+- الجذر الحقيقي: **Turbopack يُصدر ثلاث نسخ مستقلة من `tenant-resolver.ts`** في `.next/server/chunks` — واحدة للـRoute Handlers (`/api/branding/logo`)، واحدة لصفحات RSC (`/login`, `/settings`)، وواحدة للـproxy. `const cache = new Map()` على مستوى الوحدة = ثلاث خرائط؛ `invalidateTenantCache()` من مسار الرفع أفرغت خريطة لا تقرأها `/login`، فبقي `branding.logoUrl = null` حتى انتهاء TTL (60 ث). الرسالة ظهرت لأن `updateBrandingAction` (Server Action تُنفَّذ في bundle الصفحة) أبطلت النسخة الصحيحة قبل رفع الشعار.
+- **الأثر الجانبي الأخطر:** `lib/db/prisma.ts` كان يسجّل العملاء على `globalThis` **في غير الإنتاج فقط** → في الإنتاج 3 نسخ × 2 عميل = مجمّعات اتصال مستقلة (**8 جلسات `app_user` خاملة** بعد طلب واحد، مقاسة عبر `pg_stat_activity`). بعد الإصلاح: **جلسة واحدة**.
+- **الإصلاح:** الكاش وعملاء Prisma على `globalThis` بمفاتيح `Symbol.for("scam2027.*")` في كل البيئات؛ `tenantCacheStore()` مُصدَّر للاختبار؛ `tests/unit/tenant-resolver.test.ts` يستورد الوحدة مرتين (`?instance=2` عبر Vite) ويثبت خريطة واحدة وإبطالًا مشتركًا. Pitfall #17.
+
+**عطل ثانٍ كشفته الحزمة الكاملة (لم يكن معروفًا):** `e2e/users.spec` ×2 — «الرقم الأكاديمي التلقائي YYYY-NNNNN» لم يظهر. الجذر: `SETTINGS_REGISTRY["users.academicIdFormat"].default = "{YY}NNNNNN"` (وتلميح الواجهة `{year}{seq:5}`) بينما محرّك `features/users/academic-id.ts` يعرف `YYYY`/`YY`/`N…` فقط ويطبع الأقواس حرفيًا → أول حفظ من `/settings/general` (في `settings.spec`) كتب الصف، فأنتجت المستخدمون التالية `{26}000001`. الإصلاح بالجذر: الافتراضي يُستورد من `DEFAULT_ACADEMIC_ID_FORMAT`، المخطط يقبل `A-Z0-9_-` فقط مع تسلسل `N` واحد، التلميح يشرح القواعد الحقيقية، اختبارات الوحدة/التكامل محدَّثة. Pitfall #18.
+
+**عطل ثالث كشفته الحزمة الكاملة (a11y على الجوال):** `e2e/a11y.spec › /dashboard` — axe `color-contrast` serious: `#1e90ff` (اللون الذي يختاره `settings.spec`) = **3.8:1** كنص على `--sidebar-accent` (`color-mix(primary 10%, card)`). كان مخطط `primaryColor` يقبل أي HEX، أي أن مدير مستأجر يستطيع إفشال WCAG AA لكل مستخدميه بنقرة. الإصلاح بالجذر: `lib/color.ts` (WCAG luminance/contrast/mix، معزول وقابل للاختبار)، `primaryContrast()` يقيس الكارت + السطح المظلّل (الحد الملزم) + نص الزر؛ `primaryColorSchema` يرفض `< 4.5:1` خادميًا برسالة واضحة؛ النموذج يعرض النسبة حيًا (`data-testid=contrast-readout`)؛ `settings.spec` يتحقق من الرفض ثم يحفظ `#38bdf8` (5.63:1). ملاحظة Zod 4: الـ`refine` يعمل حتى لو فشل `regex` قبله — احرس المدخل. Pitfall #19.
+
+**الحالة المقاسة (في هذه الجلسة، على البناء المُدمَج):**
+| البوابة | النتيجة |
+|---|---|
+| `pnpm check` | ✅ tsc 0 · eslint 0 · vitest **238/238** (33 ملفًا) · build ✓ |
+| `playwright test` كاملة (desktop + mobile، تشمل `crawl.spec`) | **111 ✓ / 11 skip / 0 ✗** (15 ملفًا × 2 مشروع، 7.3 دقيقة) |
+| اتصالات القاعدة بعد الإقلاع + طلب | `app_user` 1 · `postgres` 1 (كانت 8 + 3) |
+
+**دروس:** (1) عند تشخيص «الإبطال لا يعمل» ابحث في `.next/server/chunks` عن عدد نسخ الوحدة (`grep -rl <string-unique> .next/server`) قبل افتراض RLS. (2) الحالة على مستوى الوحدة ليست singleton في Next/Turbopack؛ `globalThis` + `Symbol.for` هو النمط الوحيد الآمن. (3) إعداد له «افتراضي» في مكانين = عطل مؤجَّل؛ الافتراضي يُعرَّف مرة واحدة حيث يُستهلك. (5) كل قيمة يضبطها المستأجر وتُحقن في الواجهة لها **قيد دلالي** لا شكلي فقط (HEX صحيح ≠ لون مقروء). (4) الحزمة الكاملة كشفت عطلًا لا تكشفه ملفات الـspec منفردة لأن `settings.spec` يكتب صفًا يقرأه `users.spec` — لا تدمج بدون تشغيل كامل.
+
+**التالي:** P1-11 المصادقة المكتملة — **ADR-0009 أولًا** (OTP مقابل رابط لاستعادة كلمة المرور والتفعيل؛ `PasswordResetToken`/`VerificationCode` موجودان)، ثم `/activate`, `/forgot`, `/reset`, «تذكرني» (`Session.expiresAt` من `security.sessionMaxDays`), `mustChangePassword` عند أول دخول، وربط `security.*` من `SETTINGS_REGISTRY` بمسار الدخول فعليًا (كلمة المرور/القفل/الجلسة). البريد نفسه يبقى `Job mail.send` يستهلكه worker P1-12 (Mailpit محليًا).
