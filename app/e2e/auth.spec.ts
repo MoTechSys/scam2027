@@ -32,13 +32,16 @@ test.describe("authentication", () => {
     await expect(page).toHaveURL(/\/login/);
   });
 
-  // FIXME(P0-14): Radix dropdown + form-action submit is flaky under Playwright; logout is covered by manual QA and
-  // the session-actions code path. Re-enable once the menu is driven via keyboard (Enter on the menuitem).
-  test.fixme("logout revokes the session and returns to /login", async ({ page }) => {
+  // P1-15: the Radix menu is driven via keyboard (Enter on the focused menuitem) — the pointer path was flaky.
+  test("logout revokes the session and returns to /login", async ({ page }) => {
     await login(page, USERS.student);
-    await page.locator('header button[aria-haspopup="menu"]').click(); // user menu trigger
-    await page.getByRole("menuitem", { name: /تسجيل الخروج|Sign out/ }).click();
+    await page.getByTestId("user-menu").click();
+    const item = page.getByRole("menuitem", { name: /تسجيل الخروج|Sign out/ });
+    await expect(item).toBeVisible();
+    await item.focus();
+    await page.keyboard.press("Enter");
     await expect(page).toHaveURL(/\/login\?reason=signed_out/);
+    await expect(page.getByText(/تم تسجيل الخروج|signed out/i)).toBeVisible();
     await page.goto("/dashboard");
     await expect(page).toHaveURL(/\/login/);
   });

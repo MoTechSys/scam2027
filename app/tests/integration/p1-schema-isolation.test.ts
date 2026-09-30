@@ -8,7 +8,7 @@
  *  - CHECK constraints (dates, level number)
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { db, platformPrisma } from "@/lib/db";
+import { db, platformPrisma, tx } from "@/lib/db";
 import { basePrisma } from "@/lib/db/prisma";
 
 const NEW_TABLES = [
@@ -62,6 +62,54 @@ describe("P1-01 tables are RLS-protected", () => {
       expect(r.forced, `${r.relname} forced`).toBe(true);
       expect(Number(r.policies), `${r.relname} policy`).toBe(1);
     }
+  });
+});
+
+describe("whole-database RLS invariant (P1-15)", () => {
+  it("EVERY table with a NOT NULL tenantId column has RLS enabled + forced + tenant_isolation policy (catches future tables)", async () => {
+    // Same rule as scripts/gen-rls.ts: `tenantId String` (required) ⇒ tenant table; `tenantId String?` (PlatformAuditLog)
+    // is a platform table that merely references a tenant.
+    const rows = await platformPrisma.$queryRaw<
+      { relname: string; rls: boolean; forced: boolean; policies: bigint }[]
+    >`
+      SELECT c.relname, c.relrowsecurity AS rls, c.relforcerowsecurity AS forced,
+             (SELECT count(*) FROM pg_policies p WHERE p.tablename = c.relname AND p.policyname = 'tenant_isolation') AS policies
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+      JOIN pg_attribute a ON a.attrelid = c.oid AND a.attname = 'tenantId' AND NOT a.attisdropped AND a.attnotnull
+      WHERE n.nspname = 'public' AND c.relkind = 'r' AND c.relname <> '_prisma_migrations'`;
+    expect(rows.length).toBeGreaterThanOrEqual(30);
+    const bad = rows.filter((r) => !r.rls || !r.forced || Number(r.policies) !== 1).map((r) => r.relname);
+    expect(bad, `tables with tenantId but incomplete RLS: ${bad.join(", ")}`).toEqual([]);
+  });
+  it("app_user (runtime role) cannot BYPASSRLS and is not a superuser", async () => {
+    const [r] = await platformPrisma.$queryRaw<{ rolbypassrls: boolean; rolsuper: boolean }[]>`
+      SELECT rolbypassrls, rolsuper FROM pg_roles WHERE rolname = 'app_user'`;
+    expect(r).toEqual({ rolbypassrls: false, rolsuper: false });
+  });
+  it("UserProfile (P1-14 columns) is tenant-scoped and theme CHECK holds", async () => {
+    const a = db(A);
+    const u = await a.user.create({
+      data: {
+        tenantId: A,
+        email: `prof-${suffix}@a`,
+        name: "P",
+        academicId: `PRF${suffix}`,
+        passwordHash: "x",
+        status: "ACTIVE",
+      },
+    });
+    await a.userProfile.upsert({
+      where: { userId: u.id },
+      create: { tenantId: A, userId: u.id, theme: "LIGHT", avatarStorageKey: `${A}/avatars/x.png` },
+      update: { theme: "LIGHT", avatarStorageKey: `${A}/avatars/x.png` },
+    });
+    expect(await db(B).userProfile.count()).toBe(0);
+    expect(await basePrisma.userProfile.count()).toBe(0); // no GUC → no rows
+    await expect(basePrisma.$executeRawUnsafe(`UPDATE "UserProfile" SET theme = 'NEON'`)).resolves.toBe(0); // RLS hides the row from app_user without GUC → 0 rows, no CHECK reached
+    await expect(
+      tx(A, (t) => t.$executeRawUnsafe(`UPDATE "UserProfile" SET theme = 'NEON' WHERE "userId" = '${u.id}'`)),
+    ).rejects.toThrow(/UserProfile_theme_chk/);
   });
 });
 

@@ -58,7 +58,7 @@
 | P1-12 | Worker + جدول Job + بريد (SMTP أساسي للمنصة) للتفعيل/الاستعادة (ADR-0010) | GAP-24 | ☑ PR #26 |
 | P1-13 | التقارير الأساسية + الرسوم (users/courses/files/overview) | FR-RPT-001/002/003/006 | ☑ PR #27 |
 | P1-14 | البروفايل: info/password/appearance(dark/light)/notifications | FR-USR-011 | ☑ PR #28 |
-| P1-15 | اختبارات: وحدة لكل action، E2E لكل تدفق UC، عزل المستأجر لكل موديل جديد | — | ☐ |
+| P1-15 | اختبارات: وحدة لكل action، E2E لكل تدفق UC، عزل المستأجر لكل موديل جديد | — | 🔶 PR #29 غير مدموج (بوابة حمراء: crawl as admin — HANDOFF جلسة 29) |
 
 ## P2 — التعليم والذكاء (Teaching & AI) → MVP
 
