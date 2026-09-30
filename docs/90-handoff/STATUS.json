@@ -4,8 +4,8 @@
   "repo": "https://github.com/MoTechSys/scam2027",
   "entryPoint": "AGENTS.md",
   "updatedAt": "2026-09-30",
-  "updatedInPr": 26,
-  "mainHead": "0824f1d (before PR #26 merge)",
+  "updatedInPr": 27,
+  "mainHead": "1ac206a (before PR #27 merge)",
   "branches": {
     "main": "main",
     "work": "genspark_ai_developer",
@@ -13,8 +13,8 @@
   },
   "progress": {
     "totalTasks": 65,
-    "doneTasks": 28,
-    "percent": 43,
+    "doneTasks": 29,
+    "percent": 45,
     "phases": {
       "P0": {
         "name": "Foundation",
@@ -26,10 +26,10 @@
       "P1": {
         "name": "Core LMS",
         "total": 15,
-        "done": 12,
+        "done": 13,
         "status": "IN_PROGRESS",
         "prs": [
-          4, 5, 6, 8, 9, 10, 13, 14, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26
+          4, 5, 6, 8, 9, 10, 13, 14, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26, 27
         ]
       },
       "P2": {
@@ -85,19 +85,20 @@
       "P1-09",
       "P1-10",
       "P1-11",
-      "P1-12"
+      "P1-12",
+      "P1-13"
     ],
     "nextTask": {
-      "id": "P1-13",
-      "name": "التقارير الأساسية",
+      "id": "P1-14",
+      "name": "الملف الشخصي",
       "status": "TODO",
-      "scope": "/reports/[tab] (overview | users | courses | files) with real per-tenant aggregates (Prisma groupBy/count inside tx(tenantId)), Recharts charts mounted only in the visible branch (useMediaQuery), permission report.view / report.export (check 02-PERMISSIONS-MATRIX.md for existing codes before adding), CSV export route in the streamed /api/audit/export style, PageTabs semantics, ADR-0007/0008 shell rules, nav item `reports` (remove `phase` in src/lib/nav/items.ts + update login-helpers test).",
+      "scope": "/profile with 4 URL tabs (info | password | appearance | notifications). info: name/phone/locale + UserProfile (title, bio, avatar via lib/storage under <tenantId>/avatars/<uuid>.<ext>, magic-bytes PNG/WebP/JPEG ≤ 512 KB, served by a public-by-nature route like /api/branding/logo) — email/academicId read-only; password: reuse features/auth changePasswordAction + NewPasswordFields; appearance: theme light/dark/system persisted (UserProfile or new column via migration on BOTH DBs + RLS unchanged) and applied by the existing ThemeProvider; notifications: reuse features/notifications preferences UI. Server Action pattern for each mutation, audit `profile.update` / `profile.avatar`, revalidatePath. Remove `phase` from nav item `profile`, update login-helpers test, e2e/profile.spec desktop+mobile, integration tests for profile core.",
       "deliverables": [
-        "features/reports/{schemas,queries} (+ core if export) with integration tests per aggregate (tenant isolation)",
-        "app/(dashboard)/reports/[tab] pages + charts (useFormatter for numbers/dates)",
-        "GET /api/reports/[kind]/export CSV (strict Zod filters, audit 'report.export')",
-        "e2e/reports.spec.ts desktop+mobile (h1 = 1, no page scroll, tabs, export headers)",
-        "docs: ROADMAP P1-13 ☑, REQUIREMENTS FR-RPT-001/002/003/006, API-CONTRACT, AGENTS §0/§4/§5, HANDOFF session 27, STATUS"
+        "features/profile/{schemas,core,queries,actions} + tests",
+        "app/(dashboard)/profile/[tab] pages + avatar upload route",
+        "migration if a theme column is added (apply to dev AND test DB)",
+        "e2e/profile.spec.ts + a11y",
+        "docs: ROADMAP P1-14 ☑, REQUIREMENTS FR-USR-011, API-CONTRACT, DATA-MODEL (if migration), AGENTS §0/§4/§5, HANDOFF session 28, STATUS"
       ]
     }
   },
@@ -106,27 +107,27 @@
     "definition": "typecheck + lint + test + build must all pass; then playwright e2e against `pnpm build && pnpm start -p 3000`",
     "lastRun": {
       "date": "2026-09-30",
-      "commit": "P1-12 worker + mail (PR #26)",
+      "commit": "P1-13 reports (PR #27)",
       "typecheck": "PASS (0 errors)",
       "lint": "PASS (0 errors)",
       "unitAndIntegration": {
         "runner": "vitest",
-        "passed": 264,
+        "passed": 280,
         "failed": 0,
-        "files": 36
+        "files": 37
       },
       "e2e": {
         "runner": "playwright",
-        "passed": 121,
+        "passed": 129,
         "skipped": 11,
         "failed": 0,
-        "durationMinutes": 8.0,
+        "durationMinutes": 8.7,
         "projects": ["desktop-chromium", "mobile-safari"],
         "skippedReason": "logout fixme (2) + Radix Select dialogs on mobile-safari (5, covered on desktop) + dashboard student assertions mobile-only (1) + files admin upload mobile (1) + trash bulk-select desktop-only (1) + settings mobile-only viewport test on desktop (1)",
-        "note": "16 files x 2 projects incl. auth-recovery.spec, settings.spec, crawl.spec. Measured in session 26, full run on the P1-12 build."
+        "note": "17 files x 2 projects incl. reports.spec (3x2), auth-recovery.spec, settings.spec, crawl.spec. Measured in session 27, full run on the P1-13 build."
       },
       "build": "PASS",
-      "buildId": "_pCSxXFTdG0pH0o8TKEDH",
+      "buildId": "DJDzRSmuieOKTdxDSgXb3",
       "dbSessionsAfterBoot": "app_user 1 / postgres 1 (was 8 / 3 before the globalThis singleton fix)",
       "verifiedOnCleanClone": "2026-09-30 — fresh sandbox: apt postgresql-17 + pnpm 10 + playwright install-deps + migrate both DBs + seed + pnpm check + full playwright",
       "deepProbe": "2026-09-28 — 200 route×role×viewport crawls + interaction flows + 26 API/RBAC/redirect/header probes (session 21); crawl.spec re-run green in session 24",
@@ -134,6 +135,7 @@
       "audit": "pnpm audit: No known vulnerabilities found (brace-expansion resolved 1.1.21 / 5.0.12 via lockfile; no bare-name override — it breaks eslint/minimatch@3)"
     },
     "knownDebt": [
+      "Reports (P1-13) are read-only RSC queries (features/reports/queries) — every aggregate runs inside one tx(tenantId) per tab and passes through courseScopeWhere/offeringScopeWhere/fileScopeWhere so instructors never see more in a report than in the list. Page filters are lenient (invalid → default), the CSV route is strict (→ 400). Charts have animations off; MonthlyArea uses `reversed` X axis for RTL. A new report = load*Report + strict Zod filter + REPORT_TABS/TAB_PERMISSION entry.",
       "Jobs (P1-12, ADR-0010): request code enqueues a Job inside its tx and calls lib/jobs/kick.kickJob(tenantId, jobId, type) — never a processor directly. JOBS_INLINE=true (dev/test default) runs it via after(); production sets JOBS_INLINE=false and runs `pnpm worker` (tsx --conditions=react-server because features/* import server-only). Worker reserves with lockedBy/lockedAt via FOR UPDATE SKIP LOCKED; the processor owns the conditional PENDING→RUNNING transition (exactly-once). New Job type = entry in lib/jobs/registry.JOB_PROCESSORS; unknown types are marked FAILED. Mail transport is a globalThis singleton; MAIL_TRANSPORT=smtp needs SMTP_HOST (Mailpit 127.0.0.1:1025 locally via app/docker-compose.yml).",
       "Auth (P1-11, ADR-0009): recovery/activation = single-use signed links; PasswordResetToken.tokenHash is `<RESET|ACTIVATE>:<sha256>` (purpose is part of the unique key). Never store raw tokens; never send SMTP from a request — enqueueMail inside the same tx + after(() => processMailJob). MAIL_TRANSPORT=log in dev/test (preview in Job.result.text; e2e reads links from there). Forced password change is enforced by requireUser/requireUserOrThrow via Ctx.user.passwordChangeRequired; only pass { allowPasswordChangeRequired: true } for actions that must run before the change (change itself, logout, locale). Proxy rate-limit buckets: login:<ip> 20/min and recover:<ip> 30/15min — keep them separate.",
       "Settings (P1-10): every TenantSetting key lives in features/settings/schemas.ts SETTINGS_REGISTRY (category/key/Zod/default/secret) — adding a setting is a registry row, never a migration. Secrets go through setSecretSettingAction and are AES-256-GCM `v1:` ciphertext at rest (lib/crypto); never return decrypted secrets to the client (readSecretState → hasValue + masked tail). security.* values are enforced on login/lockout/session/password policy since P1-11 (features/auth/core.loadSecurityPolicy).",
@@ -170,10 +172,10 @@
     ],
     "tsc": 0,
     "eslint": 0,
-    "vitest": "264/264 (36 files)",
-    "playwright": "121 passed / 11 skipped (16 files x 2 projects)",
+    "vitest": "280/280 (37 files)",
+    "playwright": "129 passed / 11 skipped (17 files x 2 projects)",
     "build": "ok",
-    "buildId": "_pCSxXFTdG0pH0o8TKEDH"
+    "buildId": "DJDzRSmuieOKTdxDSgXb3"
   },
   "database": {
     "engine": "PostgreSQL 17",
@@ -449,6 +451,12 @@
       "date": "2026-09-30",
       "scope": "P1-12 worker + mail: ADR-0010, src/worker (FOR UPDATE SKIP LOCKED claim, reaper, graceful stop), lib/jobs registry/kick (JOBS_INLINE), SMTP transport (nodemailer) verified against Mailpit, docker-compose (postgres + mailpit), 5 integration tests, pnpm audit clean",
       "pr": 26
+    },
+    {
+      "n": 27,
+      "date": "2026-09-30",
+      "scope": "P1-13 reports: features/reports (overview/users/courses/files aggregates, strict filters, instructor scope), /reports/[tab] with Recharts, streamed CSV export route, nav item enabled, 15 integration + 3x2 e2e + axe",
+      "pr": 27
     }
   ]
 }

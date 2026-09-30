@@ -1502,5 +1502,129 @@
       "loginMessage": "Login page message",
       "loginMessageHint": "Shown under the logo on the login page (max 240 chars)"
     }
+  },
+  "reports": {
+    "title": "Reports",
+    "subtitle": "Real numbers from your institution's data: users, courses & sections, and files",
+    "tabs": {
+      "overview": "Overview",
+      "users": "Users",
+      "courses": "Courses",
+      "files": "Files"
+    },
+    "scope": {
+      "own": "Numbers here are limited to your scope (your sections and files) — institution-wide reports need a broader permission"
+    },
+    "semesterLabel": "Semester: {name}",
+    "filters": {
+      "role": "Role",
+      "status": "Status",
+      "major": "Major",
+      "semester": "Semester",
+      "currentSemester": "Current semester",
+      "current": "current",
+      "department": "Department",
+      "category": "Category",
+      "course": "Course",
+      "from": "From",
+      "to": "To"
+    },
+    "kpi": {
+      "users": "Users",
+      "activeOf": "Active: {n}",
+      "courses": "Courses",
+      "offerings": "Sections",
+      "activeEnrollments": "Active enrolments",
+      "files": "Files",
+      "downloads": "Downloads: {n}",
+      "storage": "Storage",
+      "colleges": "Colleges",
+      "deptsMajors": "{d} departments · {m} majors",
+      "notifications": "Notifications sent",
+      "unreadOf": "{n} unread of {total}",
+      "active30d": "Active last 30 days",
+      "neverLoggedIn": "Never logged in",
+      "lockedNow": "Locked now",
+      "avgFill": "Average fill",
+      "noCapacity": "No section capacity set",
+      "downloadsTotal": "Total downloads",
+      "pendingReview": "Pending review"
+    },
+    "charts": {
+      "newUsers": "New users per month",
+      "newFiles": "New files per month",
+      "userStatus": "User status",
+      "enrollmentStatus": "Enrolment status",
+      "usersByRole": "Users by role",
+      "usersByMajor": "Students by major",
+      "offeringStatus": "Section status",
+      "coursesByDepartment": "Courses by department",
+      "topCourses": "Most enrolled",
+      "filesByCategory": "Files by category",
+      "filesByType": "Files by type",
+      "filesByCourse": "Files by course"
+    },
+    "tables": {
+      "courses": "Course details",
+      "topDownloaded": "Most downloaded"
+    },
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "department": "Department",
+      "offerings": "Sections",
+      "openOfferings": "Open",
+      "activeEnrollments": "Enrolments",
+      "instructors": "Instructors",
+      "files": "Files"
+    },
+    "empty": {
+      "noData": "No data",
+      "noMajorData": "No enrolments linked to a major yet",
+      "noSemester": "No current semester — pick one from the filter",
+      "noEnrollments": "No active enrolments in this semester",
+      "noDownloads": "No downloads yet"
+    },
+    "export": {
+      "button": "Export CSV",
+      "hint": "Up to {max} rows with the current filters",
+      "started": "Export started — the file will download shortly"
+    },
+    "userStatus": {
+      "ACTIVE": "Active",
+      "PENDING_ACTIVATION": "Pending activation",
+      "FROZEN": "Frozen",
+      "DISABLED": "Disabled"
+    },
+    "enrollmentStatus": {
+      "ACTIVE": "Active",
+      "WITHDRAWN": "Withdrawn",
+      "COMPLETED": "Completed"
+    },
+    "offeringStatus": {
+      "DRAFT": "Draft",
+      "OPEN": "Open",
+      "CLOSED": "Closed",
+      "ARCHIVED": "Archived"
+    },
+    "fileCategory": {
+      "LECTURE": "Lecture",
+      "ASSIGNMENT": "Assignment",
+      "EXAM": "Exam",
+      "REFERENCE": "Reference",
+      "OTHER": "Other"
+    },
+    "mime": {
+      "pdf": "PDF",
+      "image": "Images",
+      "video": "Video",
+      "audio": "Audio",
+      "document": "Documents",
+      "spreadsheet": "Spreadsheets",
+      "presentation": "Presentations",
+      "archive": "Archives",
+      "text": "Text",
+      "other": "Other"
+    }
   }
 }

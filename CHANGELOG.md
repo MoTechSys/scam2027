@@ -11,6 +11,13 @@
 
 ## [Unreleased]
 
+### Added — التقارير الأساسية (P1-13, FR-RPT-001/002/003/006, PR #27)
+- `features/reports/{schemas,queries}`: 4 تقارير (نظرة عامة / مستخدمون / مقررات / ملفات) بتجميعات حقيقية داخل `tx(tenantId)` واحد لكل تبويب؛ مرشّحات Zod strict (`roleId/status/majorId`، `semesterId/departmentId`، `category/courseId/from/to`)؛ نطاق المدرّس عبر `*ScopeWhere` نفسها المستخدمة في القوائم.
+- `/reports/[tab]` بتبويبات URL + `reports/charts.tsx` (MonthlyArea/CountBars/Donut على رموز Omnitrix، بلا حركة) + بطاقات KPI؛ ملاحظة نطاق للمدرّس؛ عنصر «التقارير» ظهر في القائمة الجانبية.
+- `GET /api/reports/{users|courses|files}/export`: CSV بتدفّق (BOM، RFC 4180، حماية من حقن الصيغ، keyset، سقف 50k، `x-report-rows`) مُدوَّن `report.export`.
+- 15 اختبار تكامل (تجميعات مطابقة لأرقام مُعدّة يدويًا، مرشّحات، نطاق، RLS، مكرِّرات CSV) + `e2e/reports.spec.ts` (3 × سطح مكتب/جوال) + axe على `/reports/overview`.
+
+
 ### Added — Worker + بريد (P1-12, GAP-24, FR-NTF-006 جزئيًا, ADR-0010, PR #26)
 - `src/worker/index.ts` (`pnpm worker` = `tsx --conditions=react-server`): عامل مهام مستقل يلتقط `Job PENDING` بدور المالك عبر `FOR UPDATE SKIP LOCKED` (حجز `lockedBy/lockedAt`)، تزامن `WORKER_CONCURRENCY`، حاصد أقفال راكدة (`WORKER_STALE_LOCK_MINUTES`؛ تجاوز `maxAttempts` → `FAILED`)، نوع بلا معالج → `FAILED`، إيقاف رشيق على SIGINT/SIGTERM.
 - `lib/jobs/registry.ts` (`JOB_PROCESSORS`: `mail.send` / `notification.fanout` / `trash.purge`) و`lib/jobs/kick.ts` (`kickJob` — inline عبر `after()` فقط إن `JOBS_INLINE=true`); actions المصادقة/الإشعارات/السلة/المستخدمين تستدعي `kickJob` بدل المعالج مباشرة.

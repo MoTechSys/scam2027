@@ -1502,5 +1502,129 @@
       "loginMessage": "رسالة صفحة الدخول",
       "loginMessageHint": "تظهر تحت الشعار في صفحة الدخول (حتى 240 حرفًا)"
     }
+  },
+  "reports": {
+    "title": "التقارير",
+    "subtitle": "أرقام حقيقية من بيانات مؤسستك: المستخدمون، المقررات والشُعب، والملفات",
+    "tabs": {
+      "overview": "نظرة عامة",
+      "users": "المستخدمون",
+      "courses": "المقررات",
+      "files": "الملفات"
+    },
+    "scope": {
+      "own": "الأرقام هنا محدودة بنطاقك (شُعبك وملفاتك) — التقارير على مستوى المؤسسة تحتاج صلاحية أوسع"
+    },
+    "semesterLabel": "الفصل: {name}",
+    "filters": {
+      "role": "الدور",
+      "status": "الحالة",
+      "major": "التخصص",
+      "semester": "الفصل",
+      "currentSemester": "الفصل الحالي",
+      "current": "الحالي",
+      "department": "القسم",
+      "category": "التصنيف",
+      "course": "المقرر",
+      "from": "من تاريخ",
+      "to": "إلى تاريخ"
+    },
+    "kpi": {
+      "users": "المستخدمون",
+      "activeOf": "نشط: {n}",
+      "courses": "المقررات",
+      "offerings": "الشُعب",
+      "activeEnrollments": "تسجيلات نشطة",
+      "files": "الملفات",
+      "downloads": "تنزيلات: {n}",
+      "storage": "المساحة",
+      "colleges": "الكليات",
+      "deptsMajors": "{d} قسم · {m} تخصص",
+      "notifications": "إشعارات مُرسلة",
+      "unreadOf": "غير مقروء {n} من {total}",
+      "active30d": "نشط آخر 30 يومًا",
+      "neverLoggedIn": "لم يدخل قط",
+      "lockedNow": "مقفل الآن",
+      "avgFill": "متوسط الإشغال",
+      "noCapacity": "لا سعة محددة للشُعب",
+      "downloadsTotal": "إجمالي التنزيلات",
+      "pendingReview": "بانتظار المراجعة"
+    },
+    "charts": {
+      "newUsers": "مستخدمون جدد شهريًا",
+      "newFiles": "ملفات جديدة شهريًا",
+      "userStatus": "حالة المستخدمين",
+      "enrollmentStatus": "حالة التسجيلات",
+      "usersByRole": "المستخدمون حسب الدور",
+      "usersByMajor": "الطلاب حسب التخصص",
+      "offeringStatus": "حالة الشُعب",
+      "coursesByDepartment": "المقررات حسب القسم",
+      "topCourses": "الأكثر تسجيلًا",
+      "filesByCategory": "الملفات حسب التصنيف",
+      "filesByType": "الملفات حسب النوع",
+      "filesByCourse": "الملفات حسب المقرر"
+    },
+    "tables": {
+      "courses": "تفاصيل المقررات",
+      "topDownloaded": "الأكثر تنزيلًا"
+    },
+    "columns": {
+      "code": "الرمز",
+      "name": "الاسم",
+      "department": "القسم",
+      "offerings": "الشُعب",
+      "openOfferings": "مفتوحة",
+      "activeEnrollments": "التسجيلات",
+      "instructors": "المدرّسون",
+      "files": "الملفات"
+    },
+    "empty": {
+      "noData": "لا بيانات",
+      "noMajorData": "لا تسجيلات مرتبطة بتخصص بعد",
+      "noSemester": "لا فصل حالي — اختر فصلًا من المرشّح",
+      "noEnrollments": "لا تسجيلات نشطة في هذا الفصل",
+      "noDownloads": "لا تنزيلات بعد"
+    },
+    "export": {
+      "button": "تصدير CSV",
+      "hint": "حتى {max} صف بنفس المرشّحات الحالية",
+      "started": "بدأ التصدير — سيُحمَّل الملف خلال لحظات"
+    },
+    "userStatus": {
+      "ACTIVE": "نشط",
+      "PENDING_ACTIVATION": "بانتظار التفعيل",
+      "FROZEN": "مجمّد",
+      "DISABLED": "موقوف"
+    },
+    "enrollmentStatus": {
+      "ACTIVE": "نشط",
+      "WITHDRAWN": "منسحب",
+      "COMPLETED": "مكتمل"
+    },
+    "offeringStatus": {
+      "DRAFT": "مسودة",
+      "OPEN": "مفتوحة",
+      "CLOSED": "مغلقة",
+      "ARCHIVED": "مؤرشفة"
+    },
+    "fileCategory": {
+      "LECTURE": "محاضرة",
+      "ASSIGNMENT": "واجب",
+      "EXAM": "اختبار",
+      "REFERENCE": "مرجع",
+      "OTHER": "أخرى"
+    },
+    "mime": {
+      "pdf": "PDF",
+      "image": "صور",
+      "video": "فيديو",
+      "audio": "صوت",
+      "document": "مستندات",
+      "spreadsheet": "جداول",
+      "presentation": "عروض",
+      "archive": "مضغوطة",
+      "text": "نص",
+      "other": "أخرى"
+    }
   }
 }

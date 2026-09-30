@@ -65,7 +65,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
     bottom: true,
   },
   { key: "trash", href: "/trash", icon: Trash2, permission: "trash.view" },
-  { key: "reports", href: "/reports", icon: BarChart3, permission: "report.view", phase: "P3" },
+  { key: "reports", href: "/reports", icon: BarChart3, permission: "report.view" },
   { key: "audit", href: "/audit", icon: FileText, permission: "audit.view" },
   { key: "settings", href: "/settings", icon: Settings, permission: "settings.view" },
   { key: "profile", href: "/profile", icon: User, phase: "P1" },

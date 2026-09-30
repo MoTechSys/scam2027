@@ -4,9 +4,18 @@ import { USERS, expectNoHorizontalScroll, login } from "./helpers";
 
 /** WCAG 2.1 AA gate — serious/critical violations fail the build. */
 async function axe(page: import("@playwright/test").Page) {
-  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+  const results = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
   const blocking = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-  expect(blocking, JSON.stringify(blocking.map((v) => ({ id: v.id, nodes: v.nodes.length })), null, 2)).toEqual([]);
+  expect(
+    blocking,
+    JSON.stringify(
+      blocking.map((v) => ({ id: v.id, nodes: v.nodes.length })),
+      null,
+      2,
+    ),
+  ).toEqual([]);
 }
 
 test.describe("accessibility & responsiveness", () => {
@@ -31,10 +40,20 @@ test.describe("accessibility & responsiveness", () => {
     await axe(page);
   });
 
+  test("/reports/overview (admin) passes axe — charts, tabs and KPIs (P1-13)", async ({ page }) => {
+    await login(page, USERS.admin);
+    await page.goto("/reports/overview");
+    await expect(page.locator("[data-testid^=chart-] svg.recharts-surface")).toHaveCount(4);
+    await expectNoHorizontalScroll(page);
+    await axe(page);
+  });
+
   test("skip link targets #main", async ({ page }) => {
     await page.goto("/login");
     await page.keyboard.press("Tab");
-    const href = await page.evaluate(() => (document.activeElement as HTMLAnchorElement | null)?.getAttribute("href"));
+    const href = await page.evaluate(() =>
+      (document.activeElement as HTMLAnchorElement | null)?.getAttribute("href"),
+    );
     expect(href).toBe("#main");
   });
 });
