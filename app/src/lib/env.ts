@@ -33,7 +33,17 @@ const serverSchema = z.object({
   S3_ACCESS_KEY_ID: z.string().optional(),
   S3_SECRET_ACCESS_KEY: z.string().optional(),
   S3_FORCE_PATH_STYLE: z.coerce.boolean().optional(),
-  /* ---- Mail (P1-11 ADR-0009; SMTP driver ships in P1-12) ---- */
+  /* ---- Jobs (P1-12 ADR-0010) ---- */
+  /** Run jobs inline after the response (`after()`). Set to false when `pnpm worker` is running. */
+  JOBS_INLINE: z
+    .string()
+    .default("true")
+    .transform((v) => !["false", "0", "no", "off"].includes(v.toLowerCase())),
+  /** Worker tuning (only read by src/worker). */
+  WORKER_POLL_MS: z.coerce.number().int().min(200).max(60_000).default(2_000),
+  WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(32).default(4),
+  WORKER_STALE_LOCK_MINUTES: z.coerce.number().int().min(1).max(1440).default(15),
+  /* ---- Mail (P1-11 ADR-0009; SMTP driver P1-12) ---- */
   /** `log` writes the rendered message to the logger and Job.result (dev/test); `smtp` needs the SMTP_* block. */
   MAIL_TRANSPORT: z.enum(["log", "smtp"]).default("log"),
   MAIL_FROM: z.string().default("scam2027 <no-reply@localhost>"),

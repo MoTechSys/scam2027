@@ -10,7 +10,7 @@
  * `after()` until the P1-12 worker), never as a blocking SMTP call.
  */
 import { headers } from "next/headers";
-import { after } from "next/server";
+import { kickJob } from "@/lib/jobs/kick";
 import { audit } from "@/lib/audit";
 import { forwardedOrigin } from "@/lib/auth/forwarded";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
@@ -27,7 +27,6 @@ import {
   loadSecurityPolicy,
   passwordPolicyIssues,
   peekToken,
-  processMailJob,
   revokeOtherSessions,
   type TokenPurpose,
 } from "./core";
@@ -106,7 +105,7 @@ export async function forgotPasswordAction(input: unknown): Promise<Result<{ que
         );
         return r.jobId;
       });
-      if (jobId) after(() => processMailJob(tenantId, jobId, "after"));
+      if (jobId) kickJob(tenantId, jobId, "mail.send");
       return { queued: true as const };
     },
     { action: "auth.reset.request" },
@@ -280,7 +279,7 @@ export async function sendActivationAction(input: unknown): Promise<Result<{ job
         );
         return r.jobId;
       });
-      after(() => processMailJob(ctx.tenantId, jobId, "after"));
+      kickJob(ctx.tenantId, jobId, "mail.send");
       return { jobId };
     },
     { action: "auth.activation.send" },

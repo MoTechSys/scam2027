@@ -10,13 +10,13 @@
  * reason, everything else is committed. Purge is atomic per call (one tx), storage objects are removed after commit.
  */
 import { revalidatePath } from "next/cache";
-import { after } from "next/server";
+import { kickJob } from "@/lib/jobs/kick";
 import { audit } from "@/lib/audit";
 import { assertPermission, requireUserOrThrow } from "@/lib/auth/rbac";
 import { tx } from "@/lib/db/tenant";
 import { AppError, type Result } from "@/lib/result";
 import { safeAction } from "@/lib/safe-action";
-import { purgeCandidates, purgeExpired, purgeKind, removeObjects, restoreOne } from "./core";
+import { purgeCandidates, purgeKind, removeObjects, restoreOne } from "./core";
 import { TRASH_REGISTRY } from "./registry";
 import {
   emptyTrashSchema,
@@ -138,7 +138,7 @@ export async function emptyTrashAction(input: unknown): Promise<Result<Record<Tr
   );
 }
 
-/** Create a `trash.purge` Job and run it right away via `after()` (the P1-12 worker will also pick up PENDING jobs). */
+/** Create a `trash.purge` Job; runs inline (`JOBS_INLINE`) or is picked up by `pnpm worker` (ADR-0010). */
 export async function schedulePurgeJobAction(input: unknown): Promise<Result<{ jobId: string }>> {
   return safeAction(
     async () => {
@@ -163,7 +163,7 @@ export async function schedulePurgeJobAction(input: unknown): Promise<Result<{ j
         return j;
       });
       // `/trash` is dynamic (RSC re-fetches on navigation) — no revalidate inside after() (not allowed there).
-      after(() => purgeExpired(ctx.tenantId, job.id, "after"));
+      kickJob(ctx.tenantId, job.id, "trash.purge");
       return { jobId: job.id };
     },
     { action: "trash.schedule_purge" },

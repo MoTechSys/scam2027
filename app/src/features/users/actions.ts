@@ -7,15 +7,21 @@
  */
 import { randomInt } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { assertCanManageUser, assertPermission, hasRole, requireUserOrThrow, type Ctx } from "@/lib/auth/rbac";
+import {
+  assertCanManageUser,
+  assertPermission,
+  hasRole,
+  requireUserOrThrow,
+  type Ctx,
+} from "@/lib/auth/rbac";
 import { canManagePermissionSet } from "@/lib/auth/permissions";
 import { hashPassword } from "@/lib/auth/password";
 import { forwardedOrigin } from "@/lib/auth/forwarded";
 import { headers } from "next/headers";
-import { after } from "next/server";
+import { kickJob } from "@/lib/jobs/kick";
 import { audit } from "@/lib/audit";
 import { currentTenant } from "@/lib/tenant/current";
-import { issueAndMail, loadSecurityPolicy, passwordPolicyIssues, processMailJob } from "@/features/auth/core";
+import { issueAndMail, loadSecurityPolicy, passwordPolicyIssues } from "@/features/auth/core";
 import { db, tx, type TenantTx } from "@/lib/db/tenant";
 import { AppError, type Result } from "@/lib/result";
 import { safeAction } from "@/lib/safe-action";
@@ -49,17 +55,28 @@ async function assertGrantableRoles(ctx: Ctx, client: TenantTx, roleIds: string[
     where: { id: { in: roleIds }, deletedAt: null },
     select: { id: true, code: true, permissions: { select: { permissionCode: true } } },
   });
-  if (roles.length !== new Set(roleIds).size) throw new AppError("VALIDATION", "دور غير موجود", { roleIds: ["دور غير صالح"] });
+  if (roles.length !== new Set(roleIds).size)
+    throw new AppError("VALIDATION", "دور غير موجود", { roleIds: ["دور غير صالح"] });
   for (const r of roles) {
     if (r.code === "TENANT_ADMIN" && !hasRole(ctx, "TENANT_ADMIN"))
       throw new AppError("FORBIDDEN", "لا يمكن منح دور مدير النظام");
     // Unknown codes are never grantable; self-scope codes (quiz.take …) carry no admin power and are ignored.
-    if (!canManagePermissionSet(ctx.user.permissions, r.permissions.map((p) => p.permissionCode)))
+    if (
+      !canManagePermissionSet(
+        ctx.user.permissions,
+        r.permissions.map((p) => p.permissionCode),
+      )
+    )
       throw new AppError("FORBIDDEN", "لا يمكن منح دور يحوي صلاحيات لا تملكها");
   }
 }
 
-async function revokeAllSessions(client: TenantTx, tenantId: string, userId: string, by: string): Promise<void> {
+async function revokeAllSessions(
+  client: TenantTx,
+  tenantId: string,
+  userId: string,
+  by: string,
+): Promise<void> {
   await client.session.updateMany({
     where: { tenantId, userId, revokedAt: null },
     data: { revokedAt: new Date(), revokedBy: by },
@@ -70,231 +87,334 @@ async function revokeAllSessions(client: TenantTx, tenantId: string, userId: str
 export type CreateUserResult = { id: string; academicId: string; tempPassword: string | null };
 
 export async function createUserAction(input: unknown): Promise<Result<CreateUserResult>> {
-  return safeAction(async () => {
-    const ctx = await requireUserOrThrow();
-    assertPermission(ctx, "user.create");
-    const data = createUserSchema.parse(input);
-    if (data.password) {
-      const policy = await tx(ctx.tenantId, (t) => loadSecurityPolicy(t, ctx.tenantId));
-      const issues = passwordPolicyIssues(data.password, policy);
-      if (issues.length) throw new AppError("VALIDATION", "كلمة مرور ضعيفة", { password: issues });
-    }
-    // PENDING_ACTIVATION accounts set their own password through the activation link (ADR-0009) — no temp password.
-    const pending = data.status === "PENDING_ACTIVATION";
-    const tempPassword = data.password || pending ? null : generateTempPassword();
-    const passwordHash = pending && !data.password ? null : await hashPassword(data.password || (tempPassword as string));
-    const [h, tenant] = await Promise.all([headers(), currentTenant()]);
-    const origin = forwardedOrigin(h) ?? "";
-
-    const created = await tx(ctx.tenantId, async (t) => {
-      await assertGrantableRoles(ctx, t, data.roleIds);
-      const dup = await t.user.findFirst({
-        where: { OR: [{ email: data.email }, ...(data.academicId ? [{ academicId: data.academicId }] : [])] },
-        select: { email: true, academicId: true },
-      });
-      if (dup) {
-        const fe: Record<string, string[]> = {};
-        if (dup.email === data.email) fe.email = ["البريد مستخدم مسبقًا"];
-        if (data.academicId && dup.academicId === data.academicId) fe.academicId = ["الرقم مستخدم مسبقًا"];
-        throw new AppError("CONFLICT", "بيانات مكررة", fe);
+  return safeAction(
+    async () => {
+      const ctx = await requireUserOrThrow();
+      assertPermission(ctx, "user.create");
+      const data = createUserSchema.parse(input);
+      if (data.password) {
+        const policy = await tx(ctx.tenantId, (t) => loadSecurityPolicy(t, ctx.tenantId));
+        const issues = passwordPolicyIssues(data.password, policy);
+        if (issues.length) throw new AppError("VALIDATION", "كلمة مرور ضعيفة", { password: issues });
       }
-      const academicId = data.academicId || (await nextAcademicId(t, ctx.tenantId, await tenantAcademicIdFormat(t, ctx.tenantId)));
-      const user = await t.user.create({
-        data: {
-          tenantId: ctx.tenantId,
-          academicId,
-          email: data.email,
-          name: data.name,
-          phone: data.phone || null,
-          passwordHash,
-          passwordChangedAt: passwordHash ? new Date() : null,
-          status: data.status,
-          mustChangePassword: !pending && (data.mustChangePassword || !!tempPassword),
-          profile: data.title ? { create: { title: data.title } } : undefined,
-        },
-        select: { id: true, academicId: true, email: true, name: true, status: true, locale: true },
+      // PENDING_ACTIVATION accounts set their own password through the activation link (ADR-0009) — no temp password.
+      const pending = data.status === "PENDING_ACTIVATION";
+      const tempPassword = data.password || pending ? null : generateTempPassword();
+      const passwordHash =
+        pending && !data.password ? null : await hashPassword(data.password || (tempPassword as string));
+      const [h, tenant] = await Promise.all([headers(), currentTenant()]);
+      const origin = forwardedOrigin(h) ?? "";
+
+      const created = await tx(ctx.tenantId, async (t) => {
+        await assertGrantableRoles(ctx, t, data.roleIds);
+        const dup = await t.user.findFirst({
+          where: {
+            OR: [{ email: data.email }, ...(data.academicId ? [{ academicId: data.academicId }] : [])],
+          },
+          select: { email: true, academicId: true },
+        });
+        if (dup) {
+          const fe: Record<string, string[]> = {};
+          if (dup.email === data.email) fe.email = ["البريد مستخدم مسبقًا"];
+          if (data.academicId && dup.academicId === data.academicId) fe.academicId = ["الرقم مستخدم مسبقًا"];
+          throw new AppError("CONFLICT", "بيانات مكررة", fe);
+        }
+        const academicId =
+          data.academicId ||
+          (await nextAcademicId(t, ctx.tenantId, await tenantAcademicIdFormat(t, ctx.tenantId)));
+        const user = await t.user.create({
+          data: {
+            tenantId: ctx.tenantId,
+            academicId,
+            email: data.email,
+            name: data.name,
+            phone: data.phone || null,
+            passwordHash,
+            passwordChangedAt: passwordHash ? new Date() : null,
+            status: data.status,
+            mustChangePassword: !pending && (data.mustChangePassword || !!tempPassword),
+            profile: data.title ? { create: { title: data.title } } : undefined,
+          },
+          select: { id: true, academicId: true, email: true, name: true, status: true, locale: true },
+        });
+        // UserRole uses a compound tenant FK → cannot be created through the nested relation (Prisma rejects tenantId).
+        await t.userRole.createMany({
+          data: data.roleIds.map((roleId) => ({
+            tenantId: ctx.tenantId,
+            userId: user.id,
+            roleId,
+            assignedBy: ctx.user.id,
+          })),
+        });
+        await audit(
+          ctx,
+          {
+            action: "user.create",
+            entity: "User",
+            entityId: user.id,
+            after: { ...user, roleIds: data.roleIds },
+          },
+          t,
+        );
+        const activationJobId = pending
+          ? (
+              await issueAndMail(
+                t,
+                ctx.tenantId,
+                user,
+                "ACTIVATE",
+                origin,
+                tenant?.name ?? "scam2027",
+                ctx.user.id,
+                ctx.ip,
+              )
+            ).jobId
+          : null;
+        return { ...user, activationJobId };
       });
-      // UserRole uses a compound tenant FK → cannot be created through the nested relation (Prisma rejects tenantId).
-      await t.userRole.createMany({
-        data: data.roleIds.map((roleId) => ({ tenantId: ctx.tenantId, userId: user.id, roleId, assignedBy: ctx.user.id })),
-      });
-      await audit(ctx, { action: "user.create", entity: "User", entityId: user.id, after: { ...user, roleIds: data.roleIds } }, t);
-      const activationJobId = pending
-        ? (await issueAndMail(t, ctx.tenantId, user, "ACTIVATE", origin, tenant?.name ?? "scam2027", ctx.user.id, ctx.ip)).jobId
-        : null;
-      return { ...user, activationJobId };
-    });
-    if (created.activationJobId) {
-      const jobId = created.activationJobId;
-      after(() => processMailJob(ctx.tenantId, jobId, "after"));
-    }
-    revalidateUsers();
-    return { id: created.id, academicId: created.academicId, tempPassword };
-  }, { action: "user.create" });
+      if (created.activationJobId) {
+        const jobId = created.activationJobId;
+        kickJob(ctx.tenantId, jobId, "mail.send");
+      }
+      revalidateUsers();
+      return { id: created.id, academicId: created.academicId, tempPassword };
+    },
+    { action: "user.create" },
+  );
 }
 
 export async function updateUserAction(input: unknown): Promise<Result<{ id: string }>> {
-  return safeAction(async () => {
-    const ctx = await requireUserOrThrow();
-    assertPermission(ctx, "user.edit");
-    const data = updateUserSchema.parse(input);
-    await assertCanManageUser(ctx, data.id);
-    await tx(ctx.tenantId, async (t) => {
-      const before = await t.user.findFirst({
-        where: { id: data.id, deletedAt: null },
-        select: { name: true, email: true, phone: true, locale: true, profile: { select: { title: true } } },
-      });
-      if (!before) throw new AppError("NOT_FOUND", "المستخدم غير موجود");
-      const dup = await t.user.findFirst({ where: { email: data.email, id: { not: data.id } }, select: { id: true } });
-      if (dup) throw new AppError("CONFLICT", "البريد مستخدم مسبقًا", { email: ["البريد مستخدم مسبقًا"] });
-      await t.user.update({
-        where: { id: data.id },
-        data: {
-          name: data.name,
-          email: data.email,
-          phone: data.phone || null,
-          ...(data.locale ? { locale: data.locale } : {}),
-          profile: {
-            upsert: {
-              create: { title: data.title || null },
-              update: { title: data.title || null },
+  return safeAction(
+    async () => {
+      const ctx = await requireUserOrThrow();
+      assertPermission(ctx, "user.edit");
+      const data = updateUserSchema.parse(input);
+      await assertCanManageUser(ctx, data.id);
+      await tx(ctx.tenantId, async (t) => {
+        const before = await t.user.findFirst({
+          where: { id: data.id, deletedAt: null },
+          select: {
+            name: true,
+            email: true,
+            phone: true,
+            locale: true,
+            profile: { select: { title: true } },
+          },
+        });
+        if (!before) throw new AppError("NOT_FOUND", "المستخدم غير موجود");
+        const dup = await t.user.findFirst({
+          where: { email: data.email, id: { not: data.id } },
+          select: { id: true },
+        });
+        if (dup) throw new AppError("CONFLICT", "البريد مستخدم مسبقًا", { email: ["البريد مستخدم مسبقًا"] });
+        await t.user.update({
+          where: { id: data.id },
+          data: {
+            name: data.name,
+            email: data.email,
+            phone: data.phone || null,
+            ...(data.locale ? { locale: data.locale } : {}),
+            profile: {
+              upsert: {
+                create: { title: data.title || null },
+                update: { title: data.title || null },
+              },
             },
           },
-        },
+        });
+        await audit(ctx, { action: "user.edit", entity: "User", entityId: data.id, before, after: data }, t);
       });
-      await audit(ctx, { action: "user.edit", entity: "User", entityId: data.id, before, after: data }, t);
-    });
-    revalidateUsers(data.id);
-    return { id: data.id };
-  }, { action: "user.edit" });
+      revalidateUsers(data.id);
+      return { id: data.id };
+    },
+    { action: "user.edit" },
+  );
 }
 
 /** Status transitions (FR-USR-010). FROZEN/DISABLED revoke all sessions immediately. */
 export async function setUserStatusAction(input: unknown): Promise<Result<{ id: string }>> {
-  return safeAction(async () => {
-    const ctx = await requireUserOrThrow();
-    const data = setStatusSchema.parse(input);
-    assertPermission(ctx, data.status === "FROZEN" ? "user.freeze" : "user.activate");
-    if (data.id === ctx.user.id) throw new AppError("FORBIDDEN", "لا يمكنك تغيير حالة حسابك");
-    await assertCanManageUser(ctx, data.id);
-    await tx(ctx.tenantId, async (t) => {
-      const before = await t.user.findFirst({ where: { id: data.id, deletedAt: null }, select: { status: true } });
-      if (!before) throw new AppError("NOT_FOUND", "المستخدم غير موجود");
-      await t.user.update({
-        where: { id: data.id },
-        data: { status: data.status, ...(data.status === "ACTIVE" ? { failedLoginCount: 0, lockedUntil: null } : {}) },
+  return safeAction(
+    async () => {
+      const ctx = await requireUserOrThrow();
+      const data = setStatusSchema.parse(input);
+      assertPermission(ctx, data.status === "FROZEN" ? "user.freeze" : "user.activate");
+      if (data.id === ctx.user.id) throw new AppError("FORBIDDEN", "لا يمكنك تغيير حالة حسابك");
+      await assertCanManageUser(ctx, data.id);
+      await tx(ctx.tenantId, async (t) => {
+        const before = await t.user.findFirst({
+          where: { id: data.id, deletedAt: null },
+          select: { status: true },
+        });
+        if (!before) throw new AppError("NOT_FOUND", "المستخدم غير موجود");
+        await t.user.update({
+          where: { id: data.id },
+          data: {
+            status: data.status,
+            ...(data.status === "ACTIVE" ? { failedLoginCount: 0, lockedUntil: null } : {}),
+          },
+        });
+        if (data.status === "FROZEN" || data.status === "DISABLED")
+          await revokeAllSessions(t, ctx.tenantId, data.id, ctx.user.id);
+        await audit(
+          ctx,
+          {
+            action: `user.status.${data.status.toLowerCase()}`,
+            entity: "User",
+            entityId: data.id,
+            before,
+            after: { status: data.status },
+          },
+          t,
+        );
       });
-      if (data.status === "FROZEN" || data.status === "DISABLED") await revokeAllSessions(t, ctx.tenantId, data.id, ctx.user.id);
-      await audit(ctx, { action: `user.status.${data.status.toLowerCase()}`, entity: "User", entityId: data.id, before, after: { status: data.status } }, t);
-    });
-    revalidateUsers(data.id);
-    return { id: data.id };
-  }, { action: "user.status" });
+      revalidateUsers(data.id);
+      return { id: data.id };
+    },
+    { action: "user.status" },
+  );
 }
 
 export async function softDeleteUserAction(input: unknown): Promise<Result<{ id: string }>> {
-  return safeAction(async () => {
-    const ctx = await requireUserOrThrow();
-    assertPermission(ctx, "user.delete");
-    const { id } = userIdSchema.parse(input);
-    if (id === ctx.user.id) throw new AppError("FORBIDDEN", "لا يمكنك حذف حسابك");
-    await assertCanManageUser(ctx, id);
-    await tx(ctx.tenantId, async (t) => {
-      const r = await t.user.updateMany({ where: { id, deletedAt: null }, data: { deletedAt: new Date() } });
-      if (r.count === 0) throw new AppError("NOT_FOUND", "المستخدم غير موجود");
-      await revokeAllSessions(t, ctx.tenantId, id, ctx.user.id);
-      await audit(ctx, { action: "user.delete", entity: "User", entityId: id }, t);
-    });
-    revalidateUsers(id);
-    return { id };
-  }, { action: "user.delete" });
+  return safeAction(
+    async () => {
+      const ctx = await requireUserOrThrow();
+      assertPermission(ctx, "user.delete");
+      const { id } = userIdSchema.parse(input);
+      if (id === ctx.user.id) throw new AppError("FORBIDDEN", "لا يمكنك حذف حسابك");
+      await assertCanManageUser(ctx, id);
+      await tx(ctx.tenantId, async (t) => {
+        const r = await t.user.updateMany({
+          where: { id, deletedAt: null },
+          data: { deletedAt: new Date() },
+        });
+        if (r.count === 0) throw new AppError("NOT_FOUND", "المستخدم غير موجود");
+        await revokeAllSessions(t, ctx.tenantId, id, ctx.user.id);
+        await audit(ctx, { action: "user.delete", entity: "User", entityId: id }, t);
+      });
+      revalidateUsers(id);
+      return { id };
+    },
+    { action: "user.delete" },
+  );
 }
 
 export async function restoreUserAction(input: unknown): Promise<Result<{ id: string }>> {
-  return safeAction(async () => {
-    const ctx = await requireUserOrThrow();
-    assertPermission(ctx, "user.restore");
-    const { id } = userIdSchema.parse(input);
-    await tx(ctx.tenantId, async (t) => {
-      const r = await t.user.updateMany({ where: { id, deletedAt: { not: null } }, data: { deletedAt: null } });
-      if (r.count === 0) throw new AppError("NOT_FOUND", "المستخدم غير موجود في السلة");
-      await audit(ctx, { action: "user.restore", entity: "User", entityId: id }, t);
-    });
-    revalidateUsers(id);
-    return { id };
-  }, { action: "user.restore" });
+  return safeAction(
+    async () => {
+      const ctx = await requireUserOrThrow();
+      assertPermission(ctx, "user.restore");
+      const { id } = userIdSchema.parse(input);
+      await tx(ctx.tenantId, async (t) => {
+        const r = await t.user.updateMany({
+          where: { id, deletedAt: { not: null } },
+          data: { deletedAt: null },
+        });
+        if (r.count === 0) throw new AppError("NOT_FOUND", "المستخدم غير موجود في السلة");
+        await audit(ctx, { action: "user.restore", entity: "User", entityId: id }, t);
+      });
+      revalidateUsers(id);
+      return { id };
+    },
+    { action: "user.restore" },
+  );
 }
 
 export async function assignRolesAction(input: unknown): Promise<Result<{ id: string }>> {
-  return safeAction(async () => {
-    const ctx = await requireUserOrThrow();
-    assertPermission(ctx, "user.change_role", "role.assign");
-    const data = assignRolesSchema.parse(input);
-    if (data.id === ctx.user.id) throw new AppError("FORBIDDEN", "لا يمكنك تغيير أدوارك");
-    await assertCanManageUser(ctx, data.id);
-    await tx(ctx.tenantId, async (t) => {
-      await assertGrantableRoles(ctx, t, data.roleIds);
-      const before = await t.userRole.findMany({ where: { userId: data.id }, select: { roleId: true } });
-      await t.userRole.deleteMany({ where: { userId: data.id } });
-      await t.userRole.createMany({
-        data: data.roleIds.map((roleId) => ({ tenantId: ctx.tenantId, userId: data.id, roleId, assignedBy: ctx.user.id })),
+  return safeAction(
+    async () => {
+      const ctx = await requireUserOrThrow();
+      assertPermission(ctx, "user.change_role", "role.assign");
+      const data = assignRolesSchema.parse(input);
+      if (data.id === ctx.user.id) throw new AppError("FORBIDDEN", "لا يمكنك تغيير أدوارك");
+      await assertCanManageUser(ctx, data.id);
+      await tx(ctx.tenantId, async (t) => {
+        await assertGrantableRoles(ctx, t, data.roleIds);
+        const before = await t.userRole.findMany({ where: { userId: data.id }, select: { roleId: true } });
+        await t.userRole.deleteMany({ where: { userId: data.id } });
+        await t.userRole.createMany({
+          data: data.roleIds.map((roleId) => ({
+            tenantId: ctx.tenantId,
+            userId: data.id,
+            roleId,
+            assignedBy: ctx.user.id,
+          })),
+        });
+        // Permissions changed → force re-login on other devices.
+        await revokeAllSessions(t, ctx.tenantId, data.id, ctx.user.id);
+        await audit(
+          ctx,
+          {
+            action: "user.change_role",
+            entity: "User",
+            entityId: data.id,
+            before: { roleIds: before.map((b) => b.roleId) },
+            after: { roleIds: data.roleIds },
+          },
+          t,
+        );
       });
-      // Permissions changed → force re-login on other devices.
-      await revokeAllSessions(t, ctx.tenantId, data.id, ctx.user.id);
-      await audit(ctx, {
-        action: "user.change_role",
-        entity: "User",
-        entityId: data.id,
-        before: { roleIds: before.map((b) => b.roleId) },
-        after: { roleIds: data.roleIds },
-      }, t);
-    });
-    revalidateUsers(data.id);
-    return { id: data.id };
-  }, { action: "user.change_role" });
+      revalidateUsers(data.id);
+      return { id: data.id };
+    },
+    { action: "user.change_role" },
+  );
 }
 
-export async function resetPasswordAction(input: unknown): Promise<Result<{ id: string; tempPassword: string | null }>> {
-  return safeAction(async () => {
-    const ctx = await requireUserOrThrow();
-    assertPermission(ctx, "user.reset_password");
-    const data = resetPasswordSchema.parse(input);
-    await assertCanManageUser(ctx, data.id);
-    if (data.password) {
-      const policy = await tx(ctx.tenantId, (t) => loadSecurityPolicy(t, ctx.tenantId));
-      const issues = passwordPolicyIssues(data.password, policy);
-      if (issues.length) throw new AppError("VALIDATION", "كلمة مرور ضعيفة", { password: issues });
-    }
-    const tempPassword = data.password ? null : generateTempPassword();
-    const passwordHash = await hashPassword(data.password || (tempPassword as string));
-    await tx(ctx.tenantId, async (t) => {
-      const r = await t.user.updateMany({
-        where: { id: data.id, deletedAt: null },
-        data: { passwordHash, passwordChangedAt: new Date(), mustChangePassword: true, failedLoginCount: 0, lockedUntil: null },
+export async function resetPasswordAction(
+  input: unknown,
+): Promise<Result<{ id: string; tempPassword: string | null }>> {
+  return safeAction(
+    async () => {
+      const ctx = await requireUserOrThrow();
+      assertPermission(ctx, "user.reset_password");
+      const data = resetPasswordSchema.parse(input);
+      await assertCanManageUser(ctx, data.id);
+      if (data.password) {
+        const policy = await tx(ctx.tenantId, (t) => loadSecurityPolicy(t, ctx.tenantId));
+        const issues = passwordPolicyIssues(data.password, policy);
+        if (issues.length) throw new AppError("VALIDATION", "كلمة مرور ضعيفة", { password: issues });
+      }
+      const tempPassword = data.password ? null : generateTempPassword();
+      const passwordHash = await hashPassword(data.password || (tempPassword as string));
+      await tx(ctx.tenantId, async (t) => {
+        const r = await t.user.updateMany({
+          where: { id: data.id, deletedAt: null },
+          data: {
+            passwordHash,
+            passwordChangedAt: new Date(),
+            mustChangePassword: true,
+            failedLoginCount: 0,
+            lockedUntil: null,
+          },
+        });
+        if (r.count === 0) throw new AppError("NOT_FOUND", "المستخدم غير موجود");
+        await revokeAllSessions(t, ctx.tenantId, data.id, ctx.user.id);
+        await audit(ctx, { action: "user.reset_password", entity: "User", entityId: data.id }, t);
       });
-      if (r.count === 0) throw new AppError("NOT_FOUND", "المستخدم غير موجود");
-      await revokeAllSessions(t, ctx.tenantId, data.id, ctx.user.id);
-      await audit(ctx, { action: "user.reset_password", entity: "User", entityId: data.id }, t);
-    });
-    revalidateUsers(data.id);
-    return { id: data.id, tempPassword };
-  }, { action: "user.reset_password" });
+      revalidateUsers(data.id);
+      return { id: data.id, tempPassword };
+    },
+    { action: "user.reset_password" },
+  );
 }
 
 /** Admin-side: terminate every session of a user (e.g. lost device). */
 export async function revokeUserSessionsAction(input: unknown): Promise<Result<{ id: string }>> {
-  return safeAction(async () => {
-    const ctx = await requireUserOrThrow();
-    assertPermission(ctx, "user.freeze", "user.edit");
-    const { id } = userIdSchema.parse(input);
-    await assertCanManageUser(ctx, id);
-    const exists = await db(ctx.tenantId).user.findFirst({ where: { id }, select: { id: true } });
-    if (!exists) throw new AppError("NOT_FOUND", "المستخدم غير موجود");
-    await tx(ctx.tenantId, async (t) => {
-      await revokeAllSessions(t, ctx.tenantId, id, ctx.user.id);
-      await audit(ctx, { action: "user.sessions.revoke", entity: "User", entityId: id }, t);
-    });
-    revalidateUsers(id);
-    return { id };
-  }, { action: "user.sessions.revoke" });
+  return safeAction(
+    async () => {
+      const ctx = await requireUserOrThrow();
+      assertPermission(ctx, "user.freeze", "user.edit");
+      const { id } = userIdSchema.parse(input);
+      await assertCanManageUser(ctx, id);
+      const exists = await db(ctx.tenantId).user.findFirst({ where: { id }, select: { id: true } });
+      if (!exists) throw new AppError("NOT_FOUND", "المستخدم غير موجود");
+      await tx(ctx.tenantId, async (t) => {
+        await revokeAllSessions(t, ctx.tenantId, id, ctx.user.id);
+        await audit(ctx, { action: "user.sessions.revoke", entity: "User", entityId: id }, t);
+      });
+      revalidateUsers(id);
+      return { id };
+    },
+    { action: "user.sessions.revoke" },
+  );
 }
