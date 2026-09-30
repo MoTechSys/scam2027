@@ -511,11 +511,11 @@ pnpm exec playwright test                   # الحزمة كاملة (desktop +
 | البوابة | النتيجة |
 |---|---|
 | `pnpm check` | ✅ tsc 0 · eslint 0 · vitest **303/303** (39 ملفًا) · build ✓ |
-| `playwright test` كاملة | ❌ **144 ✓ / 4 skip / 2 ✘** (9.8 دقيقة) — تشغيلتان كاملتان متطابقتان (`/tmp/e2e-p115.log`, `/tmp/e2e-p115b.log`). الفاشل الوحيد: `crawl.spec.ts:60 › crawl as admin` في **المشروعَين** (desktop #29، mobile #104). **لم يُدمج شيء (بوابة حمراء).** |
+| `playwright test` كاملة | ❌ **144 ✓ / 4 skip / 2 ✘** (9.8 دقيقة) — تشغيلتان كاملتان متطابقتان (`/tmp/e2e-p115.log`, `/tmp/e2e-p115b.log`). الفاشل الوحيد: `crawl.spec.ts:60 › crawl as admin` في **المشروعَين** (desktop #29، mobile #104). **دُمج PR #29 بقرار صريح من المالك (2026-09-30) رغم البوابة الحمراء؛ إصلاح هذا الفشل هو أول مهمة في الجلسة 30 قبل P2-01.** |
 
 **التالي:** **P2-01 — ADR-0011 أولًا** ثم المخطط + RLS على القاعدتَين (لا واجهة). نطاق دقيق في STATUS.json → nextTask.
 
-### 🔴 عطل مفتوح (P1-15 — يجب حلّه قبل PR #29)
+### 🔴 عطل مفتوح (P1-15 — دُمج؛ يجب حلّه أول الجلسة 30 قبل P2-01)
 **العرض:** في التشغيلة الكاملة فقط، `login(admin)` داخل `crawl as admin` يبقى على `/login` ويظهر `error.tsx` («حدث خطأ» + زر إعادة المحاولة). سجل الخادم `/tmp/next.log` يُظهر `⨯ Error: The destination stream closed early. digest 2609385683` (×3–4) في نفس اللحظة، بدون `auth.login.success` للأدمن، وبدون INVALID_CREDENTIALS/LOCKED (تلك تعود لاختبار «wrong password» المتعمَّد). القفل (5 فشل/15 د) **ليس** السبب.
 **ما جُرّب ولم يُعِد الإنتاج (كله أخضر):** `crawl -g admin` وحده (2/2)؛ `courses(student)+crawl admin`؛ `auth+a11y+crawl admin` (12/12)؛ `auth-recovery+auth+courses+crawl admin` desktop (17/17).
 **الفرضية الأرجح:** استنزاف/تسابق في الخادم (`next start` واحد على :3000) بعد ~28 اختبارًا (academic/audit/auth-recovery/auth/courses) — استجابة RSC تُقطع قبل إتمام إعادة التوجيه بعد `signIn`، فيعرض `error.tsx` وتبقى الصفحة على `/login`. نفس البصمة (`destination stream closed early`) تتكرر في السجل حول اختبارات أخرى دون فشل لأنها ليست في مسار التنقّل الحرج.

@@ -175,7 +175,7 @@
     "tsc": 0,
     "eslint": 0,
     "vitest": "303/303 (39 files)",
-    "playwright": "144 passed / 4 skipped / 2 FAILED (crawl as admin, both projects; passes in isolation) — RED, PR #29 NOT merged",
+    "playwright": "144 passed / 4 skipped / 2 FAILED (crawl as admin, both projects; passes in isolation) — RED; PR #29 merged by explicit owner decision; fix is task #1 of next session",
     "build": "ok",
     "buildId": "WxNHVBzL56Ff3D7Ze3sbE"
   },
