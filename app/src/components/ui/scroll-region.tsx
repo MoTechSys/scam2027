@@ -1,7 +1,9 @@
 /**
  * ScrollRegion — the only thing that scrolls (ADR-0008). Fills the remaining height of its flex column
  * (`flex-1 min-h-0`) and scrolls internally with `overscroll-contain`, so the app viewport never moves.
- * Server-renderable.
+ * `relative` makes it the containing block for absolutely-positioned descendants (e.g. the hidden "bubble"
+ * `<input>` Radix Switch/Checkbox render inside forms) — otherwise those escape the scroller and inflate
+ * `document.scrollHeight`. Server-renderable.
  */
 import { cn } from "@/lib/utils";
 
@@ -20,7 +22,7 @@ export function ScrollRegion({ className, label, children, ...props }: Props) {
       tabIndex={label ? 0 : undefined}
       data-testid="scroll-region"
       className={cn(
-        "min-h-0 flex-1 scrollbar-thin overflow-y-auto overscroll-contain outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+        "relative min-h-0 flex-1 scrollbar-thin overflow-y-auto overscroll-contain outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
         className,
       )}
       {...props}

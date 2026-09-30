@@ -49,6 +49,7 @@ BottomNavigation تُبنى من `NAV_ITEMS.bottom` المسموحة بالصل�
 
 - كل أيقونة تفاعلية بـ `aria-label`؛ كل حقل بـ `<Label>`؛ ترتيب تبويب منطقي؛ `focus-visible` بحلقة `--color-ring`.
 - التباين: `#39ff14`/`#0f172a` = 15.1:1 ✅؛ `#94a3b8`/`#1e293b` = 5.6:1 ✅؛ لا نص أصغر من 14px بلون muted.
+- **لون المستأجر (`--primary` من `TenantBranding.primaryColor`) مقيَّد خادميًا** (P1-10): يُستخدم كنص على `--card` وعلى السطح المظلّل `color-mix(in srgb, primary 10%, card)` (عنصر القائمة النشط، الشارات) وكخلفية تحت `--primary-foreground`؛ `lib/color.primaryContrast()` يقيس الثلاثة ويجب أن يكون أدناها ≥ 4.5:1 وإلا يرفضه `primaryColorSchema` ويعرض النموذج النسبة حيًا. أمثلة: `#39ff14` 8.6 ✅ · `#38bdf8` 5.6 ✅ · `#1e90ff` 3.95 ❌ · `#16a34a` 3.9 ❌ (أخضر الثيم الفاتح غير صالح للثيم الداكن).
 - الحركة: تُحترم `prefers-reduced-motion`.
 - الاتجاه: خصائص منطقية (`ps/pe/ms/me/start/end`) فقط؛ ESLint يمنع `pl-/pr-/ml-/mr-/left-/right-`.
 - `lang` و`dir` من locale.

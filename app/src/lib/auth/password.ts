@@ -4,6 +4,7 @@
  */
 import { hash, verify } from "@node-rs/argon2";
 import { createHash, timingSafeEqual } from "node:crypto";
+import { PASSWORD_MIN } from "./password-policy";
 
 // algorithm 2 = Argon2id (const enum not importable under isolatedModules)
 const OPTIONS = { algorithm: 2, memoryCost: 65536, timeCost: 3, parallelism: 1 } as const;
@@ -26,7 +27,7 @@ export async function verifyPassword(hashed: string | null | undefined, plain: s
 }
 
 /** Password policy — FR-AUTH-002: ≥ 10 chars, upper, lower, digit. */
-export const PASSWORD_MIN = 10;
+export { PASSWORD_MIN } from "./password-policy";
 export function passwordIssues(p: string): string[] {
   const issues: string[] = [];
   if (p.length < PASSWORD_MIN) issues.push(`min:${PASSWORD_MIN}`);

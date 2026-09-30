@@ -43,6 +43,7 @@
 | المرحلة | الموديلات | Migration |
 |---|---|---|
 | P0 | Tenant, TenantBranding, Subscription, TenantSetting, PlatformUser, PlatformAuditLog, Permission, User, UserProfile, Role, RolePermission, UserRole, Session, LoginAttempt, VerificationCode, AuditLog | `20260904221859_init_p0` + `_rls_p0` |
+| P1-10 | `TenantBranding.logoStorageKey` (مفتاح الكائن في التخزين لحذف الشعار القديم عند الاستبدال/الإزالة) · `GRANT UPDATE (name, nameEn, locale, timezone, updatedAt) ON Tenant TO app_user` (صلاحية على مستوى الأعمدة: مدير المستأجر يعدّل هويته من `/settings/general`؛ `slug/customDomain/status` تبقى للمنصة؛ `Tenant` بلا RLS لأنه جدول حلّ المضيف، والتقييد بالصف يفرضه الكود داخل `tx(tenantId)`) | `20260928120000_p1_10_branding_logo_key` + `20260928140000_p1_10_tenant_self_update` |
 | P1-01 | AcademicYear, Semester (term FIRST/SECOND/SUMMER, status), College, Department, Major (degree), Level (per major), Course, CourseMajor (+levelId, isRequired), CourseOffering (section, schedule Json), OfferingInstructor (role), Enrollment (status, source), File (category, classification, status, checksum, storageKey), FileDownloadLog, Notification (type, priority, targetSpec Json), NotificationRecipient, NotificationPreference, Job (type, status, attempts, lock), PasswordResetToken (tokenHash) | `20260905015633_p1_01_*` + `20260905015700_rls_p1_01` (30 جدولاً محمياً) |
 
 ## 2. مخطط العلاقات المختصر
@@ -71,7 +72,7 @@ User 1─n Consent ; User 1─n DataSubjectRequest
 | الفهارس | `(tenantId, id)`، `(tenantId, deletedAt)`، `(tenantId, <fk>)`، فريدة مركبة مثل `(tenantId, email)`, `(tenantId, academicId)`, `(tenantId, slug)` |
 | FK مركبة | `Enrollment(tenantId, offeringId) → CourseOffering(tenantId, id)` وأمثالها لمنع الربط عبر المستأجرين |
 | Json | `targetSpec`, `before/after`, `payload`, `value` — مع Zod schema موثّق |
-| الأسرار | `AIProviderConfig.encryptedKey`, `TenantSetting.isSecret=true` مشفّرة AES-256-GCM بمفتاح `APP_ENCRYPTION_KEY` |
+| الأسرار | `AIProviderConfig.encryptedKey`, `TenantSetting.isSecret=true` مشفّرة AES-256-GCM بمفتاح `APP_ENCRYPTION_KEY` (`lib/crypto.ts`: صيغة `v1:<iv>:<tag>:<ct>` base64، مفتاح مُرقَّم للتدوير؛ `TenantSetting` مفاتيحها معرَّفة في `features/settings/schemas.ts → SETTINGS_REGISTRY` (category, key, Zod, default, secret) — إضافة إعداد = سطر في السجل لا migration) |
 | البيانات الشخصية | موثّقة في §4 لتغذية RoPA وتصدير DSAR |
 | إجراءات FK | ADR-0006: إسناد بلا FK · اختياري `NoAction` · آباء هيكليون `Restrict` · أبناء `Cascade` |
 | قيود SQL يدوية | سنة/فصل حالي واحد لكل مستأجر (فهرس فريد جزئي)، `CHECK` للتواريخ/الأعداد — في migration `p1_01` |

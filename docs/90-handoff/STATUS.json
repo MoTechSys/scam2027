@@ -3,9 +3,9 @@
   "project": "MoTechSys/scam2027",
   "repo": "https://github.com/MoTechSys/scam2027",
   "entryPoint": "AGENTS.md",
-  "updatedAt": "2026-09-28",
-  "updatedInPr": 23,
-  "mainHead": "a2043d2",
+  "updatedAt": "2026-09-30",
+  "updatedInPr": 24,
+  "mainHead": "2032ee5 (before PR #24 merge; see sessions)",
   "branches": {
     "main": "main",
     "work": "genspark_ai_developer",
@@ -13,8 +13,8 @@
   },
   "progress": {
     "totalTasks": 65,
-    "doneTasks": 25,
-    "percent": 38,
+    "doneTasks": 26,
+    "percent": 40,
     "phases": {
       "P0": {
         "name": "Foundation",
@@ -29,7 +29,7 @@
       "P1": {
         "name": "Core LMS",
         "total": 15,
-        "done": 9,
+        "done": 10,
         "status": "IN_PROGRESS",
         "prs": [
           4,
@@ -46,7 +46,8 @@
           19,
           20,
           22,
-          23
+          23,
+          24
         ]
       },
       "P2": {
@@ -99,18 +100,21 @@
       "P1-06",
       "P1-07",
       "P1-08",
-      "P1-09"
+      "P1-09",
+      "P1-10"
     ],
     "nextTask": {
-      "id": "P1-10",
-      "name": "الإعدادات",
+      "id": "P1-11",
+      "name": "المصادقة المكتملة",
       "status": "TODO",
-      "scope": "/settings/[tab] عام/أمان/علامة تجارية (gate settings.view؛ التعديل settings.edit_general/edit_security/edit_branding). TenantSetting (tenantId,category,key) مع تشفير AES-256-GCM للأسرار (APP_ENCRYPTION_KEY) — lib/crypto جديد. TenantBranding (logoUrl, primaryColor, accentColor, loginMessage): رفع الشعار عبر lib/storage + حقن العلامة في /login والتخطيط (CSS vars من RSC). عنصر التنقّل settings موجود بـ phase P1 — أزل phase عند الشحن.",
+      "scope": "تفعيل الحساب (/activate عبر VerificationCode)، استعادة كلمة المرور (/forgot → /reset عبر PasswordResetToken، 10 دقائق)، «تذكرني» (Session.expiresAt من security.sessionMaxDays)، إجبار تغيير كلمة المرور عند أول دخول (User.mustChangePassword + security.forcePasswordChangeOnNextLogin)، وربط security.* من SETTINGS_REGISTRY بمسار الدخول فعليًا (passwordMinLength/RequireSymbol/MaxAgeDays، lockoutMaxFails/WindowMinutes، sessionIdleMinutes). البريد يُصدَر كـ Job mail.send يستهلكه worker P1-12 (Mailpit محليًا) — لا SMTP مباشر من الطلب.",
+      "prerequisite": "ADR-0009: OTP مقابل رابط موقّع للاستعادة/التفعيل (القرار قبل الكود؛ يجب أن يتوافق مع FR-AUTH-003/004/005/010 وASVS V2/V3)",
       "deliverables": [
-        "features/settings/{schemas,queries,actions} + lib/crypto (AES-256-GCM, versioned key)",
-        "/settings/[tab] على PageShell/ScrollRegion + نماذج react-hook-form",
-        "حقن TenantBranding في login/layout + مسار شعار عبر storage",
-        "اختبارات unit (crypto/schemas) + integration (settings queries, RLS) + e2e desktop+mobile + توثيق"
+        "docs/60-adr/0009-*.md",
+        "features/auth/{schemas,core,actions} + صفحات (auth)/{activate,forgot,reset,change-password}",
+        "تطبيق سياسة security.* على lib/auth (password policy, lockout, session TTL) مع اختبارات تكامل",
+        "Job mail.send (payload contract في lib/contracts/json-columns.ts) + قوالب رسائل ar/en",
+        "اختبارات unit + integration + e2e desktop+mobile لكل تدفق + توثيق (REQUIREMENTS FR-AUTH-*, AUTH-RBAC, API-CONTRACT, HANDOFF, STATUS)"
       ]
     }
   },
@@ -118,34 +122,42 @@
     "command": "cd app && pnpm check",
     "definition": "typecheck + lint + test + build must all pass; then playwright e2e against `pnpm build && pnpm start -p 3000`",
     "lastRun": {
-      "date": "2026-09-28",
-      "commit": "P1-09 audit log (PR #23)",
+      "date": "2026-09-30",
+      "commit": "P1-10 settings (PR #24)",
       "typecheck": "PASS (0 errors)",
       "lint": "PASS (0 errors)",
       "unitAndIntegration": {
         "runner": "vitest",
-        "passed": 205,
+        "passed": 238,
         "failed": 0,
-        "files": 28
+        "files": 33
       },
       "e2e": {
         "runner": "playwright",
-        "passed": 96,
-        "skipped": 10,
+        "passed": 111,
+        "skipped": 11,
         "failed": 0,
+        "durationMinutes": 7.3,
         "projects": [
           "desktop-chromium",
           "mobile-safari"
         ],
-        "skippedReason": "logout fixme (2) + Radix Select dialogs on mobile-safari (5, covered on desktop) + dashboard student assertions mobile-only (1) + files admin upload mobile (1) + trash bulk-select desktop-only (1)",
-        "note": "15 files x 2 projects incl. audit.spec (2x2) + crawl.spec. NB: PR #22 recorded 96 by arithmetic (84+12) without a full rerun — the true PR #22 figure was 92; 96 is the measured figure after P1-09."
+        "skippedReason": "logout fixme (2) + Radix Select dialogs on mobile-safari (5, covered on desktop) + dashboard student assertions mobile-only (1) + files admin upload mobile (1) + trash bulk-select desktop-only (1) + settings mobile-only viewport test on desktop (1)",
+        "note": "15 files x 2 projects incl. settings.spec (8x2) + crawl.spec. Measured in session 24 on a clean sandbox (Postgres 17 + pnpm + Chromium deps installed from scratch); full run, not arithmetic."
       },
       "build": "PASS",
-      "buildId": "r7A9h3uV33BOzm6UEPBKk",
-      "verifiedOnCleanClone": "2026-09-28 — fresh sandbox: apt postgresql-17 + pnpm 10 + migrate both DBs + seed + pnpm check + playwright; found & fixed 3 bootstrap breakers (seed .env, NODE_ENV in .env, prisma config)",
-      "deepProbe": "2026-09-28 — 200 route×role×viewport crawls + interaction flows (dialogs, uploads, i18n toggle, theme, logout) + 26 API/RBAC/redirect/header probes; all clean after fixes"
+      "buildId": "pTQfIcJyevUnMOoLGtL-F",
+      "dbSessionsAfterBoot": "app_user 1 / postgres 1 (was 8 / 3 before the globalThis singleton fix)",
+      "verifiedOnCleanClone": "2026-09-30 — fresh sandbox: apt postgresql-17 + pnpm 10 + playwright install-deps + migrate both DBs + seed + pnpm check + full playwright",
+      "deepProbe": "2026-09-28 — 200 route×role×viewport crawls + interaction flows + 26 API/RBAC/redirect/header probes (session 21); crawl.spec re-run green in session 24"
     },
     "knownDebt": [
+      "Settings (P1-10): every TenantSetting key lives in features/settings/schemas.ts SETTINGS_REGISTRY (category/key/Zod/default/secret) — adding a setting is a registry row, never a migration. Secrets go through setSecretSettingAction and are AES-256-GCM `v1:` ciphertext at rest (lib/crypto); never return decrypted secrets to the client (readSecretState → hasValue + masked tail). security.* values are stored/validated but NOT yet enforced on the login path — P1-11 wires them.",
+      "Module-level state is NOT a singleton under Turbopack (Route Handlers / RSC / proxy each get their own copy, in production too). Cross-request state (caches, PrismaClient) must be registered on globalThis via Symbol.for keys — see lib/db/prisma.ts and lib/auth/tenant-resolver.ts; unit test imports the module twice (?instance=2) to prove sharing. Symptom before the fix: invalidateTenantCache() from /api/branding/logo never reached /login's copy; 3 connection pools per client.",
+      "Brand primary is text on dark surfaces: primaryColorSchema rejects colours where lib/color.primaryContrast(hex).min < 4.5 (binding surface = color-mix(primary 10%, card)). e2e/a11y.spec fails /dashboard on any lower-contrast primary. Zod 4 runs .refine even after .regex failed — guard refinements against malformed input.",
+      "users.academicIdFormat grammar (features/users/academic-id.ts): YYYY/YY = year, exactly one N-run = zero-padded sequence, everything else literal; only A-Z 0-9 - _ allowed. Braces are NOT placeholders. DEFAULT_ACADEMIC_ID_FORMAT is the single default (imported by SETTINGS_REGISTRY).",
+      "Tenant table has no RLS; app_user holds column-level UPDATE (name, nameEn, locale, timezone, updatedAt) only (migration 20260928140000). New tenant-editable Tenant columns need an explicit GRANT (scripts/gen-rls.ts) or fail with 42501.",
+      "Never import lib/auth/password.ts (argon2) from a client component — use lib/auth/password-policy.ts constants. ScrollRegion must stay `relative` (Radix hidden inputs otherwise inflate document.scrollHeight on mobile).",
       "Audit (P1-09): AuditLog.actorId has no FK — resolve names with one IN(...) per page (features/audit/queries resolveActors); unknown id renders as 'deleted user'. Day filters are widened in the TENANT time zone (dayRangeInTimeZone) — never use Date-only comparisons. CSV cells pass csvEscape (formula-injection guard); export is keyset-paginated per short RLS tx, never one long transaction. The sheet is URL-addressable (?entry=<id>) so any page can deep-link an audit row.",
       "Hydration (React #418): never format dates/numbers in client components with `new Intl.*(undefined)` or `useFormatter().dateTimeRange` — server (Node ICU, thin spaces U+2009) and browser output differ. Use `useFormatter().dateTime/number` and `lib/format-range.ts` for ranges. e2e/crawl.spec fails on any pageerror.",
       "Exactly one <h1>: PageHeader renders <p> below lg and the app bar renders the <h1> (useMediaQuery on DESKTOP_HEADER_QUERY). Do not add another h1 anywhere; crawl.spec asserts count == 1 on every route.",
@@ -160,7 +172,6 @@
       "Mobile: PageHeader hides the in-content h1 below lg, so the app bar renders the h1 (ownsHeading). Detail pages that keep a visible h1 use MobilePageTitle instead. Never add a manual <header> — e2e heading assertions and axe page-has-heading-one depend on exactly one h1.",
       "Unanchored .gitignore patterns bite: `storage` (P1-06) silently excluded app/src/lib/storage from every commit until PR #16. Anchor runtime dirs (`/storage/`) and run `git status --ignored` / a clean-clone `pnpm check` before merging a PR that adds a new top-level folder.",
       "prettier --check flags ~120 pre-existing files; not part of `pnpm check`. Format ONLY files you touch (running --write on a folder pollutes the PR) or do a dedicated `style:` PR.",
-      "docs/50-quality/01-TESTING-STRATEGY.md §5 references scripts e2e:mobile / e2e:crawl / test:a11y that are not yet in app/package.json (a11y is covered by e2e/a11y.spec.ts; a crawl spec is not written yet).",
       "e2e logout test is fixme in auth.spec.ts.",
       "Radix Select option tap is flaky on mobile-safari in Playwright; create dialogs are skipped on that project and asserted on desktop — mobile asserts list/detail/no-horizontal-scroll.",
       "Modules imported by integration tests must import permission predicates from src/lib/auth/has-permission.ts, never runtime from rbac.ts (next-auth → next/server is not resolvable under vitest).",
@@ -169,14 +180,15 @@
       "Prisma enums in tests must be read from schema.prisma (UserStatus: PENDING_ACTIVATION/ACTIVE/FROZEN/DISABLED; EnrollmentStatus: ACTIVE/WITHDRAWN/COMPLETED); JSON columns are typed Prisma.InputJsonObject.",
       "features/*/actions.ts imports `after` from next/server → never import actions in vitest; test core/scope/schemas/queries instead.",
       "Background jobs (notification.fanout) run inline via after(); no standalone worker until P1-12 — a Job left PENDING after a crash is re-run by processFanoutJob.",
-      "Full Playwright run under load may fail login `toHaveURL` in roles/users specs; rerun those files alone before treating as regression."
+      "Full Playwright run under load may fail login `toHaveURL` in roles/users specs; rerun those files alone before treating as regression.",
+      "docs/50-quality/01-TESTING-STRATEGY.md §5 references scripts e2e:mobile / e2e:crawl / test:a11y that are not in app/package.json (a11y is e2e/a11y.spec.ts; crawl is e2e/crawl.spec.ts — run via `pnpm exec playwright test <file>`)."
     ],
     "tsc": 0,
     "eslint": 0,
-    "vitest": "205/205 (28 files)",
-    "playwright": "96 passed / 10 skipped (15 files x 2 projects)",
+    "vitest": "238/238 (33 files)",
+    "playwright": "111 passed / 11 skipped (15 files x 2 projects)",
     "build": "ok",
-    "buildId": "r7A9h3uV33BOzm6UEPBKk"
+    "buildId": "pTQfIcJyevUnMOoLGtL-F"
   },
   "database": {
     "engine": "PostgreSQL 17",
@@ -192,17 +204,20 @@
         "migrateCommand": "DIRECT_DATABASE_URL=\"postgresql://postgres:postgres@localhost:5432/scam2027_test?schema=public\" pnpm exec prisma migrate deploy"
       }
     },
-    "latestMigration": "20260905015700_rls_p1_01",
+    "latestMigration": "20260928140000_p1_10_tenant_self_update",
     "migrations": [
       "20260904221859_init_p0",
       "20260904222500_rls_p0",
       "20260905015633_p1_01_academic_content_comms",
-      "20260905015700_rls_p1_01"
+      "20260905015700_rls_p1_01",
+      "20260928120000_p1_10_branding_logo_key",
+      "20260928140000_p1_10_tenant_self_update"
     ],
     "tenantScopedTables": 30,
     "platformTables": 4,
     "rlsGenerator": "pnpm tsx scripts/gen-rls.ts > prisma/migrations/<ts>_rls_<name>/migration.sql",
-    "rule": "After ANY migration, run migrate deploy on BOTH databases or integration tests fail with 'table does not exist'."
+    "rule": "After ANY migration, run migrate deploy on BOTH databases or integration tests fail with 'table does not exist'.",
+    "tenantGrants": "app_user: column-level UPDATE (name, nameEn, locale, timezone, updatedAt) on Tenant (P1-10); Tenant has no RLS (host→tenant resolution table)"
   },
   "permissions": {
     "count": 114,
@@ -424,8 +439,18 @@
       "date": "2026-09-28",
       "scope": "P1-09 audit log: features/audit/{schemas,queries}, GET /api/audit/export (streamed CSV), /audit with filter panel + URL-addressable diff sheet, nav item, i18n ar/en, 12 unit + 9 integration + 2 e2e (desktop+mobile)",
       "pr": 23
+    },
+    {
+      "n": 23,
+      "date": "2026-09-28",
+      "scope": "P1-10 settings WIP: lib/crypto, lib/svg-safe, features/settings, /settings/[tab], logo upload/serve, migrations, tests; one open e2e assertion; PR #24 draft",
+      "pr": 24
+    },
+    {
+      "n": 24,
+      "date": "2026-09-30",
+      "scope": "P1-10 closed: clean-sandbox bootstrap (pg_ctlcluster, playwright install-deps); root-caused login logo (Turbopack module duplication → globalThis singletons for tenant cache + Prisma clients, 8→1 DB sessions); academicIdFormat grammar unified (DEFAULT_ACADEMIC_ID_FORMAT single source); WCAG AA gate for brand primary (lib/color, primaryColorSchema, live readout); full gate measured; docs; PR #24 merged",
+      "pr": 24
     }
-  ],
-  "nextTask": "P1-10 settings",
-  "session": 22
+  ]
 }

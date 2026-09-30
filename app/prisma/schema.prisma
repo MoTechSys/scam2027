@@ -89,9 +89,10 @@ model Tenant {
 }
 
 model TenantBranding {
-  tenantId     String   @id @db.Uuid
-  logoUrl      String?
-  faviconUrl   String?
+  tenantId       String   @id @db.Uuid
+  logoUrl        String? // public URL served by GET /api/branding/logo/[tenantId]/[version]
+  logoStorageKey String? // object key in the storage adapter (deleted when the logo is replaced/removed)
+  faviconUrl     String?
   primaryColor String   @default("#39ff14")
   accentColor  String?
   loginMessage String?
