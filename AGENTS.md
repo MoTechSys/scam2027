@@ -1,9 +1,9 @@
 # AGENTS.md — دليل الوكيل الكامل لمشروع scam2027
 
-> **حالة الاستئناف (2026-09-30، جلسة 24):** P1-10 الإعدادات **مُدمَجة** (PR #24). لا عناصر مفتوحة. **التالي: P1-11 المصادقة المكتملة** — يبدأ بـ ADR-0009 (OTP مقابل رابط). التفاصيل في `docs/90-handoff/HANDOFF.md` → «الجلسة 24».
+> **حالة الاستئناف (2026-09-30، جلسة 25):** P1-11 المصادقة المكتملة **مُدمَجة** (PR #25، ADR-0009). لا عناصر مفتوحة. **التالي: P1-12 Worker + بريد** (`worker/` يلتقط `Job` بقفل، ناقل SMTP في `lib/mail` — Mailpit محليًا). التفاصيل في `docs/90-handoff/HANDOFF.md` → «الجلسة 25».
 
 
-> **ابدأ هنا.** هذا الملف هو نقطة الدخول الوحيدة لأي وكيل (AI أو مطوّر) يُكلَّف بمتابعة المشروع. اقرأه كاملًا (10 دقائق) قبل أي أمر. كل ما فيه مُتحقَّق منه فعليًا بتاريخ **2026-09-30** على `main` بعد دمج PR #24.
+> **ابدأ هنا.** هذا الملف هو نقطة الدخول الوحيدة لأي وكيل (AI أو مطوّر) يُكلَّف بمتابعة المشروع. اقرأه كاملًا (10 دقائق) قبل أي أمر. كل ما فيه مُتحقَّق منه فعليًا بتاريخ **2026-09-30** على `main` بعد دمج PR #25.
 >
 > تعليمات المالك الدائمة (نصًّا): *«كون ادمج انت وسوي كل شي»* · *«انجز وادمج وتحقق واختبر واكمل المشروع كله عليك بس بدقه»* · *«لا شغل عشوائي … كل شيء يكون مدروس بدقة»* · *«نظام لأي جامعة، متكامل، قابل للتطوير، ومرن»*.
 
@@ -15,9 +15,9 @@
 |---|---|
 | المنتج | **scam2027** — نظام إدارة تعلّم (LMS) جامعي **متعدد المستأجرين** (عدة جامعات على منصة واحدة) بواجهة **Omnitrix الخضراء** RTL، عربي/إنجليزي، جوال أولًا |
 | المستودع | `https://github.com/MoTechSys/scam2027` (عام) — `main` محمي بالمنطق التالي: فرع `genspark_ai_developer` → PR → **squash-merge** مصرّح به للوكيل |
-| التقدّم | **26 / 65 مهمة (40%)** — P0 كامل (16/16) · P1 10/15 (P1-01..P1-10) · P2–P5 لم تبدأ. انظر §4 |
+| التقدّم | **27 / 65 مهمة (42%)** — P0 كامل (16/16) · P1 11/15 (P1-01..P1-11) · P2–P5 لم تبدأ. انظر §4 |
 | آخر تصليب | **PR #22 (الجلسة 21):** إقلاع من صفر + فحص عميق (200 زحف × دور × عرض، تدفقات، 26 مسبارًا أمنيًا) → 12 إصلاحًا + `e2e/crawl.spec.ts`. انظر HANDOFF الجلسة 21 |
-| التالي مباشرة | **P1-11 المصادقة المكتملة** (تفعيل `/activate`، استعادة كلمة المرور OTP/رابط، «تذكرني»، `mustChangePassword`) — يلزمها **ADR-0009** أولًا — §5 |
+| التالي مباشرة | **P1-12 Worker + بريد**: `worker/` مستقل يلتقط `Job` (`lockedAt/lockedBy`، إعادة محاولة) بدور المالك ويضبط GUC لكل مهمة؛ ناقل `smtp` في `lib/mail` (nodemailer + Mailpit)؛ يستبدل `after()` inline لـ`mail.send`/`notification.fanout`/`trash.purge` — §5 |
 | كيف تبدأ | §2 (Bootstrap 10 أوامر) → §6 (دورة العمل الإلزامية لكل مهمة) |
 | المرجع الكامل | `docs/` (28 وثيقة) — خريطتها في §3 |
 
@@ -114,7 +114,7 @@ pnpm exec playwright test                    # الأرقام الحالية ف�
 | **تعريف المنجز** (قائمة تحقق إلزامية لكل مهمة) | `docs/50-quality/00-DEFINITION-OF-DONE.md` |
 | استراتيجية الاختبار | `docs/50-quality/01-TESTING-STRATEGY.md` |
 | سياسة التوثيق (ما يُحدَّث مع كل PR) | `docs/50-quality/02-DOCUMENTATION-POLICY.md` |
-| القرارات المعمارية (8 ADR) | `docs/60-adr/` |
+| القرارات المعمارية (9 ADR) | `docs/60-adr/` |
 | الأمان (ASVS 5.0 L2)، PDPL/NCA، معايير LTI/QTI/OneRoster/WCAG | `docs/10-research/02..04` |
 | سجل الجلسات والدروس المستفادة | `docs/90-handoff/HANDOFF.md` |
 | سجل التغييرات | `CHANGELOG.md` |
@@ -137,16 +137,17 @@ pnpm exec playwright test                    # الأرقام الحالية ف�
 | **قشرة التطبيق (ADR-0007/0008)** | viewport ثابت `h-dvh` + `ScrollRegion`/`PageShell` (القائمة وحدها تتحرك)، App bar بعنوان الصفحة + ☰، `MiniStatCard` 3×2، رسم نمو حقيقي، شريط سفلي 4 عناصر بلا «المزيد»، `manifest.webmanifest`؛ كل صفحة: `<PageHeader>` + جذر `flex h-full min-h-0 flex-col` + `ScrollRegion` | `app/src/components/layout/{page-header,page-shell,Header,BottomNavigation,DashboardLayout}.tsx`, `app/src/components/ui/{scroll-region,mini-stat-card}.tsx`, `app/src/app/(dashboard)/dashboard/*`, `app/src/app/manifest.webmanifest/route.ts` |
 | **P1-09 سجل التدقيق** | `features/audit/{schemas,queries}`: مرشّحات (نص/فاعل/نوع الفاعل/كيان/معرّف/إجراء دقيق أو بادئة `resource.`/من–إلى بحدود يوم المستأجر)، حلّ أسماء الفاعلين بلا FK (محذوف = «مستخدم محذوف»، null = «النظام»)، facets؛ `GET /api/audit/export` CSV بتدفّق keyset (BOM، حماية حقن الصيغ، سقف 50k، يُدوَّن `audit.export`)؛ `/audit` (بحث + لوحة مرشّحات + جدول/قائمة جوال + Sheet تفاصيل مع diff قبل/بعد «التغييرات فقط» + نسخ JSON) | `app/src/features/audit/*`, `app/src/app/(dashboard)/audit/**`, `app/src/app/api/audit/export/route.ts` |
 | **P1-10 الإعدادات** | `lib/crypto.ts` (AES-256-GCM، `v1:` مُرقَّم، `maskSecret`) + `lib/svg-safe.ts`؛ `features/settings/{schemas,core,queries,actions}`: **`SETTINGS_REGISTRY`** (category/key/Zod/default/secret — إضافة إعداد = سطر لا migration)، `getSetting/setSetting` مع سقوط آمن للصف الفاسد، أسرار مشفّرة لا تُعاد للعميل (`hasValue` + ذيل مقنَّع)؛ `/settings/[tab]` (عام: اسم/لغة/منطقة زمنية/صيغة الرقم الأكاديمي/بريد الدعم · أمان: سياسة كلمات المرور/الجلسة/القفل/MFA للأدوار · هوية: ألوان + شعار)؛ `POST /api/branding/logo` (magic bytes + SVG inert + `<tenantId>/branding/` + حذف القديم) و`GET /api/branding/logo/:tid/:v` (عام، CSP sandbox)؛ حقن `--primary`/الشعار/رسالة الدخول في `/login` والتخطيط عبر `resolveTenant` | `app/src/lib/{crypto,svg-safe}.ts`, `app/src/features/settings/*`, `app/src/app/(dashboard)/settings/**`, `app/src/app/api/branding/**`, `app/prisma/migrations/20260928*` |
+| **P1-11 المصادقة المكتملة** | ADR-0009: `features/auth/{schemas,core,actions}` — رابط موقّع أحادي (`PasswordResetToken.tokenHash = <PURPOSE>:<sha256>`, 10 دقائق/72 ساعة، إبطال السابق، مقارنة ثابتة الزمن)، `loadSecurityPolicy` يقرأ `security.*` **ويُطبَّق فعليًا** على القفل/الجلسة/سياسة كلمات المرور، `forcedChangeReason` → `Ctx.user.passwordChangeRequired` تفرضه `requireUser`/`requireUserOrThrow`؛ `lib/mail` (قوالب ar/en + ناقل `log`؛ `smtp` في P1-12) و`Job mail.send` يُعالَج inline؛ صفحات `/forgot`, `/reset`, `/activate`, `/change-password` على `AuthCard`؛ إنشاء مستخدم `PENDING_ACTIVATION` = رمز تفعيل + بريد، وزر إعادة الإرسال | `app/src/features/auth/*`, `app/src/lib/mail/*`, `app/src/app/(auth)/**`, `app/src/lib/auth/{config,rbac,password-policy}.ts`, `app/prisma/migrations/20260930090000*` |
 | **P1-01 المخطط** | 18 موديلًا (أكاديمي/مقررات/محتوى/تواصل/نظام) + قيود SQL يدوية + RLS على 30 جدولًا + عقود Zod لأعمدة Json | `app/prisma/schema.prisma`, `app/prisma/migrations/20260905*`, `app/src/lib/contracts/json-columns.ts`, ADR-0006 |
 
-**مقاييس الجودة الحالية (PR #24، 2026-09-30، مقاسة في الجلسة نفسها):** `tsc` 0 · `eslint` 0 · Vitest **238/238** (33 ملفًا: 23 وحدة + 10 تكامل بقاعدة اختبار مستقلة) · Playwright **111 ✓ / 11 skip / 0 ✗** (15 ملفًا × 2 مشروع بما فيها `crawl.spec` و`settings.spec`؛ skips = logout fixme + حوارات Radix Select/compose على mobile-safari المغطّاة على سطح المكتب + تحديد جماعي في السلة desktop-only؛ فشل `toHaveURL` في login تحت الحمل الكامل عابر — أعد الملف وحده) · مُتحقَّق منها على **sandbox خالٍ تمامًا** (الجلسة 21: تثبيت Postgres/pnpm من الصفر → `pnpm check` exit 0 → Playwright كاملة) · `pnpm build` ✓ · 0 تمرير أفقي على 390px · 0 انتهاكات axe serious/critical على الصفحات المبنية.
+**مقاييس الجودة الحالية (PR #25، 2026-09-30، مقاسة في الجلسة نفسها):** `tsc` 0 · `eslint` 0 · Vitest **259/259** (35 ملفًا: 24 وحدة + 11 تكامل بقاعدة اختبار مستقلة) · Playwright **121 ✓ / 11 skip / 0 ✗** (16 ملفًا × 2 مشروع بما فيها `crawl.spec` و`auth-recovery.spec`؛ skips = logout fixme + حوارات Radix Select/compose على mobile-safari المغطّاة على سطح المكتب + تحديد جماعي في السلة desktop-only؛ فشل `toHaveURL` في login تحت الحمل الكامل عابر — أعد الملف وحده) · مُتحقَّق منها على **sandbox خالٍ تمامًا** (الجلسة 21: تثبيت Postgres/pnpm من الصفر → `pnpm check` exit 0 → Playwright كاملة) · `pnpm build` ✓ · 0 تمرير أفقي على 390px · 0 انتهاكات axe serious/critical على الصفحات المبنية.
 
 ### 4.2 ما هو **غير** مبني (بصراحة)
 - لا اختبارات (quizzes) ولا درجات ولا حضور **في الواجهة** — الجداول موجودة (P1-01) لكن بلا صفحات أو Server Actions. المبني: مستخدمون/أدوار/بنية أكاديمية/مقررات/شُعب/تسجيل/ملفات/إشعارات. الطالب يرى لوحة التحكم + المقررات + شُعبه + ملفاته + إشعاراته؛ المدرّس يرى شُعبه وقوائم طلابه ويرفع ملفات ويرسل إشعارات لشُعبه.
 - الإشعارات in-app فقط: لا بريد (FR-NTF-006 → P1-12/P2) ولا مشغّلات آلية عند رفع ملف/نشر اختبار (FR-NTF-007 → P2)؛ `Job notification.fanout` يُنفَّذ inline عبر `after()` — لا عامل خلفي مستقل بعد (P1-12).
 - القائمة الجانبية تُظهر: لوحة التحكم، المستخدمون، الأدوار، البنية الأكاديمية، المقررات، الشُعب، الملفات، الإشعارات، سلة المحذوفات، سجل التدقيق، الإعدادات (+ ما يُضاف عند إزالة `phase` من `src/lib/nav/items.ts` لكل وحدة تُبنى).
 - `seed.ts` يبذر المستأجر والأدوار والمستخدمين والبنية الأكاديمية والمقررات/الشُعب/30 طالبًا وملفَّين على CS101 (P1-06)، و3 إشعارات نموذجية (53 مستلمًا) (P1-07).
-- لا worker للمهام (`Job` جدول فقط) — P1-12. لا بريد. لا استعادة كلمة مرور/تفعيل — P1-11. إعدادات الأمان (`/settings/security`) **تُخزَّن وتُدقَّق لكن لا تُطبَّق بعد على مسار الدخول** (الحدود الفعلية ما تزال ثوابت `lib/auth/*`) — ربطها في P1-11.
+- لا worker مستقل للمهام (`Job` يُعالَج inline عبر `after()` لـ`mail.send`/`notification.fanout`) — P1-12. البريد بناقل `log` فقط (المعاينة في `Job.result`)؛ SMTP في P1-12. لا MFA (P3) ولا OTP (محجوز لـ MFA). `mfaRequiredRoles` يُخزَّن ولا يُطبَّق (P3).
 - CI غير مفعَّل على GitHub (ملف القالب موجود، انظر §7).
 - `e2e/crawl.spec.ts` مكتوب (PR #22): كل رابط شِل لكل دور = 200 + h1 واحد + صفر تمرير + صفر أخطاء صفحة/كونسول؛ المسارات المخفية تُعاد توجيهها لا 500؛ مسابير 401 JSON وCSP.
 - اختبار logout في Playwright معلَّم `fixme`.
@@ -168,6 +169,9 @@ pnpm exec playwright test                    # الأرقام الحالية ف�
 15. **جدول `Tenant` بلا RLS ومنح `app_user` عليه على مستوى الأعمدة**: `UPDATE (name, nameEn, locale, timezone, updatedAt)` فقط (migration `p1_10_tenant_self_update`؛ مولّدها `scripts/gen-rls.ts`). أي عمود جديد يعدّله المستأجر يحتاج GRANT صريحًا وإلا 42501. `slug/customDomain/status` للمنصة فقط.
 16. **`ScrollRegion` هو `relative`** (PR #24): مدخلات Radix المخفية المطلقة (`Switch/Checkbox`) كانت تهرب من الحاوية وتُضخّم `document.scrollHeight` على الجوال. لا تُزل `relative` منه.
 17. **Turbopack يُصدر نسخة مستقلة من كل وحدة لكل نوع مدخل (Route Handlers / صفحات RSC / proxy)** حتى في الإنتاج → أي «singleton» على مستوى الوحدة (`const cache = new Map()`، `new PrismaClient()`) يتكرّر 3 مرات؛ `invalidateTenantCache()` من `/api/branding/logo` لم يكن يصل إلى النسخة التي تقرأها `/login`، وكان الخادم يفتح 3 مجمّعات اتصال. **القاعدة:** كل حالة عابرة للطلبات تُسجَّل على `globalThis` بمفتاح `Symbol.for(...)` (انظر `lib/db/prisma.ts` و`lib/auth/tenant-resolver.ts`)، مع اختبار وحدة يستورد الوحدة مرتين (`?instance=2`) ويثبت المشاركة.
+20. **إجبار تغيير كلمة المرور يمرّ عبر `requireUser`/`requireUserOrThrow`** (ADR-0009 §6): كل صفحة داخل `(dashboard)` وكل action يُرفض تلقائيًا حتى يغيّر المستخدم كلمته. الاستثناء الوحيد `{ allowPasswordChangeRequired: true }` — لا تضفه إلا لما يلزم قبل التغيير (التغيير نفسه، الخروج، اللغة). اختبارات التكامل التي تبني `Ctx` يدويًا تحتاج `passwordChangeRequired: null`.
+21. **لا SMTP من الطلب أبدًا**: أي بريد = `enqueueMail` داخل نفس `tx` ثم `after(() => processMailJob(...))`. القوالب في `lib/mail/templates.ts` (بلا next-intl — تُعرض داخل job بلا request scope). `MAIL_TRANSPORT=log` في التطوير/الاختبار؛ e2e يقرأ الرابط من `Job.result.text`.
+22. **دلاءُ rate-limit في الـproxy منفصلة**: `login:` (20/دقيقة) و`recover:` (30/15 دقيقة). دلو مشترك أسقط دخولًا مشروعًا في الحزمة الكاملة (كل الاختبارات من IP واحد).
 19. **لون العلامة التجارية = نص على أسطح داكنة**: أي `--primary` يُحقن يجب أن يمرّ `primaryContrast(hex).passesAA` (`lib/color.ts`؛ الحد الملزم هو السطح المظلّل `color-mix(primary 10%, card)` لا الكارت نفسه). `e2e/a11y.spec` يفشل على `/dashboard` لأي لون دون 4.5:1. لا ترفع الحد ولا تُضف `color-contrast` إلى قائمة الاستثناءات — أصلح اللون.
 18. **قواعد صيغة الرقم الأكاديمي** (`users.academicIdFormat`): `YYYY`/`YY` = السنة، تسلسل `N` واحد، وبقية الحروف حرفية؛ الأحرف المسموحة `A-Z 0-9 - _` فقط. لا أقواس `{}` ولا `{year}`: المحرّك (`features/users/academic-id.ts`) يطبعها حرفيًا. الافتراضي `DEFAULT_ACADEMIC_ID_FORMAT` (`YYYY-NNNNN`) هو المصدر الوحيد ويُستورد في `SETTINGS_REGISTRY`.
 11. **لا تضبط `AUTH_URL` أبدًا** (متعدد المستأجرين): Auth.js يثبّت كل إعادة توجيه على ذلك الأصل → `localhost:3000` بعد الدخول. الأصل يُشتق من الطلب عبر `src/lib/auth/forwarded.ts` (تطبيع `x-forwarded-*` في الـproxy + إعادة بناء `request.url` في `api/auth/[...nextauth]/route.ts` لأن Next يبنيه من `hostname:port` الخادم). عند وكيل عكسي جديد افحص ترويساته فعليًا (PR #12).
@@ -178,7 +182,7 @@ pnpm exec playwright test                    # الأرقام الحالية ف�
 
 > مصدر الحقيقة: `docs/40-plan/01-ROADMAP.md`. لا تُغيّر الترتيب دون ADR. كل مهمة = PR واحد مُدمَج.
 
-### P1 — النواة الإدارية (متبقٍ 5 مهام)
+### P1 — النواة الإدارية (متبقٍ 4 مهام)
 | # | المهمة | مخرجات محددة | ملاحظات تنفيذ |
 |---|---|---|---|
 | ~~**P1-06**~~ ☑ PR #13 | الملفات | storage adapter (local/S3 عبر واجهة واحدة)، رفع stream متعدد بتقدّم، فحص magic bytes + قائمة سماح + حد حجم حسب الاشتراك، اسم مُعاد التوليد `tenant/course/uuid`، تصنيف، روابط تنزيل موقّعة قصيرة العمر (`/api/files/[id]/download`)، `/files` بتبويبات | `lib/storage/`؛ حذف ناعم؛ `file.manage_all` |
@@ -186,7 +190,7 @@ pnpm exec playwright test                    # الأرقام الحالية ف�
 | **P1-08** ☑ | سلة المحذوفات الموحّدة | `features/trash/{schemas,registry,queries,core,actions}` + `/trash` (6 تبويبات) + job `trash.purge` — PR #20 | استخدم `TRASH_REGISTRY` لأي كيان جديد ذي `deletedAt` |
 | **P1-09** ☑ | سجل التدقيق | `features/audit/{schemas,queries}` (قراءة فقط)، `GET /api/audit/export` CSV بتدفّق، `/audit` بلوحة مرشّحات + Sheet للـdiff عبر `?entry=` — PR #23 | كل action جديد يظهر تلقائيًا (facets من البيانات) |
 | ~~**P1-10**~~ ☑ PR #24 | الإعدادات | `/settings/[tab]` عام/أمان/هوية، `SETTINGS_REGISTRY`، أسرار AES-256-GCM، شعار عبر `lib/storage` + مساري `/api/branding/logo`، حقن العلامة في `/login` | أي إعداد جديد = سطر في `SETTINGS_REGISTRY`؛ الأسرار عبر `setSecretSettingAction` |
-| **P1-11** | المصادقة المكتملة | تفعيل الحساب (`/activate`)، استعادة كلمة المرور OTP/رابط 10 دقائق (`PasswordResetToken`)، «تذكرني»، إجبار تغيير كلمة المرور عند أول دخول (`mustChangePassword`) | |
+| ~~**P1-11**~~ ☑ PR #25 | المصادقة المكتملة | ADR-0009 · `/forgot`→`/reset` (10 دقائق) · `/activate` (72 ساعة) · «تذكرني» من `security.sessionMaxDays` · `/change-password` إلزامي (`ADMIN_RESET/TENANT_FORCED/EXPIRED`) · `security.*` مطبَّقة على الدخول | أي action جديد يمرّ عبر `requireUserOrThrow` يُرفض تلقائيًا أثناء إجبار التغيير؛ لا تستثنِ إلا ما لا يمكن تنفيذه بعد التغيير |
 | **P1-12** | Worker + بريد | `worker/` يلتقط `Job` بقفل (`lockedAt/lockedBy`)، إعادة محاولة، SMTP أساسي للمنصة (تفعيل/استعادة)، `mail.send` | يتصل بدور المالك ويضبط GUC لكل مهمة |
 | **P1-13** | التقارير الأساسية | `/reports`: مستخدمون/مقررات/ملفات/نظرة عامة + رسوم Recharts | |
 | **P1-14** | الملف الشخصي | `/profile`: بيانات، كلمة مرور، مظهر (فاتح/داكن)، تفضيلات الإشعارات | |

@@ -26,7 +26,10 @@ export default async function LoginPage({
   const logo = tenant?.branding?.logoUrl ?? null;
 
   return (
-    <main id="main" className="flex min-h-dvh flex-col items-center justify-center px-4 py-8 safe-area-bottom">
+    <main
+      id="main"
+      className="safe-area-bottom flex min-h-dvh flex-col items-center justify-center px-4 py-8"
+    >
       <div className="w-full max-w-md">
         <div className="mb-8 flex flex-col items-center text-center">
           {logo ? (
@@ -40,7 +43,7 @@ export default async function LoginPage({
             />
           ) : (
             <div
-              className="mb-4 flex size-20 items-center justify-center rounded-2xl bg-primary text-3xl font-black text-primary-foreground neon-glow"
+              className="neon-glow mb-4 flex size-20 items-center justify-center rounded-2xl bg-primary text-3xl font-black text-primary-foreground"
               aria-hidden="true"
             >
               {name.trim().charAt(0)}
@@ -63,7 +66,10 @@ export default async function LoginPage({
         </Card>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          <Link href="/developer" className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
+          <Link
+            href="/developer"
+            className="inline-flex min-h-11 items-center underline-offset-4 hover:underline"
+          >
             {tDev("title")}
           </Link>
         </p>

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Link from "next/link";
 import type { LoginState } from "@/lib/auth/login-errors";
 import { loginAction } from "./actions";
 
@@ -79,16 +80,28 @@ export function LoginForm({ next, reason }: Props) {
             aria-pressed={showPassword}
             className="absolute end-1 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
           >
-            {showPassword ? <EyeOff className="size-5" aria-hidden="true" /> : <Eye className="size-5" aria-hidden="true" />}
+            {showPassword ? (
+              <EyeOff className="size-5" aria-hidden="true" />
+            ) : (
+              <Eye className="size-5" aria-hidden="true" />
+            )}
           </button>
         </div>
       </div>
 
-      <div className="flex min-h-11 items-center gap-3">
-        <Checkbox id={rememberId} name="remember" className="size-5" />
-        <Label htmlFor={rememberId} className="cursor-pointer font-normal">
-          {t("remember")}
-        </Label>
+      <div className="flex min-h-11 items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Checkbox id={rememberId} name="remember" className="size-5" />
+          <Label htmlFor={rememberId} className="cursor-pointer font-normal">
+            {t("remember")}
+          </Label>
+        </div>
+        <Link
+          href="/forgot"
+          className="inline-flex min-h-11 items-center text-sm text-primary underline-offset-4 hover:underline"
+        >
+          {t("forgot")}
+        </Link>
       </div>
 
       <Button type="submit" size="lg" className="min-h-11 w-full gap-2 font-semibold" disabled={pending}>

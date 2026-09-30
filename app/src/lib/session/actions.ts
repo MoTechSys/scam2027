@@ -20,7 +20,8 @@ import { AppError, type Result } from "@/lib/result";
 export async function logoutAction(): Promise<void> {
   const r = await (async () => {
     try {
-      return await requireUserOrThrow();
+      // Logging out must work while a password change is pending (ADR-0009 §6).
+      return await requireUserOrThrow({ allowPasswordChangeRequired: true });
     } catch {
       return null;
     }
@@ -64,7 +65,7 @@ export async function setLocaleAction(locale: string): Promise<Result<{ locale: 
       secure: process.env.NODE_ENV === "production",
     });
     try {
-      const ctx = await requireUserOrThrow();
+      const ctx = await requireUserOrThrow({ allowPasswordChangeRequired: true });
       await db(ctx.tenantId).user.update({ where: { id: ctx.user.id }, data: { locale } });
     } catch {
       // Anonymous visitors (login page) can still switch language via the cookie.

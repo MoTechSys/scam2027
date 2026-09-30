@@ -9,8 +9,13 @@ import { randomInt } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { assertCanManageUser, assertPermission, hasRole, requireUserOrThrow, type Ctx } from "@/lib/auth/rbac";
 import { canManagePermissionSet } from "@/lib/auth/permissions";
-import { hashPassword, passwordIssues } from "@/lib/auth/password";
+import { hashPassword } from "@/lib/auth/password";
+import { forwardedOrigin } from "@/lib/auth/forwarded";
+import { headers } from "next/headers";
+import { after } from "next/server";
 import { audit } from "@/lib/audit";
+import { currentTenant } from "@/lib/tenant/current";
+import { issueAndMail, loadSecurityPolicy, passwordPolicyIssues, processMailJob } from "@/features/auth/core";
 import { db, tx, type TenantTx } from "@/lib/db/tenant";
 import { AppError, type Result } from "@/lib/result";
 import { safeAction } from "@/lib/safe-action";
@@ -70,11 +75,16 @@ export async function createUserAction(input: unknown): Promise<Result<CreateUse
     assertPermission(ctx, "user.create");
     const data = createUserSchema.parse(input);
     if (data.password) {
-      const issues = passwordIssues(data.password);
+      const policy = await tx(ctx.tenantId, (t) => loadSecurityPolicy(t, ctx.tenantId));
+      const issues = passwordPolicyIssues(data.password, policy);
       if (issues.length) throw new AppError("VALIDATION", "كلمة مرور ضعيفة", { password: issues });
     }
-    const tempPassword = data.password ? null : generateTempPassword();
-    const passwordHash = await hashPassword(data.password || (tempPassword as string));
+    // PENDING_ACTIVATION accounts set their own password through the activation link (ADR-0009) — no temp password.
+    const pending = data.status === "PENDING_ACTIVATION";
+    const tempPassword = data.password || pending ? null : generateTempPassword();
+    const passwordHash = pending && !data.password ? null : await hashPassword(data.password || (tempPassword as string));
+    const [h, tenant] = await Promise.all([headers(), currentTenant()]);
+    const origin = forwardedOrigin(h) ?? "";
 
     const created = await tx(ctx.tenantId, async (t) => {
       await assertGrantableRoles(ctx, t, data.roleIds);
@@ -97,19 +107,27 @@ export async function createUserAction(input: unknown): Promise<Result<CreateUse
           name: data.name,
           phone: data.phone || null,
           passwordHash,
+          passwordChangedAt: passwordHash ? new Date() : null,
           status: data.status,
-          mustChangePassword: data.mustChangePassword || !!tempPassword,
+          mustChangePassword: !pending && (data.mustChangePassword || !!tempPassword),
           profile: data.title ? { create: { title: data.title } } : undefined,
         },
-        select: { id: true, academicId: true, email: true, name: true, status: true },
+        select: { id: true, academicId: true, email: true, name: true, status: true, locale: true },
       });
       // UserRole uses a compound tenant FK → cannot be created through the nested relation (Prisma rejects tenantId).
       await t.userRole.createMany({
         data: data.roleIds.map((roleId) => ({ tenantId: ctx.tenantId, userId: user.id, roleId, assignedBy: ctx.user.id })),
       });
       await audit(ctx, { action: "user.create", entity: "User", entityId: user.id, after: { ...user, roleIds: data.roleIds } }, t);
-      return user;
+      const activationJobId = pending
+        ? (await issueAndMail(t, ctx.tenantId, user, "ACTIVATE", origin, tenant?.name ?? "scam2027", ctx.user.id, ctx.ip)).jobId
+        : null;
+      return { ...user, activationJobId };
     });
+    if (created.activationJobId) {
+      const jobId = created.activationJobId;
+      after(() => processMailJob(ctx.tenantId, jobId, "after"));
+    }
     revalidateUsers();
     return { id: created.id, academicId: created.academicId, tempPassword };
   }, { action: "user.create" });
@@ -243,7 +261,8 @@ export async function resetPasswordAction(input: unknown): Promise<Result<{ id: 
     const data = resetPasswordSchema.parse(input);
     await assertCanManageUser(ctx, data.id);
     if (data.password) {
-      const issues = passwordIssues(data.password);
+      const policy = await tx(ctx.tenantId, (t) => loadSecurityPolicy(t, ctx.tenantId));
+      const issues = passwordPolicyIssues(data.password, policy);
       if (issues.length) throw new AppError("VALIDATION", "كلمة مرور ضعيفة", { password: issues });
     }
     const tempPassword = data.password ? null : generateTempPassword();
@@ -251,7 +270,7 @@ export async function resetPasswordAction(input: unknown): Promise<Result<{ id: 
     await tx(ctx.tenantId, async (t) => {
       const r = await t.user.updateMany({
         where: { id: data.id, deletedAt: null },
-        data: { passwordHash, mustChangePassword: true, failedLoginCount: 0, lockedUntil: null },
+        data: { passwordHash, passwordChangedAt: new Date(), mustChangePassword: true, failedLoginCount: 0, lockedUntil: null },
       });
       if (r.count === 0) throw new AppError("NOT_FOUND", "المستخدم غير موجود");
       await revokeAllSessions(t, ctx.tenantId, data.id, ctx.user.id);

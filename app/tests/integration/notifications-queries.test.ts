@@ -32,6 +32,7 @@ const mkCtx = (tenantId: string, userId: string, perms: PermissionCode[] = []): 
     academicId: "t",
     locale: "ar",
     mustChangePassword: false,
+    passwordChangeRequired: null,
     roles: [],
     permissions: new Set(perms),
   },

@@ -194,6 +194,8 @@ model User {
   passwordHash       String?
   status             UserStatus @default(PENDING_ACTIVATION)
   mustChangePassword Boolean    @default(false)
+  /// P1-11 (ADR-0009): drives `security.passwordMaxAgeDays` and tenant-wide forced rotation.
+  passwordChangedAt  DateTime?
   sessionVersion     Int        @default(1)
   locale             String     @default("ar")
   emailVerifiedAt    DateTime?

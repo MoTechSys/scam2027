@@ -1,13 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { hashPassword, passwordIssues, safeEqualHex, sha256, verifyPassword } from "@/lib/auth/password";
+import { hashPassword, safeEqualHex, sha256, verifyPassword } from "@/lib/auth/password";
+import { DEFAULT_POLICY, passwordPolicyIssues } from "@/features/auth/core";
 
-describe("password policy (FR-AUTH-002)", () => {
-  it("accepts a compliant password", () => expect(passwordIssues("Admin@123456")).toEqual([]));
+describe("password policy (FR-AUTH-002, tenant-configurable per ADR-0009 §7)", () => {
+  it("accepts a compliant password under the default policy", () =>
+    expect(passwordPolicyIssues("Admin@123456", DEFAULT_POLICY)).toEqual([]));
   it("reports every violated rule", () => {
-    expect(passwordIssues("short")).toEqual(["min:10", "upper", "digit"]);
-    expect(passwordIssues("alllowercase1")).toEqual(["upper"]);
-    expect(passwordIssues("ALLUPPERCASE1")).toEqual(["lower"]);
-    expect(passwordIssues("NoDigitsHere")).toEqual(["digit"]);
+    expect(passwordPolicyIssues("short", DEFAULT_POLICY)).toEqual(["min:10", "upper", "digit"]);
+    expect(passwordPolicyIssues("alllowercase1", DEFAULT_POLICY)).toEqual(["upper"]);
+    expect(passwordPolicyIssues("ALLUPPERCASE1", DEFAULT_POLICY)).toEqual(["lower"]);
+    expect(passwordPolicyIssues("NoDigitsHere", DEFAULT_POLICY)).toEqual(["digit"]);
+  });
+  it("honours the tenant floor and the symbol switch", () => {
+    const strict = { passwordMinLength: 14, passwordRequireSymbol: true };
+    expect(passwordPolicyIssues("Admin1234567", strict)).toEqual(["min:14", "symbol"]);
+    expect(passwordPolicyIssues("Admin@1234567890", strict)).toEqual([]);
   });
 });
 

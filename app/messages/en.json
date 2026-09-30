@@ -45,10 +45,10 @@
     "logout": "Sign out",
     "errors": {
       "INVALID_CREDENTIALS": "Invalid credentials.",
-      "LOCKED": "Account temporarily locked after repeated attempts. Try again in 15 minutes.",
+      "LOCKED": "The account is temporarily locked after repeated attempts. Try again later.",
       "FROZEN": "Account is frozen. Contact the university administration.",
       "DISABLED": "Account is disabled.",
-      "PENDING": "Account is pending activation.",
+      "PENDING": "The account is pending activation — open the activation link sent to your email or ask an administrator to resend it.",
       "RATE_LIMITED": "Too many attempts. Try again later.",
       "VALIDATION": "Please fill in all fields.",
       "UNKNOWN": "Unexpected error. Please try again."
@@ -59,6 +59,46 @@
       "tenant_mismatch": "Your session belongs to another university. Sign in again.",
       "user_inactive": "Account is not active.",
       "signed_out": "You have been signed out."
+    },
+    "backToLogin": "Back to sign in",
+    "goToLogin": "Sign in",
+    "forgotTitle": "Recover your password",
+    "forgotSubtitle": "Enter your email or academic ID. If the account exists we will send a reset link.",
+    "forgotSubmit": "Send reset link",
+    "forgotDone": "If the account is registered you will receive a message with a link valid for 10 minutes. Check your inbox and spam folder.",
+    "resetTitle": "Set a new password",
+    "resetSubtitle": "Hello {name}, choose a new password for your account.",
+    "resetSubmit": "Save password",
+    "resetDone": "Your password was changed and other sessions were signed out. You can sign in now.",
+    "activateTitle": "Activate your account",
+    "activateSubtitle": "Hello {name}, set a password to activate your account.",
+    "activateSubmit": "Activate account",
+    "activateDone": "Your account is active. Sign in with your email or academic ID.",
+    "requestNewLink": "Request a new link",
+    "changeTitle": "Change password",
+    "changeSubtitle": "Enter your current password, then choose a new one.",
+    "changeSubmit": "Change password",
+    "changeDone": "Password changed{n, plural, =0 {.} one {, one other session signed out.} other {, # other sessions signed out.}}",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "passwordHint": "At least {min} characters with an uppercase letter, a lowercase letter and a digit",
+    "passwordIssues": {
+      "min": "At least {n} characters",
+      "lower": "At least one lowercase letter",
+      "upper": "At least one uppercase letter",
+      "digit": "At least one digit",
+      "symbol": "At least one symbol (e.g. @ or #)"
+    },
+    "tokenErrors": {
+      "INVALID": "This link is not valid. Make sure it was copied completely or request a new one.",
+      "EXPIRED": "This link has expired. Request a new one.",
+      "USED": "This link was already used. Request a new one if needed."
+    },
+    "changeReasons": {
+      "ADMIN_RESET": "An administrator set a temporary password for you. Choose your own password to continue.",
+      "TENANT_FORCED": "Your institution requires every user to change their password. Choose a new one to continue.",
+      "EXPIRED": "Your password has expired under the institution's policy. Choose a new one to continue."
     }
   },
   "nav": {
@@ -204,7 +244,8 @@
       "restore": "Restore",
       "resetPassword": "Reset password",
       "assignRoles": "Assign roles",
-      "revokeSessions": "End all sessions"
+      "revokeSessions": "End all sessions",
+      "resendActivation": "Resend activation link"
     },
     "form": {
       "name": "Full name",
@@ -244,7 +285,8 @@
       "restored": "Restored",
       "rolesUpdated": "Roles updated",
       "passwordReset": "Password reset",
-      "sessionsRevoked": "Sessions ended"
+      "sessionsRevoked": "Sessions ended",
+      "activationSent": "Activation link sent to the user's email"
     },
     "detail": {
       "info": "Details",

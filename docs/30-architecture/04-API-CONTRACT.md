@@ -19,7 +19,7 @@ type Page<T> = { items: T[]; total: number; page: number; pageSize: number };
 | `authApi.getMe` | RSC `getCtx()` | — |
 | `authApi.refreshToken` | (لا حاجة — جلسة DB) | — |
 | `authApi.changePassword` | `auth/changePassword` | مصادق |
-| — | `auth/requestPasswordReset`, `auth/verifyOtp`, `auth/resetPassword`, `auth/activateAccount` | — |
+| — | `auth/forgotPasswordAction({identifier})` → دائمًا `{queued:true}` (بلا تعداد) · `auth/inspectTokenAction(token, purpose)` (RSC) · `auth/resetPasswordAction({token,password,confirm})` · `auth/activateAccountAction({token,password,confirm})` · `auth/changePasswordAction({current,password,confirm})` (الوحيد المسموح أثناء `PASSWORD_CHANGE_REQUIRED`) · `auth/sendActivationAction({id})` — ADR-0009؛ لا `verifyOtp` (OTP محجوز لـ MFA P3) | عامة / جلسة / `user.edit` |
 | `usersApi.getAll` | `users/listUsers({ q, role, majorId, levelId, status, page, pageSize })` → `Page<UserDTO>` | `user.view` |
 | `usersApi.getById` | `users/getUser(id)` | `user.view_details` |
 | `usersApi.create/update/delete` | `users/createUser`, `updateUser`, `softDeleteUser` | `user.create/edit/delete` |
@@ -52,6 +52,7 @@ type Page<T> = { items: T[]; total: number; page: number; pageSize: number };
 | `/api/health` | GET | `{ status, db, storage, redis, version }` | عامة (بلا تفاصيل حساسة) |
 | `/api/files` | POST | رفع multipart (stream → storage) | جلسة + `file.upload` |
 | `/api/files/[id]/download` | GET | تنزيل برابط موقّع (5 دقائق) | توقيع HMAC + جلسة |
+| `/forgot`, `/reset?token=`, `/activate?token=`, `/change-password` | صفحات | صفحات المصادقة المستقلة (P1-11)؛ عامة عدا `/change-password` (جلسة، مسموحة أثناء إجبار التغيير)؛ rate-limit 30/15 دقيقة لكل IP على POST | — |
 | `/api/branding/logo` | POST | رفع/استبدال شعار المستأجر (multipart `logo`، ≤512 KB، النوع بالـmagic bytes: PNG/WebP/JPEG، أو SVG بعد فحص `svgIsInert` — لا script/on*/foreignObject/مراجع خارجية)؛ يُكتب تحت `<tenantId>/branding/<uuid>.<ext>` عبر `lib/storage`، يحدّث `TenantBranding.logoUrl/faviconUrl/logoStorageKey` ويحذف الكائن القديم، يدوّن `settings.upload_logo`، rate-limit 10/دقيقة؛ 401/403/400/413/415/429 | جلسة + `settings.edit_branding` |
 | `/api/branding/logo/[tenantId]/[version]` | GET | الشعار الحالي للمستأجر (عام بطبيعته — يُعرض لزائر `/login` بلا جلسة)؛ `version` كاسر كاش فقط؛ `Cache-Control: immutable` + CSP `default-src 'none'; sandbox` + `nosniff`؛ يُقرأ المفتاح عبر العميل المالك (لا GUC بلا جلسة) ويُرفض أي مفتاح خارج `<tenantId>/branding/`؛ 404 لغير الموجود | عامة |
 | `/api/audit/export` | GET | CSV بتدفّق (UTF-8 BOM، RFC 4180، حماية من حقن الصيغ، keyset batches ×1000، سقف 50k صف، `x-audit-rows`/`x-audit-total`)؛ المرشّحات = `auditExportSchema` **strict** (مجهول → 400)؛ التصدير نفسه يُدوَّن `audit.export` | جلسة + `audit.export` |

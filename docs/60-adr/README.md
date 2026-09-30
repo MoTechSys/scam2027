@@ -10,5 +10,6 @@
 | [0006](0006-referential-actions-and-json-contracts.md) | قواعد FK/الإسناد + عقود Json + قيود SQL يدوية | مقبول |
 | [0007](0007-mobile-app-shell.md) | قشرة تطبيق للجوال: PageHeader في Header، MiniStatCard 3×2، شريط سفلي بنمط تطبيق، manifest | مقبول |
 | [0008](0008-app-viewport-scroll-regions.md) | الشاشة viewport ثابت؛ القوائم تُمرَّر داخل `ScrollRegion`؛ `PageShell`؛ زر ☰ في App bar بدل «المزيد» | مقبول |
+| [0009](0009-account-recovery-tokens.md) | التفعيل/الاستعادة برابط موقّع أحادي (لا OTP)؛ بريد عبر `Job mail.send`؛ «تذكرني» وإجبار التغيير وسياسة كلمات المرور من `security.*` | مقبول |
 
 قالب ADR جديد: `NNNN-title.md` بأقسام: الحالة، السياق، القرار، البدائل، العواقب.

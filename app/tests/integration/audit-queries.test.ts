@@ -33,6 +33,7 @@ const mkCtx = (tenantId: string, userId: string): Ctx => ({
     academicId: "t",
     locale: "ar",
     mustChangePassword: false,
+    passwordChangeRequired: null,
     roles: [],
     permissions: new Set(),
   },

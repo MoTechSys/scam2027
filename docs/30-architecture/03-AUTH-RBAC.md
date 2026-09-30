@@ -6,13 +6,15 @@
 |---|---|
 | المزوّد الأساسي | `Credentials` (بريد أو رقم أكاديمي + كلمة مرور) ضمن المستأجر المحلول من host |
 | التجزئة | Argon2id (`@node-rs/argon2`) — memory 64MB, iterations 3, parallelism 1 |
-| الجلسة | استراتيجية `database` (جدول `Session`) لدعم "الجلسات النشطة" والإبطال الفوري؛ كوكي `HttpOnly; Secure; SameSite=Lax; Path=/`؛ مدة 12 ساعة (30 يوماً مع "تذكرني") |
+| الجلسة | JWT في كوكي `scam.session` (`HttpOnly; Secure; SameSite=Lax`) **+ صف `Session`** هو المصدر الملزم (يُفحص في كل طلب عبر `requireUser`)؛ العمر من إعدادات المستأجر (ADR-0009 §5): بلا «تذكرني» = `security.sessionIdleMinutes` (0 → 12 ساعة)، مع «تذكرني» = `security.sessionMaxDays` (افتراضي 30، سقف 90) |
 | إعادة الحساب | `sessionVersion` على User؛ كل تغيير كلمة مرور/دور/تجميد يزيده → الجلسات القديمة تُرفض |
-| القفل | `LoginAttempt` بالـ (tenantId, identifier, ip); 5 فشل/15 دقيقة → قفل 15 دقيقة; rate limit 20/دقيقة لكل IP على `/login` |
-| OTP | 6 أرقام، 10 دقائق، 5 محاولات، تجزئة بالـ SHA-256 في `VerificationCode` |
+| القفل | `LoginAttempt` بالـ (tenantId, identifier, ip); `security.lockoutMaxFails` فشل / `security.lockoutWindowMinutes` (افتراضي 5/15) → قفل؛ rate limit 20/دقيقة لكل IP على `/login`، و30/15 دقيقة لكل IP على `/forgot|/reset|/activate` (دلو مستقل) |
+| الاستعادة/التفعيل (P1-11) | **رابط موقّع أحادي الاستخدام** (ADR-0009): 32 بايت base64url، يُخزَّن `sha256` فقط في `PasswordResetToken.tokenHash` بصيغة `<PURPOSE>:<hex>`؛ 10 دقائق للاستعادة، 72 ساعة للتفعيل؛ طلب جديد يُبطل السابق؛ الاستهلاك داخل معاملة تغيير كلمة المرور + إبطال كل الجلسات؛ الرد على `/forgot` متطابق وُجد الحساب أم لا (3/15 دقيقة لكل معرّف، 10/15 دقيقة لكل IP). `VerificationCode` (OTP) محجوز لـ MFA (P3) وتغيير البريد |
 | MFA (P3) | TOTP (RFC 6238) + 10 رموز احتياطية؛ إلزامي حسب `settings.security.mfaRequiredRoles` |
 | SSO (P4) | `SsoConnection` لكل مستأجر (OIDC: issuer, clientId, secret مشفّر; SAML عبر Jackson) + JIT provisioning بالبريد |
-| أول دخول | `mustChangePassword=true` → توجيه إجباري لـ `/profile/password` |
+| إجبار تغيير كلمة المرور (P1-11) | `Ctx.user.passwordChangeRequired ∈ {ADMIN_RESET, TENANT_FORCED, EXPIRED, null}` يُحسب في `loadCtx` من `User.mustChangePassword`، و`security.forcePasswordChangeOnNextLogin` (مقارنة `passwordChangedAt` بـ`updatedAt` صف الإعداد)، و`security.passwordMaxAgeDays`. غير null ⇒ `requireUser` يعيد التوجيه إلى `/change-password?reason=…` و`requireUserOrThrow` يرمي `PASSWORD_CHANGE_REQUIRED`؛ يُستثنى فقط `changePasswordAction`/`logoutAction`/`setLocaleAction` عبر `{ allowPasswordChangeRequired: true }` |
+| سياسة كلمات المرور | `features/auth/core.passwordPolicyIssues(p, policy)`: `security.passwordMinLength` (≥10)، upper/lower/digit ثابتة، `security.passwordRequireSymbol`؛ الرموز `min:N|lower|upper|digit|symbol` تُترجم في `auth.passwordIssues.*`. تُطبَّق في الإنشاء/إعادة التعيين الإداري/الاستعادة/التفعيل/التغيير |
+| البريد | لا SMTP من الطلب: `Job mail.send` (`{to, template, params, locale}`) يُكتب في نفس معاملة الرمز ويُعالَج inline عبر `after()` حتى worker P1-12؛ `lib/mail` بناقل `log` (المعاينة في `Job.result`) والـ`smtp` يُفعَّل في P1-12 |
 
 ## 2. سياق الطلب
 
@@ -22,7 +24,7 @@ type Ctx = {
   user: { id: string; roles: string[]; permissions: Set<Permission>; locale: string };
   requestId: string; ip?: string; ua?: string;
 };
-export async function requireUser(): Promise<Ctx>          // يرمي REDIRECT_LOGIN
+export async function requireUser(opts?: { allowPasswordChangeRequired?: boolean }): Promise<Ctx> // redirect /login أو /change-password
 export function assertPermission(ctx, ...perms: Permission[]) // أي واحدة تكفي؛ يرمي FORBIDDEN
 export function assertAllPermissions(ctx, ...perms)
 export async function assertOwnsOffering(ctx, offeringId)  // للمدرس (◐)

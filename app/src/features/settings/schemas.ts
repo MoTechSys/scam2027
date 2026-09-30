@@ -7,7 +7,7 @@
  * Branding lives in the dedicated `TenantBranding` row (it is read on every request by the layout/login).
  */
 import { z } from "zod";
-import { PASSWORD_MIN } from "@/lib/auth/password-policy";
+import { LOCKOUT_MAX_FAILS, LOCKOUT_WINDOW_MIN, PASSWORD_MIN, SESSION_MAX_DAYS } from "@/lib/auth/password-policy";
 import { DEFAULT_ACADEMIC_ID_FORMAT } from "@/features/users/academic-id";
 import { AA_TEXT_CONTRAST, primaryContrast } from "@/lib/color";
 
@@ -164,21 +164,21 @@ export const SETTINGS_REGISTRY = {
     category: "security",
     key: "sessionMaxDays",
     schema: securitySettingsSchema.shape.sessionMaxDays,
-    default: 30,
+    default: SESSION_MAX_DAYS,
     secret: false,
   },
   "security.lockoutMaxFails": {
     category: "security",
     key: "lockoutMaxFails",
     schema: securitySettingsSchema.shape.lockoutMaxFails,
-    default: 5,
+    default: LOCKOUT_MAX_FAILS,
     secret: false,
   },
   "security.lockoutWindowMinutes": {
     category: "security",
     key: "lockoutWindowMinutes",
     schema: securitySettingsSchema.shape.lockoutWindowMinutes,
-    default: 15,
+    default: LOCKOUT_WINDOW_MIN,
     secret: false,
   },
   "security.mfaRequiredRoles": {

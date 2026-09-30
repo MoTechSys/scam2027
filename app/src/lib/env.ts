@@ -33,6 +33,15 @@ const serverSchema = z.object({
   S3_ACCESS_KEY_ID: z.string().optional(),
   S3_SECRET_ACCESS_KEY: z.string().optional(),
   S3_FORCE_PATH_STYLE: z.coerce.boolean().optional(),
+  /* ---- Mail (P1-11 ADR-0009; SMTP driver ships in P1-12) ---- */
+  /** `log` writes the rendered message to the logger and Job.result (dev/test); `smtp` needs the SMTP_* block. */
+  MAIL_TRANSPORT: z.enum(["log", "smtp"]).default("log"),
+  MAIL_FROM: z.string().default("scam2027 <no-reply@localhost>"),
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().int().positive().optional(),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASSWORD: z.string().optional(),
+  SMTP_SECURE: z.coerce.boolean().optional(),
 });
 
 export type Env = z.infer<typeof serverSchema>;

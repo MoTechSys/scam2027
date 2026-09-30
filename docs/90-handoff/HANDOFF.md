@@ -386,3 +386,29 @@ pnpm exec playwright test                   # الحزمة كاملة (desktop +
 **دروس:** (1) عند تشخيص «الإبطال لا يعمل» ابحث في `.next/server/chunks` عن عدد نسخ الوحدة (`grep -rl <string-unique> .next/server`) قبل افتراض RLS. (2) الحالة على مستوى الوحدة ليست singleton في Next/Turbopack؛ `globalThis` + `Symbol.for` هو النمط الوحيد الآمن. (3) إعداد له «افتراضي» في مكانين = عطل مؤجَّل؛ الافتراضي يُعرَّف مرة واحدة حيث يُستهلك. (5) كل قيمة يضبطها المستأجر وتُحقن في الواجهة لها **قيد دلالي** لا شكلي فقط (HEX صحيح ≠ لون مقروء). (4) الحزمة الكاملة كشفت عطلًا لا تكشفه ملفات الـspec منفردة لأن `settings.spec` يكتب صفًا يقرأه `users.spec` — لا تدمج بدون تشغيل كامل.
 
 **التالي:** P1-11 المصادقة المكتملة — **ADR-0009 أولًا** (OTP مقابل رابط لاستعادة كلمة المرور والتفعيل؛ `PasswordResetToken`/`VerificationCode` موجودان)، ثم `/activate`, `/forgot`, `/reset`, «تذكرني» (`Session.expiresAt` من `security.sessionMaxDays`), `mustChangePassword` عند أول دخول، وربط `security.*` من `SETTINGS_REGISTRY` بمسار الدخول فعليًا (كلمة المرور/القفل/الجلسة). البريد نفسه يبقى `Job mail.send` يستهلكه worker P1-12 (Mailpit محليًا).
+
+## الجلسة 25 — P1-11 المصادقة المكتملة (PR #25) — ☑
+
+**القرار أولًا:** `docs/60-adr/0009-account-recovery-tokens.md` — رابط موقّع أحادي الاستخدام (لا OTP في P1؛ `VerificationCode` محجوز لـ MFA)، `sha256` فقط في القاعدة بصيغة `<PURPOSE>:<hex>`، 10 دقائق للاستعادة/72 ساعة للتفعيل، طلب جديد يُبطل السابق، رد متطابق على `/forgot` وُجد الحساب أم لا، البريد `Job mail.send` لا SMTP من الطلب، «تذكرني» = `Session.expiresAt` من `security.sessionMaxDays` بلا تدوير refresh، إجبار التغيير عبر `Ctx.user.passwordChangeRequired`.
+
+**المُنفَّذ:**
+- `lib/mail/{templates,index}` (قوالب ar/en نص+HTML مع escaping؛ ناقل `log` يحفظ المعاينة في `Job.result`؛ `smtp` يرفض الإقلاع حتى P1-12؛ `MAIL_*`/`SMTP_*` في `env.ts`).
+- `features/auth/{schemas,core,actions}` + صفحات `(auth)/{forgot,reset,activate,change-password}` على قشرة `AuthCard` موحّدة + `NewPasswordFields` (ترجمة رموز السياسة `min:N|lower|upper|digit|symbol`).
+- **ربط `security.*` فعليًا** (كان الدَّين المعلن في الجلسة 24): `authenticateWithPassword` يقرأ القفل والجلسة من `loadSecurityPolicy`؛ `loadCtx` يحسب `passwordChangeRequired` (`ADMIN_RESET` من `mustChangePassword`، `TENANT_FORCED` بمقارنة `passwordChangedAt` مع `updatedAt` صف الإعداد — بلا عمود إضافي، `EXPIRED` من `passwordMaxAgeDays`)؛ `requireUser` يعيد التوجيه و`requireUserOrThrow` يرمي `PASSWORD_CHANGE_REQUIRED`؛ الاستثناء `allowPasswordChangeRequired` للتغيير/الخروج/اللغة فقط.
+- إنشاء مستخدم `PENDING_ACTIVATION` = بلا كلمة مؤقتة، رمز تفعيل + بريد داخل نفس `tx`؛ زر «إعادة إرسال رابط التفعيل» في صفحة المستخدم (`sendActivationAction`).
+- Migration `20260930090000_p1_11_password_changed_at` (`User.passwordChangedAt` + backfill من `createdAt`) على القاعدتين.
+- ثوابت `LOCKOUT_*`/`SESSION_*` صارت في `password-policy.ts` ويستوردها `SETTINGS_REGISTRY` (مصدر وحيد)؛ حُذف `passwordIssues` القديم.
+
+**ما كشفته البوابة:** الحزمة `auth-recovery.spec` على mobile فشلت 3 مرات بـ«حدث خطأ» عند الدخول بينما نجحت منفردة — الجذر: دلو rate-limit واحد `login:<ip>` (20/دقيقة) يشترك فيه `/login` و`/api/auth/*` **والصفحات الجديدة**؛ سلسلة desktop+mobile من IP واحد تجاوزته. الحل بالجذر: دلو `recover:<ip>` مستقل (30/15 دقيقة) للاستعادة/التفعيل — المسارات نادرة الطلب، والـactions خلفها تفرض حدودًا أضيق بالمعرّف. Pitfall #22. ملاحظة على `[auth][error] CallbackRouteError: INVALID_CREDENTIALS` في السجل: هذا **متوقَّع** (اختبار رفض كلمة المرور القديمة) وليس عطلًا.
+
+**الحالة المقاسة (في هذه الجلسة):**
+| البوابة | النتيجة |
+|---|---|
+| `pnpm check` | ✅ tsc 0 · eslint 0 · vitest **259/259** (35 ملفًا) · build ✓ |
+| `playwright test` كاملة (desktop + mobile) | **121 ✓ / 11 skip / 0 ✗** (16 ملفًا × 2 مشروع، 7.9 دقيقة) |
+
+**قرارات:** (1) الغرض جزء من `tokenHash` → رمز الاستعادة لا يُقبل في `/activate` والعكس بلا عمود إضافي. (2) `changePasswordAction` لا يرفع `sessionVersion` (كان سيُخرج المستخدم نفسه) بل يُبطل صفوف الجلسات الأخرى فقط؛ الاستعادة/التفعيل يرفعانه ويُبطلان الكل. (3) `inspectTokenAction` يُستدعى من RSC قبل النموذج كي لا يكتب المستخدم كلمة مرور لرابط ميت. (4) e2e ينشئ مستخدمين مؤقتين بـ`E2E-` لكل اختبار (لا يمسّ الحسابات المبذورة) ويقرأ الرابط من `Job.result`.
+
+**دروس:** (1) Zod 4 يُنفّذ `refine` بعد فشل `regex` — احرس الدالة. (2) اختبار «الحزمة كاملة» يكشف تفاعل الحدود المشتركة (rate-limit) الذي لا يظهر بتشغيل ملف واحد. (3) عند إضافة حقل إلى `Ctx` ابحث في `tests/` عن الـfixtures اليدوية (8 ملفات).
+
+**التالي:** P1-12 Worker + بريد — `worker/` مستقل (`pnpm worker`) يلتقط `Job` بـ`FOR UPDATE SKIP LOCKED`/`lockedAt` ويعالج `mail.send`/`notification.fanout`/`trash.purge` بدور المالك مع ضبط GUC لكل مهمة؛ ناقل `smtp` (nodemailer) في `lib/mail` + Mailpit في docker-compose؛ إزالة `after()` inline أو إبقاؤه كمسار احتياطي عند غياب worker (يُقرَّر في ADR-0010 إن لزم).
