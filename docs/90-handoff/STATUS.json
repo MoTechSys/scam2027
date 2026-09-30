@@ -4,8 +4,8 @@
   "repo": "https://github.com/MoTechSys/scam2027",
   "entryPoint": "AGENTS.md",
   "updatedAt": "2026-09-30",
-  "updatedInPr": 27,
-  "mainHead": "1ac206a (before PR #27 merge)",
+  "updatedInPr": 28,
+  "mainHead": "cc221aa (before PR #28 merge)",
   "branches": {
     "main": "main",
     "work": "genspark_ai_developer",
@@ -13,8 +13,8 @@
   },
   "progress": {
     "totalTasks": 65,
-    "doneTasks": 29,
-    "percent": 45,
+    "doneTasks": 30,
+    "percent": 46,
     "phases": {
       "P0": {
         "name": "Foundation",
@@ -26,10 +26,11 @@
       "P1": {
         "name": "Core LMS",
         "total": 15,
-        "done": 13,
+        "done": 14,
         "status": "IN_PROGRESS",
         "prs": [
-          4, 5, 6, 8, 9, 10, 13, 14, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26, 27
+          4, 5, 6, 8, 9, 10, 13, 14, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26, 27,
+          28
         ]
       },
       "P2": {
@@ -86,19 +87,20 @@
       "P1-10",
       "P1-11",
       "P1-12",
-      "P1-13"
+      "P1-13",
+      "P1-14"
     ],
     "nextTask": {
-      "id": "P1-14",
-      "name": "الملف الشخصي",
+      "id": "P1-15",
+      "name": "اختبارات P1 (إغلاق)",
       "status": "TODO",
-      "scope": "/profile with 4 URL tabs (info | password | appearance | notifications). info: name/phone/locale + UserProfile (title, bio, avatar via lib/storage under <tenantId>/avatars/<uuid>.<ext>, magic-bytes PNG/WebP/JPEG ≤ 512 KB, served by a public-by-nature route like /api/branding/logo) — email/academicId read-only; password: reuse features/auth changePasswordAction + NewPasswordFields; appearance: theme light/dark/system persisted (UserProfile or new column via migration on BOTH DBs + RLS unchanged) and applied by the existing ThemeProvider; notifications: reuse features/notifications preferences UI. Server Action pattern for each mutation, audit `profile.update` / `profile.avatar`, revalidatePath. Remove `phase` from nav item `profile`, update login-helpers test, e2e/profile.spec desktop+mobile, integration tests for profile core.",
+      "scope": "Close P1 with measured coverage: (1) unit/integration per action-equivalent core for every P1 feature — audit which features/*/core|queries lack tests (grep tests/ vs src/features/) and fill gaps; (2) E2E per UC not yet covered: logout (currently fixme in auth.spec — implement via the avatar menu form submit), Radix Select create dialogs on mobile-safari (skipped) — either fix the tap flakiness with a keyboard-driven helper or assert via a dedicated mobile create path; (3) tenant isolation for EVERY P1 model in tests/integration/p1-schema-isolation.test.ts including UserProfile.theme/avatarStorageKey, PasswordResetToken, Job; (4) docs/50-quality/01-TESTING-STRATEGY.md §5 script names aligned with package.json (add e2e:mobile / e2e:crawl / test:a11y scripts or fix the doc). Acceptance: P1 acceptance criterion in AGENTS §5 exercised end-to-end by one e2e (setup wizard → users/roles → offerings/enrol → files → notifications → trash → audit).",
       "deliverables": [
-        "features/profile/{schemas,core,queries,actions} + tests",
-        "app/(dashboard)/profile/[tab] pages + avatar upload route",
-        "migration if a theme column is added (apply to dev AND test DB)",
-        "e2e/profile.spec.ts + a11y",
-        "docs: ROADMAP P1-14 ☑, REQUIREMENTS FR-USR-011, API-CONTRACT, DATA-MODEL (if migration), AGENTS §0/§4/§5, HANDOFF session 28, STATUS"
+        "coverage audit table in HANDOFF session 29 (feature → unit/integration/e2e)",
+        "new tests filling the gaps + logout e2e un-fixme'd",
+        "p1-schema-isolation extended to all P1 tables",
+        "TESTING-STRATEGY §5 aligned; package.json scripts",
+        "docs: ROADMAP P1-15 ☑ (P1 DONE), AGENTS §0/§4/§5 (P1 closed), STATUS (31/65, nextTask P2-01 + ADR-0011), CHANGELOG, README"
       ]
     }
   },
@@ -107,27 +109,27 @@
     "definition": "typecheck + lint + test + build must all pass; then playwright e2e against `pnpm build && pnpm start -p 3000`",
     "lastRun": {
       "date": "2026-09-30",
-      "commit": "P1-13 reports (PR #27)",
+      "commit": "P1-14 profile (PR #28)",
       "typecheck": "PASS (0 errors)",
       "lint": "PASS (0 errors)",
       "unitAndIntegration": {
         "runner": "vitest",
-        "passed": 280,
+        "passed": 288,
         "failed": 0,
-        "files": 37
+        "files": 38
       },
       "e2e": {
         "runner": "playwright",
-        "passed": 129,
+        "passed": 139,
         "skipped": 11,
         "failed": 0,
-        "durationMinutes": 8.7,
+        "durationMinutes": 9.6,
         "projects": ["desktop-chromium", "mobile-safari"],
         "skippedReason": "logout fixme (2) + Radix Select dialogs on mobile-safari (5, covered on desktop) + dashboard student assertions mobile-only (1) + files admin upload mobile (1) + trash bulk-select desktop-only (1) + settings mobile-only viewport test on desktop (1)",
-        "note": "17 files x 2 projects incl. reports.spec (3x2), auth-recovery.spec, settings.spec, crawl.spec. Measured in session 27, full run on the P1-13 build."
+        "note": "18 files x 2 projects incl. profile.spec (5x2), reports.spec, auth-recovery.spec, settings.spec, crawl.spec. Measured in session 28, full run on the P1-14 build."
       },
       "build": "PASS",
-      "buildId": "DJDzRSmuieOKTdxDSgXb3",
+      "buildId": "WxNHVBzL56Ff3D7Ze3sbE",
       "dbSessionsAfterBoot": "app_user 1 / postgres 1 (was 8 / 3 before the globalThis singleton fix)",
       "verifiedOnCleanClone": "2026-09-30 — fresh sandbox: apt postgresql-17 + pnpm 10 + playwright install-deps + migrate both DBs + seed + pnpm check + full playwright",
       "deepProbe": "2026-09-28 — 200 route×role×viewport crawls + interaction flows + 26 API/RBAC/redirect/header probes (session 21); crawl.spec re-run green in session 24",
@@ -135,6 +137,7 @@
       "audit": "pnpm audit: No known vulnerabilities found (brace-expansion resolved 1.1.21 / 5.0.12 via lockfile; no bare-name override — it breaks eslint/minimatch@3)"
     },
     "knownDebt": [
+      "Profile (P1-14): theme lives in UserProfile.theme and flows (dashboard)/layout → LayoutUser.theme → Header (applyThemeToDocument); localStorage is a cache only. proxy.ts overwrites CSP on every response except BINARY_ASSET matches — add any new binary route with its own `sandbox` CSP there. Avatars are raster-only (no SVG). Preferences UI is shared from notifications/preferences.tsx. Never run prettier on a whole folder (pollutes the PR).",
       "Reports (P1-13) are read-only RSC queries (features/reports/queries) — every aggregate runs inside one tx(tenantId) per tab and passes through courseScopeWhere/offeringScopeWhere/fileScopeWhere so instructors never see more in a report than in the list. Page filters are lenient (invalid → default), the CSV route is strict (→ 400). Charts have animations off; MonthlyArea uses `reversed` X axis for RTL. A new report = load*Report + strict Zod filter + REPORT_TABS/TAB_PERMISSION entry.",
       "Jobs (P1-12, ADR-0010): request code enqueues a Job inside its tx and calls lib/jobs/kick.kickJob(tenantId, jobId, type) — never a processor directly. JOBS_INLINE=true (dev/test default) runs it via after(); production sets JOBS_INLINE=false and runs `pnpm worker` (tsx --conditions=react-server because features/* import server-only). Worker reserves with lockedBy/lockedAt via FOR UPDATE SKIP LOCKED; the processor owns the conditional PENDING→RUNNING transition (exactly-once). New Job type = entry in lib/jobs/registry.JOB_PROCESSORS; unknown types are marked FAILED. Mail transport is a globalThis singleton; MAIL_TRANSPORT=smtp needs SMTP_HOST (Mailpit 127.0.0.1:1025 locally via app/docker-compose.yml).",
       "Auth (P1-11, ADR-0009): recovery/activation = single-use signed links; PasswordResetToken.tokenHash is `<RESET|ACTIVATE>:<sha256>` (purpose is part of the unique key). Never store raw tokens; never send SMTP from a request — enqueueMail inside the same tx + after(() => processMailJob). MAIL_TRANSPORT=log in dev/test (preview in Job.result.text; e2e reads links from there). Forced password change is enforced by requireUser/requireUserOrThrow via Ctx.user.passwordChangeRequired; only pass { allowPasswordChangeRequired: true } for actions that must run before the change (change itself, logout, locale). Proxy rate-limit buckets: login:<ip> 20/min and recover:<ip> 30/15min — keep them separate.",
@@ -172,10 +175,10 @@
     ],
     "tsc": 0,
     "eslint": 0,
-    "vitest": "280/280 (37 files)",
-    "playwright": "129 passed / 11 skipped (17 files x 2 projects)",
+    "vitest": "288/288 (38 files)",
+    "playwright": "139 passed / 11 skipped (18 files x 2 projects)",
     "build": "ok",
-    "buildId": "DJDzRSmuieOKTdxDSgXb3"
+    "buildId": "WxNHVBzL56Ff3D7Ze3sbE"
   },
   "database": {
     "engine": "PostgreSQL 17",
@@ -191,7 +194,7 @@
         "migrateCommand": "DIRECT_DATABASE_URL=\"postgresql://postgres:postgres@localhost:5432/scam2027_test?schema=public\" pnpm exec prisma migrate deploy"
       }
     },
-    "latestMigration": "20260930090000_p1_11_password_changed_at",
+    "latestMigration": "20260930120000_p1_14_profile_theme_avatar",
     "migrations": [
       "20260904221859_init_p0",
       "20260904222500_rls_p0",
@@ -199,7 +202,8 @@
       "20260905015700_rls_p1_01",
       "20260928120000_p1_10_branding_logo_key",
       "20260928140000_p1_10_tenant_self_update",
-      "20260930090000_p1_11_password_changed_at"
+      "20260930090000_p1_11_password_changed_at",
+      "20260930120000_p1_14_profile_theme_avatar"
     ],
     "tenantScopedTables": 30,
     "platformTables": 4,
@@ -457,6 +461,12 @@
       "date": "2026-09-30",
       "scope": "P1-13 reports: features/reports (overview/users/courses/files aggregates, strict filters, instructor scope), /reports/[tab] with Recharts, streamed CSV export route, nav item enabled, 15 integration + 3x2 e2e + axe",
       "pr": 27
+    },
+    {
+      "n": 28,
+      "date": "2026-09-30",
+      "scope": "P1-14 profile: migration UserProfile.theme/avatarStorageKey (both DBs), features/profile, /profile/[tab] (info+avatar, password, appearance, notifications), avatar upload/serve routes, persisted theme in Header, proxy BINARY_ASSET CSP fix, 7 integration + 5x2 e2e",
+      "pr": 28
     }
   ]
 }

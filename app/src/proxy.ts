@@ -37,6 +37,9 @@ const TENANT_FREE_PATHS = new Set(["/tenant-not-found", "/tenant-suspended", "/d
 const SESSION_COOKIE = "scam.session";
 /** Tenant logo (GET only; the POST upload lives at /api/branding/logo and stays behind the session gate). */
 const PUBLIC_LOGO = /^\/api\/branding\/logo\/[0-9a-f-]{36}\/[A-Za-z0-9_-]+$/i;
+/** Binary asset routes that set their own stricter CSP (`default-src 'none'; sandbox`): logo (public) + avatar (session). */
+const BINARY_ASSET =
+  /^\/api\/(branding\/logo\/[0-9a-f-]{36}\/[A-Za-z0-9_-]+|profile\/avatar\/[0-9a-f-]{36}\/[0-9a-f-]{36}\/[A-Za-z0-9_-]+)$/i;
 
 function isPublic(pathname: string): boolean {
   if (PUBLIC_PATHS.has(pathname)) return true;
@@ -177,7 +180,7 @@ export default async function proxy(req: NextRequest): Promise<NextResponse> {
   const res = NextResponse.next({ request: { headers: reqHeaders } });
   res.headers.set("x-request-id", requestId);
   // Binary asset routes set their own, stricter CSP (`default-src 'none'; sandbox`) — do not overwrite it.
-  if (!PUBLIC_LOGO.test(pathname)) {
+  if (!BINARY_ASSET.test(pathname)) {
     res.headers.set(
       "Content-Security-Policy",
       buildCsp(nonce, reqHeaders.get("x-forwarded-proto") === "https"),

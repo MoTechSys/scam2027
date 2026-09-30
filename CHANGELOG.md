@@ -11,6 +11,17 @@
 
 ## [Unreleased]
 
+### Added — الملف الشخصي (P1-14, FR-USR-011, PR #28)
+- Migration `20260930120000_p1_14_profile_theme_avatar`: `UserProfile.theme` (DARK/LIGHT/SYSTEM + CHECK) و`avatarStorageKey`.
+- `features/profile/{schemas,queries,core,actions}`: تعديل الاسم/الهاتف/المسمّى/النبذة/اللغة (البريد والرقم الأكاديمي للقراءة)، المظهر، الصورة — كل مسار داخل `tx` مع تدقيق `profile.update/theme/avatar/avatar_remove`.
+- `/profile/[tab]`: بيانات + صورة (رفع PNG/WebP/JPEG ≤512KB عبر `POST /api/profile/avatar`، تقديم عبر `GET /api/profile/avatar/[t]/[u]/[v]` لجلسة نفس المستأجر بـCSP sandbox)، كلمة المرور (إعادة استخدام نموذج المصادقة)، المظهر (يُطبَّق فورًا ويُحفَظ في الحساب ويُقرأ في القشرة)، تفضيلات الإشعارات (مكوّن مشترك).
+- الرأس: صورة المستخدم، رابط «الملف الشخصي» فعّال، زر المظهر يحفظ في الحساب؛ عنصر القائمة «الملف الشخصي» ظهر لكل المستخدمين.
+- 7 اختبارات تكامل + `e2e/profile.spec.ts` (5 × سطح مكتب/جوال).
+
+### Fixed
+- `proxy.ts`: CSP العام كان يستبدل CSP الـsandbox الخاص بمسارات الملفات الثنائية غير الشعار — أصبح الاستثناء `BINARY_ASSET` يشمل الأفاتار.
+
+
 ### Added — التقارير الأساسية (P1-13, FR-RPT-001/002/003/006, PR #27)
 - `features/reports/{schemas,queries}`: 4 تقارير (نظرة عامة / مستخدمون / مقررات / ملفات) بتجميعات حقيقية داخل `tx(tenantId)` واحد لكل تبويب؛ مرشّحات Zod strict (`roleId/status/majorId`، `semesterId/departmentId`، `category/courseId/from/to`)؛ نطاق المدرّس عبر `*ScopeWhere` نفسها المستخدمة في القوائم.
 - `/reports/[tab]` بتبويبات URL + `reports/charts.tsx` (MonthlyArea/CountBars/Donut على رموز Omnitrix، بلا حركة) + بطاقات KPI؛ ملاحظة نطاق للمدرّس؛ عنصر «التقارير» ظهر في القائمة الجانبية.
