@@ -56,7 +56,7 @@
 | P1-10 | الإعدادات: general/security/branding + حقن العلامة التجارية | FR-SET-001/005, FR-TEN-004/007 | ☑ PR #24 |
 | P1-11 | المصادقة المكتملة: تفعيل، استعادة (رابط موقّع، ADR-0009)، تذكرني، أول دخول | FR-AUTH-003/004/005/010/011 | ☑ PR #25 |
 | P1-12 | Worker + جدول Job + بريد (SMTP أساسي للمنصة) للتفعيل/الاستعادة (ADR-0010) | GAP-24 | ☑ PR #26 |
-| P1-13 | التقارير الأساسية + الرسوم (users/courses/files/overview) | FR-RPT-001/002/003/006 | ☐ |
+| P1-13 | التقارير الأساسية + الرسوم (users/courses/files/overview) | FR-RPT-001/002/003/006 | ☑ PR #27 |
 | P1-14 | البروفايل: info/password/appearance(dark/light)/notifications | FR-USR-011 | ☐ |
 | P1-15 | اختبارات: وحدة لكل action، E2E لكل تدفق UC، عزل المستأجر لكل موديل جديد | — | ☐ |
 

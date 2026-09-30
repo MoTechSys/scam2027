@@ -440,3 +440,25 @@ pnpm exec playwright test                   # الحزمة كاملة (desktop +
 **دروس:** (1) عند `pnpm audit` لا تكتب override بالاسم المجرّد لحزمة لها خطّان رئيسيان متوازيان؛ استهدف `pkg@major` أو حدّث lockfile. (2) اختبار SMTP الحقيقي أرخص من mock: Mailpit ثنائي واحد + `fetch('/api/v1/messages')`. (3) أي كود يستورد `features/*` خارج Next يحتاج `--conditions=react-server`.
 
 **التالي:** P1-13 التقارير الأساسية — `/reports/[tab]` (نظرة عامة/مستخدمون/مقررات/ملفات) بتجميعات حقيقية داخل `tx(tenantId)`، Recharts في الفرع المرئي فقط، صلاحيات `report.*` من المصفوفة، تصدير CSV بنمط `/api/audit/export`، إزالة `phase` من عنصر `reports` في `nav/items.ts`.
+
+## الجلسة 27 — P1-13 التقارير الأساسية (PR #27) — ☑
+
+**المُنفَّذ:**
+- `features/reports/schemas.ts` (تبويبات، `TAB_PERMISSION`، 3 مرشّحات Zod strict، أعمدة CSV، `bytesToMb/pct`) و`features/reports/queries.ts` (`loadOverviewReport`, `loadUsersReport`, `loadCoursesReport`, `loadFilesReport` + مكرِّرات CSV keyset). كل تبويب = `tx(tenantId)` واحد فتصف الأرقام لقطة واحدة؛ `groupBy` حيث يدعمه Prisma، وعدّ واحد محدود لكل تخصص/دور بدل N+1 لكل صف.
+- **النطاق**: المدرّس (`report.* = own`) يمرّ عبر `courseScopeWhere/offeringScopeWhere/fileScopeWhere` نفسها المستخدمة في القوائم؛ التبويب «المستخدمون» لا يظهر له (`report.users` غير ممنوحة) والوصول المباشر → `/unauthorized`.
+- الواجهة: `/reports/[tab]` بتبويبات URL (نمط `/settings`)، `charts.tsx` (MonthlyArea/CountBars/Donut على رموز `--primary/--chart-*`، بلا حركة، `reversed` للمحور X في RTL)، `report-blocks.tsx` (Kpi/ChartCard/ScopeNote)، مرشّحات في query string يعيد استخدامها رابط CSV 1:1.
+- `GET /api/reports/[kind]/export` بنفس عقد `/api/audit/export` (BOM، حقن الصيغ، keyset ×1000، سقف 50k، `x-report-rows`، تدقيق `report.export`، نوع مجهول 404).
+- عنصر «التقارير» في القائمة (أُزيل `phase: "P3"`)، i18n ar/en كاملة، اختبار `login-helpers` مُحدَّث.
+- اختبارات: `tests/integration/reports-queries.test.ts` ×15 (كل رقم مقابل fixture مُعدّ يدويًا: 6 مستخدمين/3 مقررات/4 شُعب/3 ملفات، فصلان، مدرّسان)، `e2e/reports.spec.ts` ×3 (مدير: 4 تبويبات بأرقام = عدّ DB مباشر، رسوم SVG، مرشّح دور يغيّر KPI، مرشّح تاريخ يُصفّر، CSV BOM/header/عدد صفوف/400/404/تدقيق؛ مدرّس: 3 تبويبات + ملاحظة نطاق + CSV أقل من الكل؛ طالب: unauthorized + 403)، axe على `/reports/overview`.
+
+**تحقق يدوي قبل الاختبارات:** مسبار Playwright على 4 تبويبات × 2 عرض: h1 = 1، تمرير صفحة 0، تمرير أفقي 0، 0 أخطاء كونسول؛ أرقام «مستخدمون جدد شهريًا» طابقت `date_trunc('month')` في psql (6/11/7/10).
+
+**الحالة المقاسة:**
+| البوابة | النتيجة |
+|---|---|
+| `pnpm check` | ✅ tsc 0 · eslint 0 · vitest **280/280** (37 ملفًا) · build ✓ |
+| `playwright test` كاملة (desktop + mobile، تشمل `crawl.spec` الذي يزحف الآن إلى `/reports` لكل دور) | **129 ✓ / 11 skip / 0 ✗** (17 ملفًا × 2 مشروع، 8.7 دقيقة) |
+
+**قرارات:** (1) لا Server Actions للتقارير — قراءة RSC فقط، التصدير عبر Route Handler بتدفّق. (2) «الطلاب حسب التخصص» = مستخدمون مميَّزون مسجَّلون في شُعب مقررات مرتبطة بالتخصص (لا يوجد عمود تخصص على المستخدم حتى P2-06 SIS). (3) متوسط الإشغال يُحسب فقط على الشُعب ذات `capacity` وإلا «—» مع تلميح.
+
+**التالي:** P1-14 الملف الشخصي (النطاق التفصيلي في STATUS.json → nextTask).

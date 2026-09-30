@@ -42,7 +42,10 @@ describe("visibleNavItems", () => {
     expect(keys).not.toContain("academic"); // shipped in P1-04 but academic.view not granted here
     expect(keys).not.toContain("courses"); // shipped in P1-05 but course.view not granted here
     expect(keys).not.toContain("notifications"); // shipped in P1-07 but notification.view not granted here
-    expect(keys).not.toContain("reports"); // still a future phase (P3)
+    expect(keys).not.toContain("reports"); // shipped in P1-13 but report.view not granted here
+  });
+  it("shows reports when report.view is granted (P1-13)", () => {
+    expect(visibleNavItems(new Set(["report.view"])).map((i) => i.key)).toContain("reports");
   });
   it("shows roles when role.view is granted", () => {
     expect(visibleNavItems(new Set(["role.view"])).map((i) => i.key)).toContain("roles");
